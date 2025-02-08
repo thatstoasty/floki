@@ -1,0 +1,44 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - src/**
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - { target: linux-64, os: ubuntu-latest }
+          - { target: osx-arm64, os: macos-latest }
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - uses: prefix-dev/setup-pixi@v0.8.10
+        with:
+          pixi-version: v0.47.0
+
+      - name: Build package for target platform
+        env:
+          TARGET_PLATFORM: ${{ matrix.target }}
+          PREFIX_API_KEY: ${{ secrets.PREFIX_API_KEY }}
+          CONDA_BLD_PATH: ${{ runner.workspace }}/.rattler
+
+        run: |
+          # Build and publish
+          pixi run build
+          pixi auth login prefix.dev --token "$PREFIX_API_KEY"
+          pixi run publish mojo-community
