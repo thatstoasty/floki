@@ -28,7 +28,7 @@ publish = { cmd = "python scripts/util.py publish", env = { PREFIX_API_KEY = "$P
 max = ">=25.4.0,<25.5.0"
 mojo-tlse = ">=25.4.1,<25.5.0"
 small_time = ">=25.4.0,<25.5.0"
-emberjson = "=0.1.6"
+emberjson = "0.1.6"
 
 [package]
 name = "floki"
