@@ -1,6 +1,4 @@
 from floki.session import Session, TCPConnection
-from floki.header import Headers, Header
-
 
 fn test_http_request(mut client: Session[TCPConnection]) raises -> None:
     # var response = client.get(
