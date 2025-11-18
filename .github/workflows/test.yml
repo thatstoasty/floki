@@ -15,6 +15,7 @@ jobs:
         include:
           - { target: linux-64, os: ubuntu-latest }
           - { target: osx-arm64, os: macos-latest }
+          - { target: linux-aarch64, os: ubuntu-24.04-arm }
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
@@ -28,9 +29,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - uses: prefix-dev/setup-pixi@v0.8.10
+      - uses: prefix-dev/setup-pixi@v0.9.3
         with:
-          pixi-version: v0.47.0
+          pixi-version: v0.59.0
 
       - name: Run tests
         shell: bash

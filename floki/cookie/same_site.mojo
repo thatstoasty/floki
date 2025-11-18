@@ -1,5 +1,6 @@
 @fieldwise_init
-struct SameSite(Copyable, ExplicitlyCopyable, Movable, Stringable):
+@register_passable("trivial")
+struct SameSite(ImplicitlyCopyable, Copyable, Movable, Stringable):
     var value: UInt8
 
     alias none = SameSite(0)

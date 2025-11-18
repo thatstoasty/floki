@@ -1,21 +1,15 @@
-from memory import UnsafePointer
-from memory.span import _SpanIter
-
-
-alias Bytes = List[Byte, True]
-alias DEFAULT_BUFFER_SIZE = 4096
-
-alias CRLF = "\r\n"
-alias WHITESPACE = " "
+comptime DEFAULT_BUFFER_SIZE = 4096
+comptime CRLF = "\r\n"
+comptime WHITESPACE = " "
 
 
 struct BytesConstant:
-    alias WHITESPACE = Byte(ord(WHITESPACE))
-    alias COLON = Byte(ord(":"))
-    alias CR = Byte(ord("\r"))
-    alias LF = Byte(ord("\n"))
-    alias CRLF = CRLF.as_bytes()
-    alias DOUBLE_CRLF = "\r\n\r\n".as_bytes()
+    comptime WHITESPACE = Byte(ord(WHITESPACE))
+    comptime COLON = Byte(ord(":"))
+    comptime CR = Byte(ord("\r"))
+    comptime LF = Byte(ord("\n"))
+    comptime CRLF = CRLF.as_bytes()
+    comptime DOUBLE_CRLF = "\r\n\r\n".as_bytes()
 
 
 fn bytes_equal(lhs: Span[Byte], rhs: Span[Byte]) -> Bool:
@@ -46,53 +40,11 @@ fn is_space(b: Byte) -> Bool:
     return b == BytesConstant.WHITESPACE
 
 
-struct ByteWriter(Writer):
-    var _inner: Bytes
-
-    fn __init__(out self, capacity: UInt = DEFAULT_BUFFER_SIZE):
-        self._inner = Bytes(capacity=capacity)
-
-    @always_inline
-    fn write_bytes(mut self, bytes: Span[Byte]) -> None:
-        """Writes the contents of `bytes` into the internal buffer.
-
-        Args:
-            bytes: The bytes to write.
-        """
-        self._inner.extend(bytes)
-
-    fn write[*Ts: Writable](mut self, *args: *Ts) -> None:
-        """Write data to the `Writer`.
-
-        Parameters:
-            Ts: The types of data to write.
-
-        Args:
-            args: The data to write.
-        """
-
-        @parameter
-        for i in range(args.__len__()):
-            args[i].write_to(self)
-
-    @always_inline
-    fn consuming_write(mut self, owned b: Bytes):
-        self._inner.extend(b^)
-
-    @always_inline
-    fn write_byte(mut self, b: Byte):
-        self._inner.append(b)
-
-    fn consume(mut self) -> Bytes:
-        var ret = self._inner^
-        self._inner = Bytes()
-        return ret^
+comptime EndOfReaderError = "No more bytes to read."
+comptime OutOfBoundsError = "Tried to read past the end of the ByteReader."
 
 
-alias EndOfReaderError = "No more bytes to read."
-alias OutOfBoundsError = "Tried to read past the end of the ByteReader."
-
-
+# TODO: Assess if I need this reader, or if I can just use Span directly. Or optimize it.
 struct ByteReader[origin: Origin](Sized):
     var _inner: Span[Byte, origin]
     var read_pos: Int
