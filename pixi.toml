@@ -48,6 +48,9 @@ curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirect
 
 [package.build-dependencies]
 mojo-compiler = ">=0.25.7.0,<0.26.1.0"
+emberjson = "=0.2.1"
+mojo-curl =  ">=25.7.0,<26.1.0"
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", branch = "main" }
 
 [package.host-dependencies]
 mojo-compiler = ">=0.25.7.0,<0.26.1.0"
