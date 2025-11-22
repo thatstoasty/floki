@@ -29,7 +29,7 @@ format = [{ task = "mojo_format" }, { task = "sort_imports" }]
 
 # Build and publish
 build = { cmd = "pixi build -o ." }
-publish = { cmd = "find . -name 'mojo-curl-*.conda' | xargs pixi upload https://prefix.dev/api/v1/upload/mojo-community" }
+publish = { cmd = "find . -name 'floki-*.conda' | xargs pixi upload https://prefix.dev/api/v1/upload/mojo-community" }
 build_and_publish = [{ task = "build" }, { task = "publish" }]
 
 [package]
