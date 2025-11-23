@@ -82,87 +82,87 @@ struct HTTPResponse(Movable):
             LOGGER.error(e)
             raise Error("Failed to read request body")
 
-#     @staticmethod
-#     fn from_bytes[ConnectionType: Connection](b: Span[Byte], connection: ConnectionType) raises -> HTTPResponse:
-#         var reader = ByteReader(b)
-#         var headers = Headers()
-#         var cookies = ResponseCookieJar()
+    #     @staticmethod
+    #     fn from_bytes[ConnectionType: Connection](b: Span[Byte], connection: ConnectionType) raises -> HTTPResponse:
+    #         var reader = ByteReader(b)
+    #         var headers = Headers()
+    #         var cookies = ResponseCookieJar()
 
-#         var properties = parse_response_headers(headers, reader)
-#         protocol, status_code, reason = properties[0], properties[1], properties[2]
-#         try:
-#             cookies.from_headers(properties[3])
-#             reader.skip_carriage_return()
-#         except e:
-#             raise Error("Failed to parse response headers: ", e)
+    #         var properties = parse_response_headers(headers, reader)
+    #         protocol, status_code, reason = properties[0], properties[1], properties[2]
+    #         try:
+    #             cookies.from_headers(properties[3])
+    #             reader.skip_carriage_return()
+    #         except e:
+    #             raise Error("Failed to parse response headers: ", e)
 
-#         var response = HTTPResponse(
-#             Bytes(),
-#             headers=headers,
-#             cookies=cookies,
-#             protocol=protocol,
-#             status_code=StatusCode.from_int(Int(status_code)),
-#             reason=reason,
-#         )
+    #         var response = HTTPResponse(
+    #             Bytes(),
+    #             headers=headers,
+    #             cookies=cookies,
+    #             protocol=protocol,
+    #             status_code=StatusCode.from_int(Int(status_code)),
+    #             reason=reason,
+    #         )
 
-#         var transfer_encoding = response.headers.get(HeaderKey.TRANSFER_ENCODING)
-#         if transfer_encoding and transfer_encoding.value() == "chunked":
-#             var b = Bytes(reader.read_bytes())
-#             var buff = Bytes(capacity=DEFAULT_BUFFER_SIZE)
-#             try:
-#                 while connection.read(buff) > 0:
-#                     b += buff
+    #         var transfer_encoding = response.headers.get(HeaderKey.TRANSFER_ENCODING)
+    #         if transfer_encoding and transfer_encoding.value() == "chunked":
+    #             var b = Bytes(reader.read_bytes())
+    #             var buff = Bytes(capacity=DEFAULT_BUFFER_SIZE)
+    #             try:
+    #                 while connection.read(buff) > 0:
+    #                     b += buff
 
-#                     if (
-#                         buff[-5] == ord("0")
-#                         and buff[-4] == BytesConstant.CR
-#                         and buff[-3] == BytesConstant.LF
-#                         and buff[-2] == BytesConstant.CR
-#                         and buff[-1] == BytesConstant.LF
-#                     ):
-#                         break
+    #                     if (
+    #                         buff[-5] == ord("0")
+    #                         and buff[-4] == BytesConstant.CR
+    #                         and buff[-3] == BytesConstant.LF
+    #                         and buff[-2] == BytesConstant.CR
+    #                         and buff[-1] == BytesConstant.LF
+    #                     ):
+    #                         break
 
-#                     buff.clear()
-#                 response.read_chunks(b)
-#                 return response^
-#             except e:
-#                 LOGGER.error(e)
-#                 raise Error("Failed to read chunked response.")
+    #                     buff.clear()
+    #                 response.read_chunks(b)
+    #                 return response^
+    #             except e:
+    #                 LOGGER.error(e)
+    #                 raise Error("Failed to read chunked response.")
 
-#         try:
-#             response.read_body(reader)
-#             return response^
-#         except e:
-#             LOGGER.error(e)
-#             raise Error("Failed to read request body: ")
+    #         try:
+    #             response.read_body(reader)
+    #             return response^
+    #         except e:
+    #             LOGGER.error(e)
+    #             raise Error("Failed to read request body: ")
 
-#     fn __init__(
-#         out self,
-#         body_bytes: Span[Byte],
-#         headers: Headers = Headers(),
-#         cookies: ResponseCookieJar = ResponseCookieJar(),
-#         status_code: StatusCode = StatusCode.OK,
-#         reason: String = "OK",
-#         protocol: Protocol = Protocol.HTTP_11,
-#     ):
-#         self.headers = headers
-#         self.cookies = cookies
-#         if HeaderKey.CONTENT_TYPE not in self.headers:
-#             self.headers[HeaderKey.CONTENT_TYPE] = "application/octet-stream"
-#         self.status_code = status_code
-#         self.reason = reason
-#         self.protocol = protocol
-#         self.body = Body(Span(body_bytes))
-#         if HeaderKey.CONNECTION not in self.headers:
-#             self.set_connection_keep_alive()
-#         if HeaderKey.CONTENT_LENGTH not in self.headers:
-#             self.set_content_length(len(body_bytes))
-#         if HeaderKey.DATE not in self.headers:
-#             try:
-#                 var current_time = String(now(utc=True))
-#                 self.headers[HeaderKey.DATE] = current_time
-#             except:
-#                 LOGGER.debug("DATE header not set, unable to get current time and it was instead omitted.")
+    #     fn __init__(
+    #         out self,
+    #         body_bytes: Span[Byte],
+    #         headers: Headers = Headers(),
+    #         cookies: ResponseCookieJar = ResponseCookieJar(),
+    #         status_code: StatusCode = StatusCode.OK,
+    #         reason: String = "OK",
+    #         protocol: Protocol = Protocol.HTTP_11,
+    #     ):
+    #         self.headers = headers
+    #         self.cookies = cookies
+    #         if HeaderKey.CONTENT_TYPE not in self.headers:
+    #             self.headers[HeaderKey.CONTENT_TYPE] = "application/octet-stream"
+    #         self.status_code = status_code
+    #         self.reason = reason
+    #         self.protocol = protocol
+    #         self.body = Body(Span(body_bytes))
+    #         if HeaderKey.CONNECTION not in self.headers:
+    #             self.set_connection_keep_alive()
+    #         if HeaderKey.CONTENT_LENGTH not in self.headers:
+    #             self.set_content_length(len(body_bytes))
+    #         if HeaderKey.DATE not in self.headers:
+    #             try:
+    #                 var current_time = String(now(utc=True))
+    #                 self.headers[HeaderKey.DATE] = current_time
+    #             except:
+    #                 LOGGER.debug("DATE header not set, unable to get current time and it was instead omitted.")
 
     fn __init__(
         out self,
@@ -192,6 +192,7 @@ struct HTTPResponse(Movable):
         #         self.headers[HeaderKey.DATE] = current_time
         #     except:
         #         pass
+
 
 #     @always_inline
 #     fn set_connection_close(mut self):
