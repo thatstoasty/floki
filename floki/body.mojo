@@ -8,20 +8,29 @@ struct Body(Copyable, Movable, Sized):
     """
 
     var body: List[Byte]
+    var _json_cache: Optional[emberjson.JSON]
 
     fn __init__(out self, body: Span[Byte]):
         self.body = List[Byte](body)
+        self._json_cache = None
 
     fn __init__(out self, var body: List[Byte]):
         self.body = body^
+        self._json_cache = None
 
     fn __init__(out self):
         self.body = List[Byte]()
+        self._json_cache = None
 
-    fn __init__(out self, data: Dict[String, String]):
+    # fn __init__(out self, data: Dict[String, emberjson.Value]):
+    #     """Initializes the body from a dictionary, converting it to a form-encoded string."""
+    #     var json = {x.key: x.value.copy() for x in data.items()}
+    #     self.body = List[Byte](emberjson.to_string(emberjson.Object(json^)).as_bytes())
+
+    fn __init__(out self, var data: emberjson.Object):
         """Initializes the body from a dictionary, converting it to a form-encoded string."""
-        var json = {x.key: emberjson.Value(x.value) for x in data.items()}
-        self.body = List[Byte](emberjson.to_string(emberjson.Object(json^)).as_bytes())
+        self.body = List[Byte](emberjson.to_string(data^).as_bytes())
+        self._json_cache = None
 
     fn __len__(self) -> Int:
         return len(self.body)
@@ -39,11 +48,17 @@ struct Body(Copyable, Movable, Sized):
     fn as_string_slice(self) -> StringSlice[origin_of(self.body)]:
         return StringSlice(unsafe_from_utf8=Span(self.body))
 
-    fn as_dict(self) raises -> Dict[String, String]:
+    fn as_json(mut self) raises -> ref [origin_of(self._json_cache.value()._data)] emberjson.Object:
         """Converts the response body to a JSON object."""
+        if not self.body:
+            raise Error("Body is empty; cannot parse as JSON.")
+
+        if self._json_cache:
+            return self._json_cache.value().object()
+
         var parser = emberjson.Parser(StringSlice(unsafe_from_utf8=self.body))
-        ref json = parser.parse().object()
-        return {x.key: String(x.data) for x in json.items()}
+        self._json_cache = parser.parse()
+        return self._json_cache.value().object()
 
     fn write_to[W: Writer, //](self, mut writer: W):
         """Writes the body to a writer.

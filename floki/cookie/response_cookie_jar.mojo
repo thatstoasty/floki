@@ -82,7 +82,7 @@
 #     @always_inline
 #     fn __len__(self) -> Int:
 #         return len(self._inner)
-    
+
 #     @always_inline
 #     fn __bool__(self) -> Bool:
 #         return len(self) == 0

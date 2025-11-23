@@ -46,9 +46,9 @@ environments:
       - conda: https://conda.modular.com/max/noarch/mblack-25.7.0-release.conda
       - conda: https://conda.modular.com/max/linux-64/mojo-0.25.7.0-release.conda
       - conda: https://conda.modular.com/max/linux-64/mojo-compiler-0.25.7.0-release.conda
-      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b83c8ca56787f20d7b6a4febe30ccee6550668fc
+      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b53d942457c9db9d0083f9412dc011decd04af1a
         subdir: linux-64
-      - conda: https://repo.prefix.dev/mojo-community/linux-64/mojo-curl-25.7.0-hbf21a9e_0.conda
+      - conda: https://repo.prefix.dev/mojo-community/linux-64/mojo-curl-25.7.1-hbf21a9e_0.conda
       - conda: https://conda.modular.com/max/noarch/mojo-python-0.25.7.0-release.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mypy_extensions-1.1.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.5-h2d0b736_3.conda
@@ -108,9 +108,9 @@ environments:
       - conda: https://conda.modular.com/max/noarch/mblack-25.7.0-release.conda
       - conda: https://conda.modular.com/max/linux-aarch64/mojo-0.25.7.0-release.conda
       - conda: https://conda.modular.com/max/linux-aarch64/mojo-compiler-0.25.7.0-release.conda
-      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b83c8ca56787f20d7b6a4febe30ccee6550668fc
+      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b53d942457c9db9d0083f9412dc011decd04af1a
         subdir: linux-aarch64
-      - conda: https://repo.prefix.dev/mojo-community/linux-aarch64/mojo-curl-25.7.0-hbf21a9e_0.conda
+      - conda: https://repo.prefix.dev/mojo-community/linux-aarch64/mojo-curl-25.7.1-hbf21a9e_0.conda
       - conda: https://conda.modular.com/max/noarch/mojo-python-0.25.7.0-release.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mypy_extensions-1.1.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ncurses-6.5-ha32ae93_3.conda
@@ -163,9 +163,9 @@ environments:
       - conda: https://conda.modular.com/max/noarch/mblack-25.7.0-release.conda
       - conda: https://conda.modular.com/max/osx-arm64/mojo-0.25.7.0-release.conda
       - conda: https://conda.modular.com/max/osx-arm64/mojo-compiler-0.25.7.0-release.conda
-      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b83c8ca56787f20d7b6a4febe30ccee6550668fc
+      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b53d942457c9db9d0083f9412dc011decd04af1a
         subdir: osx-arm64
-      - conda: https://repo.prefix.dev/mojo-community/osx-arm64/mojo-curl-25.7.0-hbf21a9e_0.conda
+      - conda: https://repo.prefix.dev/mojo-community/osx-arm64/mojo-curl-25.7.1-hbf21a9e_0.conda
       - conda: https://conda.modular.com/max/noarch/mojo-python-0.25.7.0-release.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mypy_extensions-1.1.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ncurses-6.5-h5e97a16_3.conda
@@ -237,9 +237,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.modular.com/max/linux-64/mojo-0.25.7.0-release.conda
       - conda: https://conda.modular.com/max/linux-64/mojo-compiler-0.25.7.0-release.conda
-      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b83c8ca56787f20d7b6a4febe30ccee6550668fc
+      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b53d942457c9db9d0083f9412dc011decd04af1a
         subdir: linux-64
-      - conda: https://repo.prefix.dev/mojo-community/linux-64/mojo-curl-25.7.0-hbf21a9e_0.conda
+      - conda: https://repo.prefix.dev/mojo-community/linux-64/mojo-curl-25.7.1-hbf21a9e_0.conda
       - conda: https://conda.modular.com/max/noarch/mojo-python-0.25.7.0-release.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mypy_extensions-1.1.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.5-h2d0b736_3.conda
@@ -309,9 +309,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.modular.com/max/linux-aarch64/mojo-0.25.7.0-release.conda
       - conda: https://conda.modular.com/max/linux-aarch64/mojo-compiler-0.25.7.0-release.conda
-      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b83c8ca56787f20d7b6a4febe30ccee6550668fc
+      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b53d942457c9db9d0083f9412dc011decd04af1a
         subdir: linux-aarch64
-      - conda: https://repo.prefix.dev/mojo-community/linux-aarch64/mojo-curl-25.7.0-hbf21a9e_0.conda
+      - conda: https://repo.prefix.dev/mojo-community/linux-aarch64/mojo-curl-25.7.1-hbf21a9e_0.conda
       - conda: https://conda.modular.com/max/noarch/mojo-python-0.25.7.0-release.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mypy_extensions-1.1.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ncurses-6.5-ha32ae93_3.conda
@@ -374,9 +374,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.modular.com/max/osx-arm64/mojo-0.25.7.0-release.conda
       - conda: https://conda.modular.com/max/osx-arm64/mojo-compiler-0.25.7.0-release.conda
-      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b83c8ca56787f20d7b6a4febe30ccee6550668fc
+      - conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b53d942457c9db9d0083f9412dc011decd04af1a
         subdir: osx-arm64
-      - conda: https://repo.prefix.dev/mojo-community/osx-arm64/mojo-curl-25.7.0-hbf21a9e_0.conda
+      - conda: https://repo.prefix.dev/mojo-community/osx-arm64/mojo-curl-25.7.1-hbf21a9e_0.conda
       - conda: https://conda.modular.com/max/noarch/mojo-python-0.25.7.0-release.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mypy_extensions-1.1.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ncurses-6.5-h5e97a16_3.conda
@@ -534,7 +534,7 @@ packages:
   license: Python-2.0
   size: 48397
   timestamp: 1761175097707
-- conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b83c8ca56787f20d7b6a4febe30ccee6550668fc
+- conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b53d942457c9db9d0083f9412dc011decd04af1a
   name: curl_wrapper
   version: 0.1.0
   build: hbf21a9e_0
@@ -544,7 +544,7 @@ packages:
   - libgcc >=15
   - libcurl >=8.17.0,<9.0a0
   channel: null
-- conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b83c8ca56787f20d7b6a4febe30ccee6550668fc
+- conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b53d942457c9db9d0083f9412dc011decd04af1a
   name: curl_wrapper
   version: 0.1.0
   build: hbf21a9e_0
@@ -554,7 +554,7 @@ packages:
   - libgcc >=15
   - libcurl >=8.17.0,<9.0a0
   channel: null
-- conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b83c8ca56787f20d7b6a4febe30ccee6550668fc
+- conda: git+https://github.com/thatstoasty/mojo-curl?subdirectory=shim&branch=main#b53d942457c9db9d0083f9412dc011decd04af1a
   name: curl_wrapper
   version: 0.1.0
   build: hbf21a9e_0
@@ -1331,33 +1331,33 @@ packages:
   license: LicenseRef-Modular-Proprietary
   size: 63177739
   timestamp: 1763511077693
-- conda: https://repo.prefix.dev/mojo-community/linux-64/mojo-curl-25.7.0-hbf21a9e_0.conda
-  sha256: 8e3634511bba37be0b619f964c185babc9b73ea9d23c7791800b5bb2f6adcdb8
+- conda: https://repo.prefix.dev/mojo-community/linux-64/mojo-curl-25.7.1-hbf21a9e_0.conda
+  sha256: 74d3c888f55ddd40d6eae4f4f1105f18be59e18cc74ae67a248d3e590de19fca
   depends:
   - mojo-compiler >=0.25.7.0,<0.26.1.0
   - libcurl >=8.17.0,<9.0.0
   - libcurl >=8.17.0,<9.0a0
   - curl_wrapper
-  size: 1143865
-  timestamp: 1763776244231
-- conda: https://repo.prefix.dev/mojo-community/linux-aarch64/mojo-curl-25.7.0-hbf21a9e_0.conda
-  sha256: b5036b0ad9afb3253b5de276f0a3415d24e6b0e706e97468021bbc1fe9dcc47b
+  size: 1145605
+  timestamp: 1763960397276
+- conda: https://repo.prefix.dev/mojo-community/linux-aarch64/mojo-curl-25.7.1-hbf21a9e_0.conda
+  sha256: fb821f7f873db977d69299231e0350b25a476344716e2c15a5b3dc765f8a414c
   depends:
   - mojo-compiler >=0.25.7.0,<0.26.1.0
   - libcurl >=8.17.0,<9.0.0
   - libcurl >=8.17.0,<9.0a0
   - curl_wrapper
-  size: 1143862
-  timestamp: 1763776257039
-- conda: https://repo.prefix.dev/mojo-community/osx-arm64/mojo-curl-25.7.0-hbf21a9e_0.conda
-  sha256: 0731b710cb65e2542b43bff27632cdc4610f5b61feecc445427a6b57b944601b
+  size: 1145603
+  timestamp: 1763960411962
+- conda: https://repo.prefix.dev/mojo-community/osx-arm64/mojo-curl-25.7.1-hbf21a9e_0.conda
+  sha256: 0b62b2c46b7f5cfbdd121ae3be4230fff0c6618513d2249c571b1734ca560ff3
   depends:
   - mojo-compiler >=0.25.7.0,<0.26.1.0
   - libcurl >=8.17.0,<9.0.0
   - libcurl >=8.17.0,<9.0a0
   - curl_wrapper
-  size: 1144297
-  timestamp: 1763776267123
+  size: 1145619
+  timestamp: 1763960413115
 - conda: https://conda.modular.com/max/noarch/mojo-python-0.25.7.0-release.conda
   noarch: python
   sha256: 020a6cdde091d210a731216fa107472fdd3c5e790fea4c20af646b0ccb5be44e

@@ -33,8 +33,8 @@ fn main() raises -> None:
 ## TODO
 
 - Add an option for streaming responses instead of loading it all into memory.
-- Fix `HEAD` and `OPTIONS` methods.
 - Cookie support.
 - Sus out the myriad of bugs and edge cases that may arise as libcurl and requests can do A LOT of things, that I've never used before. Please open issues and open PRs to help address these gaps where possible.
+- Add methods to free Session explicitly, same with Easy handles.
 
 Reminder, this is a hobby project! You're free to fork it and make changes as you see fit.

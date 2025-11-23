@@ -1,5 +1,5 @@
 @fieldwise_init
-struct Protocol(ImplicitlyCopyable, Copyable, Movable, Writable):
+struct Protocol(Copyable, ImplicitlyCopyable, Movable, Writable):
     var value: UInt8
     comptime HTTP = Self(0)
     comptime HTTPS = Self(1)
@@ -19,7 +19,7 @@ struct Protocol(ImplicitlyCopyable, Copyable, Movable, Writable):
 
 @fieldwise_init
 @register_passable("trivial")
-struct StatusCode(Copyable, EqualityComparable, Movable, Writable, Stringable):
+struct StatusCode(Copyable, EqualityComparable, Movable, Stringable, Writable):
     var value: UInt16
 
     comptime CONTINUE = Self(100)
@@ -250,7 +250,7 @@ struct StatusCode(Copyable, EqualityComparable, Movable, Writable, Stringable):
             writer: The writer to which the status code will be written.
         """
         writer.write(self.value)
-    
+
     fn __str__(self) -> String:
         """Converts the StatusCode instance to its string representation.
 
@@ -261,7 +261,7 @@ struct StatusCode(Copyable, EqualityComparable, Movable, Writable, Stringable):
 
 
 @fieldwise_init
-struct RequestMethod(ImplicitlyCopyable, Copyable, Movable, Writable, EqualityComparable):
+struct RequestMethod(Copyable, EqualityComparable, ImplicitlyCopyable, Movable, Writable):
     var value: UInt8
 
     comptime GET = Self(0)
