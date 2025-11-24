@@ -71,9 +71,9 @@ fn fd_read_callback(
         var fd = FileDescriptor(file[]._get_raw_fd())
         return fd.read_bytes(Span(ptr=ptr.bitcast[UInt8](), length=Int(buffer_size)))
     except e:
-        # TODO: How should I handle errors here? Returning 0 just indicates EOF, which is not accurate.
         LOGGER.error("fd_read_callback: Error reading from file descriptor: ", e, " errno: ", get_errno())
-        return 0
+        # TODO: Add READ_FUNC_ABORT constant to mojo-curl and return it here to signal an error.
+        return 0x10000000
 
 
 fn _handle_post[origin: ImmutOrigin](easy: Easy, data: Span[Byte, origin]) raises:
@@ -118,7 +118,7 @@ fn _handle_put[origin: ImmutOrigin](easy: Easy, data: Span[Byte, origin]) raises
         # Set PUT with zero-length body
         result = easy.post_fields(List[Byte]())
     if result != Result.OK:
-        raise Error("_handle_put: Failed to set POST fields: ", easy.describe_error(result))
+        raise Error("_handle_put: Failed to set PUT request post fields: ", easy.describe_error(result))
 
 
 fn _handle_put(easy: Easy, mut data: FileHandle) raises:
@@ -157,7 +157,7 @@ fn _handle_patch[origin: ImmutOrigin](easy: Easy, data: Span[Byte, origin]) rais
         print("sending data", StringSlice(unsafe_from_utf8=data))
         result = easy.post_fields(data)
         if result != Result.OK:
-            raise Error("_handle_patch: Failed to set POST fields: ", easy.describe_error(result))
+            raise Error("_handle_patch: Failed to set PATCH request post fields: ", easy.describe_error(result))
 
 
 fn _handle_patch(easy: Easy, mut data: FileHandle) raises:
@@ -201,6 +201,13 @@ struct Session:
         var headers: Dict[String, String] = {},
         verbose: Bool = False,
     ) raises:
+        """Initialize a new Session.
+        
+        Args:
+            allow_redirects: Whether to follow HTTP redirects automatically.
+            headers: Default headers to include in requests.
+            verbose: If True, enables libcurl's verbose logging mode for debugging.
+        """
         self.easy = Easy()
         self.allow_redirects = allow_redirects
         self.headers = headers^
@@ -329,7 +336,7 @@ struct Session:
         """
         constrained[
             method in [RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH],
-            String("send: Unsupported HTTP method for FileDescriptor data. Received: ", method),
+            String("send: FileHandle data only supported for POST, PUT, and PATCH methods. Received: ", method),
         ]()
         self.raise_if_error(self.easy.url(url), "Failed to set URL: ")
 

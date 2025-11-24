@@ -22,11 +22,6 @@ struct Body(Copyable, Movable, Sized):
         self.body = List[Byte]()
         self._json_cache = None
 
-    # fn __init__(out self, data: Dict[String, emberjson.Value]):
-    #     """Initializes the body from a dictionary, converting it to a form-encoded string."""
-    #     var json = {x.key: x.value.copy() for x in data.items()}
-    #     self.body = List[Byte](emberjson.to_string(emberjson.Object(json^)).as_bytes())
-
     fn __init__(out self, var data: emberjson.Object):
         """Initializes the body from a dictionary, converting it to a form-encoded string."""
         self.body = List[Byte](emberjson.to_string(data^).as_bytes())
