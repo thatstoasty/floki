@@ -581,7 +581,7 @@ struct Session:
         var data: emberjson.Object = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:
-        """Sends a GET request to the specified URL.
+        """Sends a PATCH request to the specified URL.
 
         Args:
             url: The URL to which the request is sent.
