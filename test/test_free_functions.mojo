@@ -34,7 +34,7 @@ fn test_post() raises -> None:
     # print(response.body.as_string_slice())
     assert_equal(response.status_code, StatusCode.CREATED)
     print("Body:")
-    for node in response.body.as_json().items():
+    for node in response.body.as_json().object().items():
         print(String(node.key, ": ", node.data))
     
     print(response.body.as_json()["key2"]["subkey"])

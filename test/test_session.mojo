@@ -57,7 +57,7 @@ fn test_post() raises -> None:
     # print(response.body.as_string_slice())
     assert_equal(response.status_code, StatusCode.CREATED)
     print("Body:")
-    for node in response.body.as_json().items():
+    for node in response.body.as_json().object().items():
         print(String(node.key, ": ", node.data))
     
     print(response.body.as_json()["key2"]["subkey"])
@@ -78,7 +78,7 @@ fn test_post_file() raises -> None:
         )
         assert_equal(response.status_code, StatusCode.CREATED)
         print("Body:")
-        for node in response.body.as_json().items():
+        for node in response.body.as_json().object().items():
             print(String(node.key, ": ", node.data))
         
         print(response.body.as_json()["content"]["recently_edited"])
@@ -115,7 +115,7 @@ fn test_put_file() raises -> None:
         )
         assert_equal(response.status_code, StatusCode.OK)
         print("Body:")
-        for node in response.body.as_json().items():
+        for node in response.body.as_json().object().items():
             print(String(node.key, ": ", node.data))
 
 
@@ -150,7 +150,7 @@ fn test_patch_file() raises -> None:
         )
         assert_equal(response.status_code, StatusCode.OK)
         print("Body:")
-        for node in response.body.as_json().items():
+        for node in response.body.as_json().object().items():
             print(String(node.key, ": ", node.data))
 
 
