@@ -10,7 +10,11 @@ fn run_files(directory: Path, path: Optional[Path] = None) raises -> None:
         print("Path does not exist: ", directory)
         return
 
-    var files = [path.value()] if path else directory.listdir()
+    var files: List[Path]
+    if path:
+        files = [path.value()]
+    else:
+        files = [path for path in directory.listdir() if path.suffix() == ".mojo"]
     for file in files:
         print("\nRunning file:", file)
         print(subprocess.run(String("mojo -D ASSERT=all -I . ", directory / file)))

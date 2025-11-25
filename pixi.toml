@@ -34,7 +34,7 @@ build_and_publish = [{ task = "build" }, { task = "publish" }]
 
 [package]
 name = "floki"
-version = "25.7.1"
+version = "25.7.2"
 
 [package.build]
 backend = { name = "pixi-build-mojo", version = "0.*", channel = "https://prefix.dev/pixi-build-backends" }

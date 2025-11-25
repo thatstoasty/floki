@@ -7,39 +7,6 @@ from floki._logger import LOGGER
 from floki.body import Body
 
 
-fn parse_response_headers(mut r: ByteReader) raises -> Tuple[Protocol, String, String]:
-    if not r.peek():
-        raise Error("parse_response_headers: Failed to read first byte from response header")
-
-    var first = r.read_word()
-    r.increment()
-    var second = r.read_word()
-    r.increment()
-    var third = r.read_line()
-    # var cookies = List[String]()
-
-    # while not is_newline(r.peek()):
-    #     var key = r.read_until(BytesConstant.COLON)
-    #     r.increment()
-    #     if is_space(r.peek()):
-    #         r.increment()
-
-    #     # TODO (bgreni): Handle possible trailing whitespace
-    #     var value = r.read_line()
-    #     var k = StringSlice(unsafe_from_utf8=key).lower()
-    #     if k == "set-cookie":
-    #         cookies.append(String(bytes=value))
-    #         continue
-
-    #     headers[k] = String(bytes=value)
-    return (
-        Protocol.from_string(StringSlice(unsafe_from_utf8=first)),
-        String(bytes=second),
-        String(bytes=third),
-        # cookies^,
-    )
-
-
 @fieldwise_init
 struct HTTPResponse(Movable):
     var headers: Dict[String, String]

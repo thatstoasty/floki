@@ -14,28 +14,8 @@ struct Body(Copyable, Movable, Sized):
         self.body = List[Byte](body)
         self._json_cache = None
 
-    fn __init__(out self, var body: List[Byte]):
-        self.body = body^
-        self._json_cache = None
-
-    fn __init__(out self):
-        self.body = List[Byte]()
-        self._json_cache = None
-
-    fn __init__(out self, var data: emberjson.Object):
-        """Initializes the body from a dictionary, converting it to a form-encoded string."""
-        self.body = List[Byte](emberjson.to_string(data^).as_bytes())
-        self._json_cache = None
-
     fn __len__(self) -> Int:
         return len(self.body)
-
-    fn __iadd__(mut self, var other: Body):
-        self.body += other.body^
-        other.body = List[Byte]()
-
-    fn __iadd__(mut self, other: Span[Byte]):
-        self.body.extend(other)
 
     fn as_bytes(self) -> Span[Byte, origin_of(self.body)]:
         return Span(self.body)
@@ -43,17 +23,16 @@ struct Body(Copyable, Movable, Sized):
     fn as_string_slice(self) -> StringSlice[origin_of(self.body)]:
         return StringSlice(unsafe_from_utf8=Span(self.body))
 
-    fn as_json(mut self) raises -> ref [origin_of(self._json_cache.value()._data)] emberjson.Object:
+    fn as_json(mut self) raises -> ref [origin_of(self._json_cache._value)] emberjson.JSON:
         """Converts the response body to a JSON object."""
         if not self.body:
             raise Error("Body is empty; cannot parse as JSON.")
 
         if self._json_cache:
-            return self._json_cache.value().object()
+            return self._json_cache.value()
 
-        var parser = emberjson.Parser(StringSlice(unsafe_from_utf8=self.body))
-        self._json_cache = parser.parse()
-        return self._json_cache.value().object()
+        self._json_cache = emberjson.parse(StringSlice(unsafe_from_utf8=self.body))
+        return self._json_cache.value()
 
     fn write_to[W: Writer, //](self, mut writer: W):
         """Writes the body to a writer.
