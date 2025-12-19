@@ -57,11 +57,9 @@ fn post(
     )
 
 
-fn post[
-    origin: Origin
-](
+fn post(
     var url: String,
-    data: Span[Byte, origin],
+    data: Span[mut=False, Byte],
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
 ) raises -> HTTPResponse:
@@ -135,11 +133,9 @@ fn put(
     )
 
 
-fn put[
-    origin: Origin
-](
+fn put(
     var url: String,
-    data: Span[Byte, origin],
+    data: Span[mut=False, Byte],
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
 ) raises -> HTTPResponse:
@@ -235,9 +231,9 @@ fn patch(
         timeout=timeout,
     )
 
-fn patch[origin: Origin](
+fn patch(
     var url: String,
-    data: Span[Byte, origin],
+    data: Span[mut=False, Byte],
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
 ) raises -> HTTPResponse:

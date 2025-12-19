@@ -1,7 +1,9 @@
+from collections.string._utf8 import _is_valid_utf8
+
 import emberjson
 
 
-struct Body(Copyable, Movable, Sized):
+struct Body(Copyable, Sized):
     """Represents the body of an HTTP request or response.
 
     At the moment, this only supports JSON serialization and deserialization.
@@ -10,7 +12,32 @@ struct Body(Copyable, Movable, Sized):
     var body: List[Byte]
     var _json_cache: Optional[emberjson.JSON]
 
-    fn __init__(out self, body: Span[Byte]):
+    fn __init__(out self, var body: List[Byte]) raises:
+        """Constructs a Body instance from a list of bytes.
+
+        Args:
+            body: The body content as a list of bytes.
+        
+        Raises:
+            * Error: if the body is not valid UTF-8.
+        """
+        if not _is_valid_utf8(body):
+            raise Error("Body must be valid UTF-8")
+
+        self.body = body^
+        self._json_cache = None
+
+    fn __init__(out self, body: Span[Byte]) raises:
+        """Alternate constructor that accepts a Span[Byte] for the body content.
+
+        Args:
+            body: The body content as a span of bytes.
+        
+        Raises:
+            * Error: if the body is not valid UTF-8.
+        """
+        if not _is_valid_utf8(body):
+            raise Error("Body must be valid UTF-8")
         self.body = List[Byte](body)
         self._json_cache = None
 
@@ -21,6 +48,11 @@ struct Body(Copyable, Movable, Sized):
         return Span(self.body)
 
     fn as_string_slice(self) -> StringSlice[origin_of(self.body)]:
+        """Creates and returns a `StringSlice` view of the body content.
+
+        Returns:
+            The body content as a string slice.
+        """
         return StringSlice(unsafe_from_utf8=Span(self.body))
 
     fn as_json(mut self) raises -> ref [origin_of(self._json_cache._value)] emberjson.JSON:
@@ -31,22 +63,17 @@ struct Body(Copyable, Movable, Sized):
         if self._json_cache:
             return self._json_cache.value()
 
-        self._json_cache = emberjson.parse(StringSlice(unsafe_from_utf8=self.body))
+        self._json_cache = emberjson.parse(StringSlice(from_utf8=self.body))
         return self._json_cache.value()
 
-    fn write_to[W: Writer, //](self, mut writer: W):
+    fn write_to(self, mut writer: Some[Writer]):
         """Writes the body to a writer.
-
-        Parameters:
-            W: The type of the writer.
 
         Args:
             writer: The writer to which the body will be written.
         """
         writer.write(StringSlice(unsafe_from_utf8=self.body))
 
-    fn consume(mut self) -> List[Byte]:
+    fn consume(deinit self) -> List[Byte]:
         """Consumes the body and returns it as List[Byte]."""
-        var consumed_body = self.body^
-        self.body = List[Byte]()
-        return consumed_body^
+        return self.body^
