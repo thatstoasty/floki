@@ -9,9 +9,5 @@ struct Duration(Copyable, ImplicitlyCopyable, Movable):
         self.total_seconds += hours * 60 * 60
         self.total_seconds += days * 24 * 60 * 60
 
-    @staticmethod
-    fn from_string(str: StringSlice) -> Optional[Self]:
-        try:
-            return Duration(seconds=Int(str))
-        except:
-            return Optional[Self](None)
+    fn __init__(out self, text: StringSlice) raises:
+        return Self(seconds=Int(text))

@@ -1,84 +1,29 @@
-from memory import memcpy
-from sys.ffi import external_call, c_char, c_size_t, get_errno
+from reflection import get_base_type_name
+from utils import Variant
 from mojo_curl.easy import Easy, Result
 from mojo_curl.list import CurlList
-from mojo_curl.c.types import ExternalImmutPointer, ExternalMutPointer, ExternalMutOpaquePointer
+from floki.callbacks import read_callback, fd_read_callback, write_callback
 from floki.response import HTTPResponse
 from floki.http import RequestMethod
 from floki.body import Body
-from floki._logger import LOGGER
+from floki.cookie.cookie_jar import CookieJar
 import emberjson
 
 
-fn write_callback(
-    ptr: ExternalMutPointer[c_char], size: c_size_t, nmemb: c_size_t, userdata: ExternalMutOpaquePointer
-) -> c_size_t:
-    var body = userdata.bitcast[List[UInt8]]()
-    var s = Span(ptr=ptr.bitcast[UInt8](), length=Int(size * nmemb))
-    body[].extend(s)
-    return size * nmemb
-
-
-@fieldwise_init
-struct DataToRead:
-    var data: ExternalImmutPointer[Byte]
-    var bytes_remaining: UInt
-
-
-fn read_callback(
-    ptr: ExternalMutPointer[c_char], size: c_size_t, nmemb: c_size_t, userdata: ExternalMutOpaquePointer
-) -> c_size_t:
-    var data = userdata.bitcast[DataToRead]()
-    var buffer_size = size * nmemb  # Max bytes we can write to ptr
-
-    # Nothing to write
-    if buffer_size < 1:
-        return 0
-
-    # We will copy as much data as possible into the 'ptr' buffer, but no more than 'size' * 'nmemb' bytes
-    # Determine how much data to copy: either remaining data or buffer capacity
-    var bytes_to_read = min(data[].bytes_remaining, buffer_size)
-    if bytes_to_read > 0:
-        # Copy the data into the buffer
-        memcpy(
-            dest=ptr,
-            src=data[].data.bitcast[Int8](),
-            count=Int(bytes_to_read),
-        )
-
-        # Update the userdata to reflect the consumed data
-        data[].data += bytes_to_read
-        data[].bytes_remaining -= UInt(bytes_to_read)
-
-        return bytes_to_read
-
-    return 0
-
-
-fn fd_read_callback(
-    ptr: ExternalMutPointer[c_char], size: c_size_t, nmemb: c_size_t, userdata: ExternalMutOpaquePointer
-) -> c_size_t:
-    var file = userdata.bitcast[FileHandle]()
-    var buffer_size = size * nmemb  # Max bytes we can write to ptr
-    LOGGER.debug("Read callback - target buffer capacity:", buffer_size)
-
-    # Nothing to write
-    if buffer_size < 1:
-        return 0
-
-    # Copy the data into the buffer
-    try:
-        var fd = FileDescriptor(file[]._get_raw_fd())
-        return fd.read_bytes(Span(ptr=ptr.bitcast[UInt8](), length=Int(buffer_size)))
-    except e:
-        LOGGER.error("fd_read_callback: Error reading from file descriptor: ", e, " errno: ", get_errno())
-        # TODO: Add READ_FUNC_ABORT constant to mojo-curl and return it here to signal an error.
-        return 0x10000000
-
-
-fn _handle_post[origin: ImmutOrigin](easy: Easy, data: Span[Byte, origin]) raises:
+fn _handle_post(easy: Easy, data: Span[mut=False, Byte]) raises:
     if data:
-        var result = easy.post_fields(data)
+        var data_size = len(data)
+        # libcurl dictates the usage of the large post field size option over 2GB.
+        if data_size > 2_000_000_000_000:
+            var result = easy.post_field_size_large(data_size)
+            if result != Result.OK:
+                raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
+        else:
+            var result = easy.post_field_size(data_size)
+            if result != Result.OK:
+                raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
+
+        result = easy.post_fields(data)
         if result != Result.OK:
             raise Error("_handle_post: Failed to set post fields: ", easy.describe_error(result))
     else:
@@ -102,7 +47,7 @@ fn _handle_post(easy: Easy, mut data: FileHandle) raises:
         raise Error("_handle_post: Failed to set read data: ", easy.describe_error(result))
 
 
-fn _handle_put[origin: ImmutOrigin](easy: Easy, data: Span[Byte, origin]) raises:
+fn _handle_put(easy: Easy, data: Span[mut=False, Byte]) raises:
     var http_method = "PUT"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
@@ -113,6 +58,16 @@ fn _handle_put[origin: ImmutOrigin](easy: Easy, data: Span[Byte, origin]) raises
         raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
 
     if data:
+        var data_size = len(data)
+        # libcurl dictates the usage of the large post field size option over 2GB.
+        if data_size > 2_000_000_000_000:
+            var result = easy.post_field_size_large(data_size)
+            if result != Result.OK:
+                raise Error("_handle_put: Failed to set post fields size: ", easy.describe_error(result))
+        else:
+            var result = easy.post_field_size(data_size)
+            if result != Result.OK:
+                raise Error("_handle_put: Failed to set post fields size: ", easy.describe_error(result))
         result = easy.post_fields(data)
     else:
         # Set PUT with zero-length body
@@ -139,6 +94,11 @@ fn _handle_put(easy: Easy, mut data: FileHandle) raises:
     if result != Result.OK:
         raise Error("_handle_put: Failed to set read data: ", easy.describe_error(result))
 
+    # TODO: Need a way to set the file read size.
+    # result = easy.read_file_size(len(temp))
+    # if result != Result.OK:
+    #     raise Error("_handle_put: Failed to set read file size: ", easy.describe_error(result))
+
 
 fn _handle_delete(easy: Easy) raises:
     var http_method = "DELETE"
@@ -147,14 +107,24 @@ fn _handle_delete(easy: Easy) raises:
         raise Error("_handle_delete: Failed to set DELETE method: ", easy.describe_error(result))
 
 
-fn _handle_patch[origin: ImmutOrigin](easy: Easy, data: Span[Byte, origin]) raises:
+fn _handle_patch(easy: Easy, data: Span[mut=False, Byte]) raises:
     var http_method = "PATCH"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
         raise Error("_handle_patch: Failed to set PATCH method: ", easy.describe_error(result))
 
     if data:
-        print("sending data", StringSlice(unsafe_from_utf8=data))
+        var data_size = len(data)
+        # libcurl dictates the usage of the large post field size option over 2GB.
+        if data_size > 2_000_000_000_000:
+            var result = easy.post_field_size_large(data_size)
+            if result != Result.OK:
+                raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
+        else:
+            var result = easy.post_field_size(data_size)
+            if result != Result.OK:
+                raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
+
         result = easy.post_fields(data)
         if result != Result.OK:
             raise Error("_handle_patch: Failed to set PATCH request post fields: ", easy.describe_error(result))
@@ -189,16 +159,20 @@ fn _handle_options(easy: Easy) raises:
         raise Error("_handle_options: Failed to set OPTIONS method: ", easy.describe_error(result))
 
 
-struct Session:
+struct Session(Movable):
     var easy: Easy
     var allow_redirects: Bool
     var headers: Dict[String, String]
     var verbose: Bool
 
+    comptime DEFAULT_HEADERS = {
+        "User-Agent": "floki/0.1.0",
+    }
+
     fn __init__(
         out self,
         allow_redirects: Bool = True,
-        var headers: Dict[String, String] = {},
+        headers: Dict[String, String] = {},
         verbose: Bool = False,
     ) raises:
         """Initialize a new Session.
@@ -210,7 +184,8 @@ struct Session:
         """
         self.easy = Easy()
         self.allow_redirects = allow_redirects
-        self.headers = headers^
+        self.headers = materialize[Self.DEFAULT_HEADERS]()
+        self.headers.update(headers)
         self.verbose = verbose
         if self.allow_redirects:
             self.raise_if_error(self.easy.follow_location(True), "Failed to set follow location to enable redirects: ")
@@ -221,13 +196,11 @@ struct Session:
         if code != Result.OK:
             raise Error(message, self.easy.describe_error(code))
 
-    fn send[
-        origin: ImmutOrigin, //, method: RequestMethod
-    ](
+    fn send[method: RequestMethod](
         self,
         mut url: String,
         var headers: Dict[String, String],
-        data: Span[Byte, origin],
+        data: Span[mut=False, Byte],
         timeout: Optional[Int] = None,
         query_parameters: Dict[String, String] = {},
     ) raises -> HTTPResponse:
@@ -249,63 +222,78 @@ struct Session:
         Raises:
             Error: If there is a failure in sending or receiving the message.
         """
-        # Set the url
-        if query_parameters:
-            # URL-encode the parameter values
-            # TODO: This is inefficient w/ string copies, but it's ok for now. I'm not sure if we can get mutable
-            # references to the values in the dictionary as we iterate rn.
-            var params: List[String] = []
-            for pair in query_parameters.items():
-                var value = pair.value
-                params.append(String(pair.key, "=", self.easy.escape(value)))
-
-            # Append the query parameters to the URL. Thi
-            var full_url = String(url, "?", "&".join(params))
-            self.raise_if_error(self.easy.url(full_url), "Failed to set URL with query parameters: ")
-        else:
-            self.raise_if_error(self.easy.url(url), "Failed to set URL: ")
-
-        # Set the buffer to load the response into
-        var response_body = List[UInt8](capacity=8192)
-        self.raise_if_error(
-            self.easy.write_data(UnsafePointer(to=response_body).bitcast[NoneType]()),
-            "Failed to set write data: ",
-        )
-
-        # Set the write callback to load the response data into the above buffer.
-        self.raise_if_error(self.easy.write_function(write_callback), "Failed to set write function: ")
-
-        # Set method specific curl options
-        @parameter
-        if method == RequestMethod.POST:
-            _handle_post(self.easy, data)
-        elif method == RequestMethod.PUT:
-            _handle_put(self.easy, data)
-        elif method == RequestMethod.DELETE:
-            _handle_delete(self.easy)
-        elif method == RequestMethod.PATCH:
-            _handle_patch(self.easy, data)
-        elif method == RequestMethod.HEAD:
-            _handle_head(self.easy)
-        elif method == RequestMethod.OPTIONS:
-            _handle_options(self.easy)
-
-        var list = CurlList(headers^)
         try:
-            # If there's any headers set on the session, add them too.
-            for header in self.headers.items():
-                var h = String(header.key, ": ", header.value)
-                list.append(h)
+            # Set the url
+            if query_parameters:
+                # URL-encode the parameter values
+                # TODO: This is inefficient w/ string copies, but it's ok for now. I'm not sure if we can get mutable
+                # references to the values in the dictionary as we iterate rn.
+                var params: List[String] = []
+                for pair in query_parameters.items():
+                    var value = pair.value
+                    params.append(String(pair.key, "=", self.easy.escape(value)))
 
-            # Set headers
-            self.raise_if_error(self.easy.http_headers(list), "Failed to set HTTP headers: ")
+                # Append the query parameters to the URL. Thi
+                var full_url = String(url, "?", "&".join(params))
+                self.raise_if_error(self.easy.url(full_url), "Failed to set URL with query parameters: ")
+            else:
+                self.raise_if_error(self.easy.url(url), "Failed to set URL: ")
 
-            # Perform the transfer
-            self.raise_if_error(self.easy.perform(), "Failed to perform the request: ")
+            # Set the buffer to load the response into
+            var response_body = List[UInt8](capacity=8192)
+            self.raise_if_error(
+                self.easy.write_data(UnsafePointer(to=response_body).bitcast[NoneType]()),
+                "Failed to set write data: ",
+            )
+
+            # Set the write callback to load the response data into the above buffer.
+            self.raise_if_error(self.easy.write_function(write_callback), "Failed to set write function: ")
+
+            # Set method specific curl options
+            @parameter
+            if method == RequestMethod.POST:
+                _handle_post(self.easy, data)
+            elif method == RequestMethod.PUT:
+                _handle_put(self.easy, data)
+            elif method == RequestMethod.DELETE:
+                _handle_delete(self.easy)
+            elif method == RequestMethod.PATCH:
+                _handle_patch(self.easy, data)
+            elif method == RequestMethod.HEAD:
+                _handle_head(self.easy)
+            elif method == RequestMethod.OPTIONS:
+                _handle_options(self.easy)
+
+            var list = CurlList(headers)
+            try:
+                # If there's any headers set on the session, add them too.
+                # but only if they aren't already set in the request-specific headers, since those should take precedence.
+                for header in self.headers.items():
+                    if header.key not in headers:
+                        var h = String(header.key, ": ", header.value)
+                        list.append(h)
+        
+                # Set headers
+                self.raise_if_error(self.easy.http_headers(list), "Failed to set HTTP headers: ")
+
+                # Enable the cookie engine
+                self.raise_if_error(self.easy.cookie_file(), "Failed to enable cookie engine: ")
+                # self.raise_if_error(self.easy.cookie_jar(), "Failed to enable cookie engine: ")
+
+                # Perform the transfer
+                self.raise_if_error(self.easy.perform(), "Failed to perform the request: ")
+            finally:
+                list^.free() # Free headers after performing the request.
+            
+            return HTTPResponse(
+                body=response_body^,
+                headers=self.easy.headers(),
+                protocol=Protocol(self.easy.get_scheme()),
+                status=Status(Int(self.easy.response_code())),
+                cookies=CookieJar(self.easy.cookies()),
+            )
         finally:
-            list^.free()
-
-        return HTTPResponse.from_bytes(self.easy, response_body)
+            self.easy.reset() # Reset the easy handle to clear any state for the next request.
 
     # TODO: Temporary extra send function to handle File Descriptors
     fn send[
@@ -338,43 +326,56 @@ struct Session:
             method in [RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH],
             String("send: FileHandle data only supported for POST, PUT, and PATCH methods. Received: ", method),
         ]()
-        self.raise_if_error(self.easy.url(url), "Failed to set URL: ")
-
-        # Set the buffer to load the response into
-        var response_body = List[UInt8](capacity=8192)
-        self.raise_if_error(
-            self.easy.write_data(UnsafePointer(to=response_body).bitcast[NoneType]()),
-            "Failed to set write data: ",
-        )
-
-        # Set the write callback to load the response data into the above buffer.
-        self.raise_if_error(self.easy.write_function(write_callback), "Failed to set write function: ")
-
-        # Set method specific curl options
-        @parameter
-        if method == RequestMethod.POST:
-            _handle_post(self.easy, file)
-        elif method == RequestMethod.PUT:
-            _handle_put(self.easy, file)
-        elif method == RequestMethod.PATCH:
-            _handle_patch(self.easy, file)
-
-        var list = CurlList(headers^)
         try:
-            # If there's any headers set on the session, add them too.
-            for header in self.headers.items():
-                var h = String(header.key, ": ", header.value)
-                list.append(h)
+            self.raise_if_error(self.easy.url(url), "Failed to set URL: ")
 
-            # Set headers
-            self.raise_if_error(self.easy.http_headers(list), "Failed to set HTTP headers: ")
+            # Set the buffer to load the response into
+            var response_body = List[UInt8](capacity=8192)
+            self.raise_if_error(
+                self.easy.write_data(UnsafePointer(to=response_body).bitcast[NoneType]()),
+                "Failed to set write data: ",
+            )
 
-            # Perform the transfer
-            self.raise_if_error(self.easy.perform(), "Failed to perform the request: ")
+            # Set the write callback to load the response data into the above buffer.
+            self.raise_if_error(self.easy.write_function(write_callback), "Failed to set write function: ")
+
+            # Set method specific curl options
+            @parameter
+            if method == RequestMethod.POST:
+                _handle_post(self.easy, file)
+            elif method == RequestMethod.PUT:
+                _handle_put(self.easy, file)
+            elif method == RequestMethod.PATCH:
+                _handle_patch(self.easy, file)
+
+            var list = CurlList(headers^)
+            try:
+                # If there's any headers set on the session, add them too.
+                for header in self.headers.items():
+                    if header.key not in headers:
+                        var h = String(header.key, ": ", header.value)
+                        list.append(h)
+            
+                # Set headers
+                self.raise_if_error(self.easy.http_headers(list), "Failed to set HTTP headers: ")
+
+                # Enable the cookie engine
+                self.raise_if_error(self.easy.cookie_file(), "Failed to enable cookie engine: ")
+
+                # Perform the transfer
+                self.raise_if_error(self.easy.perform(), "Failed to perform the request: ")
+            finally:
+                list^.free() # Free headers after performing the request.
+
+            return HTTPResponse(
+                body=response_body^,
+                headers=self.easy.headers(),
+                protocol=Protocol(self.easy.get_scheme()),
+                status=Status(Int(self.easy.response_code())),
+                cookies=CookieJar(self.easy.cookies()),
+            )
         finally:
-            list^.free()
-
-        return HTTPResponse.from_bytes(self.easy, response_body)
+            self.easy.reset() # Reset the easy handle to clear any state for the next request.
 
     fn get(
         self,
@@ -428,12 +429,10 @@ struct Session:
             timeout=timeout,
         )
 
-    fn post[
-        origin: Origin
-    ](
+    fn post(
         self,
         var url: String,
-        data: Span[Byte, origin],
+        data: Span[mut=False, Byte],
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:
@@ -506,12 +505,10 @@ struct Session:
             timeout=timeout,
         )
 
-    fn put[
-        origin: Origin
-    ](
+    fn put(
         self,
         var url: String,
-        data: Span[Byte, origin],
+        data: Span[mut=False, Byte],
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:
@@ -607,12 +604,10 @@ struct Session:
             timeout=timeout,
         )
 
-    fn patch[
-        origin: Origin
-    ](
+    fn patch(
         self,
         var url: String,
-        data: Span[Byte, origin],
+        data: Span[Byte],
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:

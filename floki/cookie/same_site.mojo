@@ -1,33 +1,31 @@
 @fieldwise_init
 @register_passable("trivial")
-struct SameSite(Copyable, ImplicitlyCopyable, Movable, Stringable):
+struct SameSite(Copyable, Stringable, Writable, Equatable):
     var value: UInt8
 
-    alias none = SameSite(0)
-    alias lax = SameSite(1)
-    alias strict = SameSite(2)
+    comptime NONE = Self(0)
+    comptime LAX = Self(1)
+    comptime STRICT = Self(2)
 
-    alias NONE = "none"
-    alias LAX = "lax"
-    alias STRICT = "strict"
-
-    @staticmethod
-    fn from_string(str: StringSlice) -> Optional[Self]:
-        if str == SameSite.NONE:
-            return SameSite.none
-        elif str == SameSite.LAX:
-            return SameSite.lax
-        elif str == SameSite.STRICT:
-            return SameSite.strict
-        return None
+    fn __init__(out self, text: StringSlice) raises:
+        if text == "none":
+            return SameSite.NONE
+        elif text == "lax":
+            return SameSite.LAX
+        elif text == "strict":
+            return SameSite.STRICT
+        raise Error("Invalid SameSite value: ", text)
 
     fn __eq__(self, other: Self) -> Bool:
         return self.value == other.value
+    
+    fn write_to[W: Writer](self, mut writer: W):
+        if self == Self.NONE:
+            writer.write("none")
+        elif self == Self.LAX:
+            writer.write("lax")
+        else:
+            writer.write("strict")
 
     fn __str__(self) -> String:
-        if self.value == 0:
-            return SameSite.NONE
-        elif self.value == 1:
-            return SameSite.LAX
-        else:
-            return SameSite.STRICT
+        return String.write(self)
