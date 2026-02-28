@@ -13,7 +13,15 @@ First, you'll need to configure your `pixi.toml` file to include my Mojo communi
 
 ### Installing it from the `mojo-community` Conda channel
 
-Run the following commands in your terminal:
+First, you'll need to install the `curl_wrapper` library, which provides a thin wrapper around libcurl to avoid issues with variadic arguments. You can add it by running:
+
+```bash
+pixi add curl_wrapper -g "https://github.com/thatstoasty/mojo-curl.git" --subdir shim --branch main
+```
+
+> Note: Mojo cannot currently support calling C functions with variadic arguments, and the libcurl client interface makes heavy use of them. The `curl_wrapper` library provides a thin wrapper around libcurl to avoid this issue. Remember to always validate the code you're pulling from third-party sources!
+
+Next, run the following commands in your terminal:
 
 ```bash
 pixi add floki && pixi install
@@ -42,14 +50,6 @@ git clone https://github.com/thatstoasty/floki.git
 # Add the package to your project from the local path
 pixi add -s ./path/to/floki && pixi install
 ```
-
-You'll also need to install the `curl_wrapper` library, which provides a thin wrapper around libcurl to avoid issues with variadic arguments. You can add it by running:
-
-```bash
-pixi add curl_wrapper -g "https://github.com/thatstoasty/mojo-curl.git" --subdirectory shim --branch main
-```
-
-> Note: Mojo cannot currently support calling C functions with variadic arguments, and the libcurl client interface makes heavy use of them. The `curl_wrapper` library provides a thin wrapper around libcurl to avoid this issue. Remember to always validate the code you're pulling from third-party sources!
 
 ```mojo
 import floki
