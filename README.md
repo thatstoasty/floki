@@ -13,7 +13,13 @@ First, you'll need to configure your `pixi.toml` file to include my Mojo communi
 
 ### Installing it from the `mojo-community` Conda channel
 
-First, you'll need to install the `curl_wrapper` library, which provides a thin wrapper around libcurl to avoid issues with variadic arguments. You can add it by running:
+First, you'll need to install the `curl_wrapper` library, which provides a thin wrapper around libcurl to avoid issues with variadic arguments. You'll need to enable the `pixi-build` preview by adding this to the `workspace section of your `pixi.toml` file.
+
+```bash
+preview = ["pixi-build"]
+```
+
+Next, you can add `curl_wrapper` by running:
 
 ```bash
 pixi add curl_wrapper -g "https://github.com/thatstoasty/mojo-curl.git" --subdir shim --branch main
