@@ -9,7 +9,7 @@ A `requests` like HTTP client for Mojo, leveraging `libcurl` under the hood.
 
 ## Adding the `floki` package to your project
 
-First, you'll need to configure your `pixi.toml` file to include my Mojo community Conda channel. Add `"https://repo.prefix.dev/mojo-community"` to the list of channels.
+First, you'll need to configure your `pixi.toml` file to include a few community Conda channels. Add both Modular (`"https://repo.prefix.dev/modular-community"`) and my (`"https://repo.prefix.dev/mojo-community"`) Conda channels to the list of channels. 
 
 ### Installing it from the `mojo-community` Conda channel
 
