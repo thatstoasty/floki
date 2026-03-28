@@ -1,4 +1,4 @@
-from floki.session import Session
+from floki.session import Session, RequestData
 from floki.response import HTTPResponse
 from floki.http import RequestMethod
 from floki.body import Body
@@ -27,7 +27,7 @@ fn get(
         headers=headers^,
         timeout=timeout,
         query_parameters=query_parameters,
-        data=List[Byte](),
+        data=RequestData(List[Byte]()),
     )
 
 
@@ -57,9 +57,9 @@ fn post(
     )
 
 
-fn post(
+fn post[origin: ImmutOrigin, //](
     var url: String,
-    data: Span[mut=False, Byte],
+    data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
 ) raises -> HTTPResponse:
@@ -84,7 +84,7 @@ fn post(
 
 fn post(
     var url: String,
-    mut data: FileHandle,
+    data: FileHandle,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
 ) raises -> HTTPResponse:
@@ -102,7 +102,7 @@ fn post(
     return Session().send[RequestMethod.POST](
         url=url,
         headers=headers^,
-        file=data,
+        data=Pointer(to=data),
         timeout=timeout,
     )
 
@@ -133,9 +133,9 @@ fn put(
     )
 
 
-fn put(
+fn put[origin: ImmutOrigin, //](
     var url: String,
-    data: Span[mut=False, Byte],
+    data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
 ) raises -> HTTPResponse:
@@ -160,7 +160,7 @@ fn put(
 
 fn put(
     var url: String,
-    mut data: FileHandle,
+    data: FileHandle,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
 ) raises -> HTTPResponse:
@@ -178,7 +178,7 @@ fn put(
     return Session().send[RequestMethod.PUT](
         url=url,
         headers=headers^,
-        file=data,
+        data=Pointer(to=data),
         timeout=timeout,
     )
 
@@ -202,7 +202,7 @@ fn delete(
         url=url,
         headers=headers^,
         timeout=timeout,
-        data=List[Byte](),
+        data=RequestData(List[Byte]()),
     )
 
 
@@ -231,9 +231,9 @@ fn patch(
         timeout=timeout,
     )
 
-fn patch(
+fn patch[origin: ImmutOrigin, //](
     var url: String,
-    data: Span[mut=False, Byte],
+    data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
 ) raises -> HTTPResponse:
@@ -257,7 +257,7 @@ fn patch(
 
 fn patch(
     var url: String,
-    mut data: FileHandle,
+    data: FileHandle,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
 ) raises -> HTTPResponse:
@@ -275,7 +275,7 @@ fn patch(
     return Session().send[RequestMethod.PATCH](
         url=url,
         headers=headers^,
-        file=data,
+        data=Pointer(to=data),
         timeout=timeout,
     )
 
@@ -299,7 +299,7 @@ fn head(
         url=url,
         headers=headers^,
         timeout=timeout,
-        data=List[Byte](),
+        data=RequestData(List[Byte]()),
     )
 
 
@@ -322,5 +322,5 @@ fn options(
         url=url,
         headers=headers^,
         timeout=timeout,
-        data=List[Byte](),
+        data=RequestData(List[Byte]()),
     )

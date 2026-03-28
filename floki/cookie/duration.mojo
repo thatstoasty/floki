@@ -1,6 +1,5 @@
 @fieldwise_init
-@register_passable("trivial")
-struct Duration(Copyable, ImplicitlyCopyable, Movable):
+struct Duration(ImplicitlyCopyable, TrivialRegisterPassable):
     var total_seconds: Int
 
     fn __init__(out self, seconds: Int = 0, minutes: Int = 0, hours: Int = 0, days: Int = 0):

@@ -1,4 +1,4 @@
-from collections.string._utf8 import _is_valid_utf8
+from std.collections.string._utf8 import _is_valid_utf8
 
 import emberjson
 
@@ -10,7 +10,7 @@ struct Body(Copyable, Sized):
     """
 
     var body: List[Byte]
-    var _json_cache: Optional[emberjson.JSON]
+    var _json_cache: Optional[emberjson.Value]
 
     fn __init__(out self, var body: List[Byte]) raises:
         """Constructs a Body instance from a list of bytes.
@@ -27,7 +27,7 @@ struct Body(Copyable, Sized):
         self.body = body^
         self._json_cache = None
 
-    fn __init__(out self, body: Span[Byte]) raises:
+    fn __init__[origin: ImmutOrigin, //](out self, body: Span[Byte, origin]) raises:
         """Alternate constructor that accepts a Span[Byte] for the body content.
 
         Args:
@@ -55,7 +55,7 @@ struct Body(Copyable, Sized):
         """
         return StringSlice(unsafe_from_utf8=Span(self.body))
 
-    fn as_json(mut self) raises -> ref [origin_of(self._json_cache._value)] emberjson.JSON:
+    fn as_json(mut self) raises -> ref [origin_of(self._json_cache._value)] emberjson.Value:
         """Converts the response body to a JSON object."""
         if not self.body:
             raise Error("Body is empty; cannot parse as JSON.")
@@ -75,5 +75,9 @@ struct Body(Copyable, Sized):
         writer.write(StringSlice(unsafe_from_utf8=self.body))
 
     fn consume(deinit self) -> List[Byte]:
-        """Consumes the body and returns it as List[Byte]."""
+        """Consumes the body and returns it as List[Byte].
+        
+        Returns:
+            The body content as a list of bytes.
+        """
         return self.body^

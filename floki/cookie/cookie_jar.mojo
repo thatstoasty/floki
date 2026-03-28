@@ -1,4 +1,4 @@
-from collections.dict import Hasher
+from std.collections.dict import Hasher
 from small_time import now
 from mojo_curl.list import CurlList
 from floki.cookie.cookie import Cookie
@@ -37,7 +37,7 @@ struct CookieKey(KeyElement):
 
 
 @fieldwise_init
-struct CookieJar(Copyable, Sized, Stringable, Writable, Defaultable):
+struct CookieJar(Copyable, Sized, Writable, Defaultable):
     var _inner: Dict[CookieKey, Cookie]
 
     fn __init__(out self):
@@ -60,7 +60,7 @@ struct CookieJar(Copyable, Sized, Stringable, Writable, Defaultable):
     fn __setitem__(mut self, var key: CookieKey, var value: Cookie):
         self._inner[key^] = value^
 
-    fn __getitem__(ref self, var key: CookieKey) raises -> ref [self._inner._entries[0].value().value] Cookie:
+    fn __getitem__(ref self, var key: CookieKey) raises -> ref [self._inner] Cookie:
         return self._inner[key^]
 
     fn get(self, key: CookieKey) -> Optional[Cookie]:
@@ -73,9 +73,6 @@ struct CookieJar(Copyable, Sized, Stringable, Writable, Defaultable):
     @always_inline
     fn __contains__(self, key: Cookie) -> Bool:
         return CookieKey(key.name, key.domain, key.path) in self
-
-    fn __str__(self) -> String:
-        return String.write(self)
 
     @always_inline
     fn __len__(self) -> Int:

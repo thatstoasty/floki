@@ -15,7 +15,7 @@ repos:
         stages: [pre-commit]
       # - id: mojo-docs
       #   name: mojo-docs
-      #   entry: pixi run python3 ./scripts/check-docstrings.py
+      #   entry: pixi run lint_docs
       #   language: system
       #   pass_filenames: false
       #   stages: [pre-commit]

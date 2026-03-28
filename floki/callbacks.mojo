@@ -1,6 +1,6 @@
-from memory import memcpy
-from sys.ffi import c_char, c_size_t, get_errno
-from sys import stderr
+from std.memory import memcpy
+from std.ffi import c_char, c_size_t, get_errno
+from std.sys import stderr
 from mojo_curl.c.types import ImmutExternalPointer, MutExternalPointer, MutExternalOpaquePointer
 
 
