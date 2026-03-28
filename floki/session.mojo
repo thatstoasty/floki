@@ -459,6 +459,15 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            var r = session.get("https://httpbin.org/get")
+        ```
         """
         return self.send[RequestMethod.GET](
             url=url,
@@ -488,6 +497,15 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            var r = session.post("https://httpbin.org/post", data={"key": "value"})
+        ```
         """
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.POST](
@@ -520,6 +538,15 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            var r = session.post("https://httpbin.org/post", data="hello".as_bytes())
+        ```
         """
         return self.send[RequestMethod.POST](
             url=url,
@@ -548,6 +575,16 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            with open("data.json", "r") as file:
+                var r = session.post("https://httpbin.org/post", data=file)
+        ```
         """
         return self.send[RequestMethod.POST](
             url=url,
@@ -576,6 +613,15 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            var r = session.put("https://httpbin.org/put", data={"key": "value"})
+        ```
         """
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.PUT](
@@ -608,6 +654,15 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            var r = session.put("https://httpbin.org/put", data="hello".as_bytes())
+        ```
         """
         return self.send[RequestMethod.PUT](
             url=url,
@@ -636,6 +691,16 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            with open("data.json", "r") as file:
+                var r = session.put("https://httpbin.org/put", data=file)
+        ```
         """
         return self.send[RequestMethod.PUT](
             url=url,
@@ -662,6 +727,15 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            var r = session.delete("https://httpbin.org/delete")
+        ```
         """
         return self.send[RequestMethod.DELETE](
             url=url,
@@ -690,6 +764,15 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            var r = session.patch("https://httpbin.org/patch", data={"key": "value"})
+        ```
         """
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.PATCH](
@@ -722,6 +805,15 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            var r = session.patch("https://httpbin.org/patch", data="hello".as_bytes())
+        ```
         """
         return self.send[RequestMethod.PATCH](
             url=url,
@@ -750,6 +842,16 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            with open("data.json", "r") as file:
+                var r = session.patch("https://httpbin.org/patch", data=file)
+        ```
         """
         return self.send[RequestMethod.PATCH](
             url=url,
@@ -776,6 +878,15 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            var r = session.head("https://httpbin.org/get")
+        ```
         """
         return self.send[RequestMethod.HEAD](
             url=url,
@@ -802,6 +913,15 @@ struct Session(Movable):
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        fn main() raises:
+            var session = Session()
+            var r = session.options("https://httpbin.org/get")
+        ```
         """
         return self.send[RequestMethod.OPTIONS](
             url=url,
