@@ -3,8 +3,9 @@ from floki.body import Body
 from floki.cookie.cookie_jar import CookieJar
 
 comptime WHITESPACE = " "
+"""Whitespace character used in HTTP formatting."""
 comptime CRLF = "\r\n"
-
+"""Carriage return and line feed characters used in HTTP formatting."""
 
 @fieldwise_init
 struct HTTPError(Movable):
@@ -35,6 +36,18 @@ struct HTTPResponse(Movable, Writable):
         protocol: Protocol,
         var headers: Dict[String, String] = {},
     ) raises:
+        """Constructs an HTTPResponse from its component parts.
+
+        Args:
+            body: The raw response body as a list of bytes.
+            cookies: The cookies received in the response.
+            status: The HTTP status code of the response.
+            protocol: The HTTP protocol used in the response.
+            headers: The HTTP headers included in the response.
+        
+        Raises:
+            Error: If there is a failure in constructing the Body from the provided bytes.
+        """
         self.headers = headers^
         self.cookies = cookies^
         self.status = status

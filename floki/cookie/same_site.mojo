@@ -1,5 +1,6 @@
 @fieldwise_init
 struct SameSite(Copyable, Writable, Equatable, TrivialRegisterPassable):
+    """Represents the SameSite attribute of an HTTP cookie, which controls when cookies are sent with cross-site requests."""
     var value: UInt8
     """Internal enum value."""
 
@@ -11,6 +12,14 @@ struct SameSite(Copyable, Writable, Equatable, TrivialRegisterPassable):
     """The cookie is only sent in a first-party context and not with requests initiated by third party websites."""
 
     fn __init__(out self, text: StringSlice) raises:
+        """Constructs a SameSite from its string representation.
+
+        Args:
+            text: The string value ("none", "lax", or "strict").
+
+        Raises:
+            Error: If the string does not match a known SameSite value.
+        """
         if text == "none":
             return SameSite.NONE
         elif text == "lax":
@@ -20,9 +29,22 @@ struct SameSite(Copyable, Writable, Equatable, TrivialRegisterPassable):
         raise Error("Invalid SameSite value: ", text)
 
     fn __eq__(self, other: Self) -> Bool:
+        """Compares two SameSite instances for equality.
+
+        Args:
+            other: The SameSite instance to compare with.
+
+        Returns:
+            True if both instances represent the same SameSite policy.
+        """
         return self.value == other.value
     
     fn write_to(self, mut writer: Some[Writer]):
+        """Writes the SameSite policy name to a writer.
+
+        Args:
+            writer: The writer to which the policy name will be written.
+        """
         if self == Self.NONE:
             writer.write("none")
         elif self == Self.LAX:
