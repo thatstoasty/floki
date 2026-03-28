@@ -21,6 +21,9 @@ fn get(
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the request fails.
     """
     return Session().send[RequestMethod.GET](
         url=url,
@@ -47,6 +50,9 @@ fn post(
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the data cannot be serialized to JSON or if the request fails.
     """
     var json_data = emberjson.to_string(data^).as_bytes()
     return Session().send[RequestMethod.POST](
@@ -65,6 +71,9 @@ fn post[origin: ImmutOrigin, //](
 ) raises -> HTTPResponse:
     """Sends a POST request to the specified URL.
 
+    Parameters:
+        origin: The origin of the data span.
+
     Args:
         url: The URL to which the request is sent.
         data: The data to include in the body of the POST request.
@@ -73,6 +82,9 @@ fn post[origin: ImmutOrigin, //](
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the data cannot be sent as bytes.
     """
     return Session().send[RequestMethod.POST](
         url=url,
@@ -98,6 +110,9 @@ fn post(
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the data cannot be sent from the file handle.
     """
     return Session().send[RequestMethod.POST](
         url=url,
@@ -123,6 +138,9 @@ fn put(
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the data cannot be serialized to JSON or if the request fails.
     """
     var json_data = emberjson.to_string(data^).as_bytes()
     return Session().send[RequestMethod.PUT](
@@ -141,6 +159,9 @@ fn put[origin: ImmutOrigin, //](
 ) raises -> HTTPResponse:
     """Sends a PUT request to the specified URL.
 
+    Parameters:
+        origin: The origin of the data span.
+
     Args:
         url: The URL to which the request is sent.
         data: The data to include in the body of the PUT request.
@@ -149,6 +170,9 @@ fn put[origin: ImmutOrigin, //](
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the data cannot be sent as bytes.
     """
     return Session().send[RequestMethod.PUT](
         url=url,
@@ -174,6 +198,9 @@ fn put(
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the data cannot be sent from the file handle.
     """
     return Session().send[RequestMethod.PUT](
         url=url,
@@ -197,6 +224,9 @@ fn delete(
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the request fails.
     """
     return Session().send[RequestMethod.DELETE](
         url=url,
@@ -222,6 +252,9 @@ fn patch(
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the data cannot be serialized to JSON or if the request fails.
     """
     var json_data = emberjson.to_string(data^).as_bytes()
     return Session().send[RequestMethod.PATCH](
@@ -239,6 +272,9 @@ fn patch[origin: ImmutOrigin, //](
 ) raises -> HTTPResponse:
     """Sends a GET request to the specified URL.
 
+    Parameters:
+        origin: The origin of the data span.
+
     Args:
         url: The URL to which the request is sent.
         data: The data to include in the body of the PATCH request.
@@ -247,6 +283,9 @@ fn patch[origin: ImmutOrigin, //](
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the data cannot be sent as bytes.
     """
     return Session().send[RequestMethod.PATCH](
         url=url,
@@ -271,6 +310,9 @@ fn patch(
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the data cannot be sent from the file handle.
     """
     return Session().send[RequestMethod.PATCH](
         url=url,
@@ -294,6 +336,9 @@ fn head(
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the request fails.
     """
     return Session().send[RequestMethod.HEAD](
         url=url,
@@ -317,6 +362,9 @@ fn options(
 
     Returns:
         The received response as an `HTTPResponse` object.
+    
+    Raises:
+        Error: If the request fails.
     """
     return Session().send[RequestMethod.OPTIONS](
         url=url,

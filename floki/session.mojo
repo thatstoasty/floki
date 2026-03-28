@@ -12,7 +12,11 @@ import emberjson
 
 @fieldwise_init
 struct RequestData[origin: ImmutOrigin]:
-    """Data variant to represent either a FileHandle or a Span of bytes for request bodies."""
+    """Data variant to represent either a FileHandle or a Span of bytes for request bodies.
+    
+    Parameters:
+        origin: The origin of the data span.
+    """
     var data: Variant[Pointer[FileHandle, Self.origin], Span[Byte, Self.origin]]
     """The `data` field can hold either a pointer to a `FileHandle` or a span of bytes, allowing for flexible handling of request bodies in different formats."""
 
@@ -64,6 +68,15 @@ struct RequestData[origin: ImmutOrigin]:
 
 
 fn _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
+    """Configures the libcurl easy handle for a POST request with byte data.
+
+    Parameters:
+        origin: The origin of the data span.
+
+    Args:
+        easy: The libcurl easy handle to configure.
+        data: The request body as a span of bytes.
+    """
     if data:
         var data_size = len(data)
         # libcurl dictates the usage of the large post field size option over 2GB.
@@ -87,6 +100,12 @@ fn _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) r
 
 
 fn _handle_post(easy: Easy, data: FileHandle) raises:
+    """Configures the libcurl easy handle for a POST request with file data.
+
+    Args:
+        easy: The libcurl easy handle to configure.
+        data: The file handle to read request body data from.
+    """
     var result = easy.post(True)
     if result != Result.OK:
         raise Error("_handle_post: Failed to set POST method: ", easy.describe_error(result))
@@ -101,6 +120,15 @@ fn _handle_post(easy: Easy, data: FileHandle) raises:
 
 
 fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
+    """Configures the libcurl easy handle for a PUT request with byte data.
+
+    Parameters:
+        origin: The origin of the data span.
+
+    Args:
+        easy: The libcurl easy handle to configure.
+        data: The request body as a span of bytes.
+    """
     comptime http_method = "PUT"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
@@ -130,6 +158,12 @@ fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) ra
 
 
 fn _handle_put(easy: Easy, data: FileHandle) raises:
+    """Configures the libcurl easy handle for a PUT request with file data.
+
+    Args:
+        easy: The libcurl easy handle to configure.
+        data: The file handle to read request body data from.
+    """
     comptime http_method = "PUT"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
@@ -154,6 +188,11 @@ fn _handle_put(easy: Easy, data: FileHandle) raises:
 
 
 fn _handle_delete(easy: Easy) raises:
+    """Configures the libcurl easy handle for a DELETE request.
+
+    Args:
+        easy: The libcurl easy handle to configure.
+    """
     comptime http_method = "DELETE"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
@@ -161,6 +200,15 @@ fn _handle_delete(easy: Easy) raises:
 
 
 fn _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
+    """Configures the libcurl easy handle for a PATCH request with byte data.
+
+    Parameters:
+        origin: The origin of the data span.
+
+    Args:
+        easy: The libcurl easy handle to configure.
+        data: The request body as a span of bytes.
+    """
     comptime http_method = "PATCH"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
@@ -184,6 +232,12 @@ fn _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) 
 
 
 fn _handle_patch(easy: Easy, data: FileHandle) raises:
+    """Configures the libcurl easy handle for a PATCH request with file data.
+
+    Args:
+        easy: The libcurl easy handle to configure.
+        data: The file handle to read request body data from.
+    """
     comptime http_method = "PATCH"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
@@ -199,6 +253,11 @@ fn _handle_patch(easy: Easy, data: FileHandle) raises:
 
 
 fn _handle_head(easy: Easy) raises:
+    """Configures the libcurl easy handle for a HEAD request.
+
+    Args:
+        easy: The libcurl easy handle to configure.
+    """
     # Set NOBODY to true to avoid downloading the body, also tells libcurl to use HEAD.
     result = easy.nobody(True)
     if result != Result.OK:
@@ -206,6 +265,11 @@ fn _handle_head(easy: Easy) raises:
 
 
 fn _handle_options(easy: Easy) raises:
+    """Configures the libcurl easy handle for an OPTIONS request.
+
+    Args:
+        easy: The libcurl easy handle to configure.
+    """
     comptime http_method = "OPTIONS"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
@@ -226,6 +290,7 @@ struct Session(Movable):
     comptime DEFAULT_HEADERS = {
         "User-Agent": "floki/0.2.0",
     }
+    """Default headers that are included in every request made with this session, unless overridden by request-specific headers."""
 
     fn __init__(
         out self,
@@ -239,6 +304,9 @@ struct Session(Movable):
             allow_redirects: Whether to follow HTTP redirects automatically.
             headers: Default headers to include in requests.
             verbose: If True, enables libcurl's verbose logging mode for debugging.
+        
+        Raises:
+            Error: If there is a failure in initializing the libcurl easy handle or setting options.
         """
         self.easy = Easy()
         self.allow_redirects = allow_redirects
@@ -251,6 +319,15 @@ struct Session(Movable):
             self.raise_if_error(self.easy.verbose(True), "Failed to set libcurl verbose mode: ")
 
     fn raise_if_error(self, code: Result, message: StringSlice) raises:
+        """Raises an error if the libcurl result code indicates failure.
+
+        Args:
+            code: The libcurl result code to check.
+            message: The error message prefix to use if the code indicates failure.
+        
+        Raises:
+            Error: If the code does not indicate success, with a message describing the error.
+        """
         if code != Result.OK:
             raise Error(message, self.easy.describe_error(code))
 
@@ -264,7 +341,8 @@ struct Session(Movable):
     ) raises -> HTTPResponse:
         """Sends an HTTP request and returns the corresponding response.
 
-        Params:
+        Parameters:
+            origin: The origin of the request data.
             method: The HTTP method to use for the request.
 
         Args:
@@ -378,6 +456,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         return self.send[RequestMethod.GET](
             url=url,
@@ -404,6 +485,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.POST](
@@ -422,6 +506,9 @@ struct Session(Movable):
     ) raises -> HTTPResponse:
         """Sends a POST request to the specified URL.
 
+        Parameters:
+            origin: The origin of the data span.
+
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the POST request.
@@ -430,6 +517,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         return self.send[RequestMethod.POST](
             url=url,
@@ -455,6 +545,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         return self.send[RequestMethod.POST](
             url=url,
@@ -480,6 +573,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.PUT](
@@ -498,6 +594,9 @@ struct Session(Movable):
     ) raises -> HTTPResponse:
         """Sends a PUT request to the specified URL.
 
+        Parameters:
+            origin: The origin of the data span.
+
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the PUT request.
@@ -506,6 +605,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         return self.send[RequestMethod.PUT](
             url=url,
@@ -531,6 +633,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         return self.send[RequestMethod.PUT](
             url=url,
@@ -554,6 +659,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         return self.send[RequestMethod.DELETE](
             url=url,
@@ -579,6 +687,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.PATCH](
@@ -595,7 +706,10 @@ struct Session(Movable):
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:
-        """Sends a GET request to the specified URL.
+        """Sends a PATCH request to the specified URL.
+
+        Parameters:
+            origin: The origin of the data span.
 
         Args:
             url: The URL to which the request is sent.
@@ -605,6 +719,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         return self.send[RequestMethod.PATCH](
             url=url,
@@ -620,7 +737,7 @@ struct Session(Movable):
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:
-        """Sends a GET request to the specified URL.
+        """Sends a PATCH request to the specified URL.
 
         Args:
             url: The URL to which the request is sent.
@@ -630,6 +747,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         return self.send[RequestMethod.PATCH](
             url=url,
@@ -653,6 +773,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         return self.send[RequestMethod.HEAD](
             url=url,
@@ -676,6 +799,9 @@ struct Session(Movable):
 
         Returns:
             The received response as an `HTTPResponse` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
         """
         return self.send[RequestMethod.OPTIONS](
             url=url,

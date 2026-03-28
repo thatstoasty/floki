@@ -7,55 +7,98 @@ from floki.cookie.duration import Duration
 
 @fieldwise_init
 struct Cookie(Copyable, Writable):
+    """Represents an HTTP cookie with its attributes and provides methods for constructing, manipulating, and serializing cookies.
+    """
     comptime EXPIRES = "Expires"
+    """The `Expires` attribute of a cookie, indicating the expiration date and time of the cookie.
+    """
     comptime MAX_AGE = "Max-Age"
+    """The `Max-Age` attribute of a cookie, indicating the maximum age of the cookie in seconds.
+    """
     comptime DOMAIN = "Domain"
+    """The `Domain` attribute of a cookie, indicating the domain for which the cookie is valid.
+    """
     comptime PATH = "Path"
+    """The `Path` attribute of a cookie, indicating the URL path for which the cookie is valid.
+    """
     comptime SECURE = "Secure"
+    """The `Secure` attribute of a cookie, indicating that the cookie should only be sent over HTTPS.
+    """
     comptime HTTP_ONLY = "HttpOnly"
+    """The `HttpOnly` attribute of a cookie, indicating that the cookie should not be accessible via JavaScript.
+    """
     comptime SAME_SITE = "SameSite"
+    """The `SameSite` attribute of a cookie, indicating the cross-site request behavior of the cookie.
+    """
     comptime PARTITIONED = "Partitioned"
+    """The `Partitioned` attribute of a cookie, indicating that the cookie is partitioned.
+    """
 
     comptime SEPERATOR = "; "
+    """The separator string used to delimit cookie attributes in the `Set-Cookie` header value.
+    """
     comptime EQUAL = "="
+    """The equal sign used to separate cookie attribute names and values in the `Set-Cookie` header value.
+    """
 
     var name: String
+    """The name of the cookie."""
     var value: String
+    """The value of the cookie."""
     var expires: Expiration
+    """The expiration setting for the cookie, which can be a specific datetime or session-scoped."""
     var secure: Bool
-    # var http_only: Bool
+    """Whether the cookie should only be sent over secure connections (HTTPS)."""
     var partitioned: Bool
-    # var same_site: Optional[SameSite]
+    """Whether the cookie is partitioned, meaning it is isolated to a specific top-level site."""
     var domain: Optional[String]
+    """The domain for which the cookie is valid. If not specified, defaults to the host of the request URL."""
     var path: Optional[String]
-    # var max_age: Optional[Duration]
+    """The URL path for which the cookie is valid. If not specified, defaults to `/`."""
 
     fn __init__(
         out self,
         var name: String,
         var value: String,
         var expires: Expiration = Expiration(),
-        # max_age: Optional[Duration] = Optional[Duration](None),
         domain: Optional[String] = Optional[String](None),
         path: Optional[String] = Optional[String](None),
-        # same_site: Optional[SameSite] = Optional[SameSite](None),
         *,
         secure: Bool = False,
-        # http_only: Bool = False,
         partitioned: Bool = False,
     ):
+        """Constructs a Cookie with the given attributes.
+
+        Args:
+            name: The name of the cookie.
+            value: The value of the cookie.
+            expires: The expiration setting for the cookie.
+            domain: The domain the cookie is valid for.
+            path: The URL path the cookie is valid for.
+            secure: Whether the cookie should only be sent over HTTPS.
+            partitioned: Whether the cookie is partitioned.
+        """
         self.name = name
         self.value = value
         self.expires = expires^
-        # self.max_age = max_age
         self.domain = domain
         self.path = path
         self.secure = secure
-        # self.http_only = http_only
-        # self.same_site = same_site
         self.partitioned = partitioned
 
-    fn __init__[origin: Origin](out self, header: StringSlice[origin]) raises:
+    fn __init__[origin: Origin, //](out self, header: StringSlice[origin]) raises:
+        """Constructs a Cookie by parsing a tab-separated cookie header string.
+
+        Parameters:
+            origin: The origin of the StringSlice.
+
+        Args:
+            header: A tab-separated string containing cookie fields
+                    (domain, partitioned, path, secure, expires, name, value).
+
+        Raises:
+            Error: If the header string cannot be parsed.
+        """
         var raw_parts = header.split("\t")
         var parts: List[StringSlice[origin].Immutable] = [part for part in raw_parts]
         self.domain = String(parts[0])
@@ -67,12 +110,23 @@ struct Cookie(Copyable, Writable):
         self.value = String(parts[6])
     
     fn write_to(self, mut writer: Some[Writer]):
+        """Writes a debug representation of the cookie to a writer.
+
+        Args:
+            writer: The writer to which the cookie will be written.
+        """
         writer.write("Cookie(", "name=", self.name, ", value=", self.value, ")")
 
     fn __str__(self) -> String:
+        """Returns a string representation of the cookie.
+
+        Returns:
+            A string containing the cookie's name and value.
+        """
         return String.write("Name: ", self.name, " Value: ", self.value)
 
     fn clear_cookie(mut self):
+        """Invalidates the cookie by clearing its expiration."""
         # self.max_age = None
         self.expires = Expiration.invalidate()
 
@@ -80,6 +134,11 @@ struct Cookie(Copyable, Writable):
     #     return Header(HeaderKey.SET_COOKIE, self.build_header_value())
 
     fn build_header_value(self) -> String:
+        """Builds the `Set-Cookie` header value string for this cookie.
+
+        Returns:
+            The complete header value string including all cookie attributes.
+        """
         var header_value = String.write(self.name, Self.EQUAL, self.value)
         if self.expires.is_datetime():
             try:

@@ -9,6 +9,14 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
     """Represents the HTTPS protocol, which is the secure version of HTTP. It uses encryption to protect data transmitted between the client and server."""
 
     fn __init__(out self, s: StringSlice) raises:
+        """Constructs a Protocol from its string representation.
+
+        Args:
+            s: The string representation of the protocol ("http" or "https").
+
+        Raises:
+            Error: If the string does not match a known protocol.
+        """
         if s == "http":
             return Self.HTTP
         elif s == "https":
@@ -17,9 +25,22 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
             raise Error("Invalid protocol: ", s)
     
     fn __eq__(self, other: Self) -> Bool:
+        """Compares two Protocol instances for equality.
+
+        Args:
+            other: The Protocol instance to compare with.
+
+        Returns:
+            True if both instances represent the same protocol.
+        """
         return self.value == other.value
     
     fn write_to(self, mut writer: Some[Writer]):
+        """Writes the protocol name to a writer.
+
+        Args:
+            writer: The writer to which the protocol name will be written.
+        """
         if self == Self.HTTP:
             writer.write("http")
         else:
@@ -28,82 +49,145 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
 
 @fieldwise_init
 struct Status(Copyable, Equatable, Writable, TrivialRegisterPassable):
+    """Represents the status of an HTTP response, including the status code and a corresponding message."""
     var code: UInt16
     """Represents the status code of an HTTP response. The status code indicates the result of the HTTP request and provides information about the success or failure of the request."""
     var message: StaticString
     """A human-readable message corresponding to the status code. This message provides additional information about the status of the HTTP response."""
 
     comptime CONTINUE = Self(100, "Continue")
+    """HTTP 100: The server has received the request headers and the client should proceed to send the request body."""
     comptime SWITCHING_PROTOCOLS = Self(101, "Switching Protocols")
+    """HTTP 101: The server is switching protocols as requested by the client."""
     comptime PROCESSING = Self(102, "Processing")
+    """HTTP 102: The server has received and is processing the request, but no response is available yet."""
     comptime EARLY_HINTS = Self(103, "Early Hints")
+    """HTTP 103: The server is sending some response headers before the final HTTP message."""
 
     comptime OK = Self(200, "OK")
+    """HTTP 200: The request has succeeded."""
     comptime CREATED = Self(201, "Created")
+    """HTTP 201: The request has been fulfilled and a new resource has been created."""
     comptime ACCEPTED = Self(202, "Accepted")
+    """HTTP 202: The request has been accepted for processing, but processing has not been completed."""
     comptime NON_AUTHORITATIVE_INFORMATION = Self(203, "Non-Authoritative Information")
+    """HTTP 203: The returned metadata is not exactly the same as available from the origin server."""
     comptime NO_CONTENT = Self(204, "No Content")
+    """HTTP 204: The server successfully processed the request but is not returning any content."""
     comptime RESET_CONTENT = Self(205, "Reset Content")
+    """HTTP 205: The server successfully processed the request and is asking the client to reset the document view."""
     comptime PARTIAL_CONTENT = Self(206, "Partial Content")
+    """HTTP 206: The server is delivering only part of the resource due to a range header sent by the client."""
     comptime MULTI_STATUS = Self(207, "Multi-Status")
+    """HTTP 207: The message body contains multiple status codes for multiple independent operations."""
     comptime ALREADY_REPORTED = Self(208, "Already Reported")
+    """HTTP 208: The members of a DAV binding have already been enumerated in a previous reply."""
     comptime IM_USED = Self(226, "IM Used")
+    """HTTP 226: The server has fulfilled a request for the resource with instance-manipulations applied."""
     comptime MULTIPLE_CHOICES = Self(300, "Multiple Choices")
+    """HTTP 300: The request has more than one possible response."""
     comptime MOVED_PERMANENTLY = Self(301, "Moved Permanently")
+    """HTTP 301: The resource has been permanently moved to a new URL."""
     comptime FOUND = Self(302, "Found")
+    """HTTP 302: The resource resides temporarily under a different URL."""
     comptime TEMPORARY_REDIRECT = Self(307, "Temporary Redirect")
+    """HTTP 307: The request should be repeated with another URL, but future requests should still use the original URL."""
     comptime PERMANENT_REDIRECT = Self(308, "Permanent Redirect")
+    """HTTP 308: The resource has been permanently moved to a new URL and all future requests should use the new URL."""
 
     comptime BAD_REQUEST = Self(400, "Bad Request")
+    """HTTP 400: The server cannot process the request due to a client error."""
     comptime UNAUTHORIZED = Self(401, "Unauthorized")
+    """HTTP 401: Authentication is required and has failed or has not been provided."""
     comptime PAYMENT_REQUIRED = Self(402, "Payment Required")
+    """HTTP 402: Reserved for future use; generally indicates payment is required."""
     comptime FORBIDDEN = Self(403, "Forbidden")
+    """HTTP 403: The server understood the request but refuses to authorize it."""
     comptime NOT_FOUND = Self(404, "Not Found")
+    """HTTP 404: The requested resource could not be found on the server."""
     comptime METHOD_NOT_ALLOWED = Self(405, "Method Not Allowed")
+    """HTTP 405: The HTTP method is not allowed for the requested resource."""
     comptime NOT_ACCEPTABLE = Self(406, "Not Acceptable")
+    """HTTP 406: The server cannot produce a response matching the acceptable values defined in the request headers."""
     comptime PROXY_AUTHENTICATION_REQUIRED = Self(407, "Proxy Authentication Required")
+    """HTTP 407: The client must first authenticate itself with the proxy."""
     comptime REQUEST_TIMEOUT = Self(408, "Request Timeout")
+    """HTTP 408: The server timed out waiting for the request."""
     comptime CONFLICT = Self(409, "Conflict")
+    """HTTP 409: The request conflicts with the current state of the server."""
     comptime GONE = Self(410, "Gone")
+    """HTTP 410: The requested resource is no longer available and will not be available again."""
     comptime LENGTH_REQUIRED = Self(411, "Length Required")
+    """HTTP 411: The request did not specify the length of its content, which is required by the resource."""
     comptime PRECONDITION_FAILED = Self(412, "Precondition Failed")
+    """HTTP 412: A precondition given in the request headers was not met by the server."""
     comptime PAYLOAD_TOO_LARGE = Self(413, "Payload Too Large")
+    """HTTP 413: The request entity is larger than the server is willing or able to process."""
     comptime URI_TOO_LONG = Self(414, "URI Too Long")
+    """HTTP 414: The URI provided was too long for the server to process."""
     comptime UNSUPPORTED_MEDIA_TYPE = Self(415, "Unsupported Media Type")
+    """HTTP 415: The media type of the request data is not supported by the server."""
     comptime RANGE_NOT_SATISFIABLE = Self(416, "Range Not Satisfiable")
+    """HTTP 416: The range specified in the Range header cannot be fulfilled."""
     comptime EXPECTATION_FAILED = Self(417, "Expectation Failed")
+    """HTTP 417: The expectation given in the Expect header could not be met by the server."""
     comptime IM_A_TEAPOT = Self(418, "I'm a teapot")
+    """HTTP 418: The server refuses to brew coffee because it is, permanently, a teapot."""
     comptime MISDIRECTED_REQUEST = Self(421, "Misdirected Request")
+    """HTTP 421: The request was directed at a server that is not able to produce a response."""
     comptime UNPROCESSABLE_ENTITY = Self(422, "Unprocessable Entity")
+    """HTTP 422: The request was well-formed but could not be followed due to semantic errors."""
     comptime LOCKED = Self(423, "Locked")
+    """HTTP 423: The resource that is being accessed is locked."""
     comptime FAILED_DEPENDENCY = Self(424, "Failed Dependency")
+    """HTTP 424: The request failed because it depended on another request that failed."""
     comptime TOO_EARLY = Self(425, "Too Early")
+    """HTTP 425: The server is unwilling to process a request that might be replayed."""
     comptime UPGRADE_REQUIRED = Self(426, "Upgrade Required")
+    """HTTP 426: The client should switch to a different protocol as indicated in the Upgrade header."""
     comptime PRECONDITION_REQUIRED = Self(428, "Precondition Required")
+    """HTTP 428: The origin server requires the request to be conditional."""
     comptime TOO_MANY_REQUESTS = Self(429, "Too Many Requests")
+    """HTTP 429: The user has sent too many requests in a given amount of time."""
     comptime REQUEST_HEADER_FIELDS_TOO_LARGE = Self(431, "Request Header Fields Too Large")
+    """HTTP 431: The server is unwilling to process the request because its header fields are too large."""
     comptime UNAVAILABLE_FOR_LEGAL_REASONS = Self(451, "Unavailable For Legal Reasons")
+    """HTTP 451: The resource is unavailable due to legal reasons."""
 
     comptime INTERNAL_ERROR = Self(500, "Internal Server Error")
+    """HTTP 500: The server encountered an unexpected condition that prevented it from fulfilling the request."""
     comptime NOT_IMPLEMENTED = Self(501, "Not Implemented")
+    """HTTP 501: The server does not support the functionality required to fulfill the request."""
     comptime BAD_GATEWAY = Self(502, "Bad Gateway")
+    """HTTP 502: The server received an invalid response from an upstream server."""
     comptime SERVICE_UNAVAILABLE = Self(503, "Service Unavailable")
+    """HTTP 503: The server is currently unable to handle the request due to temporary overloading or maintenance."""
     comptime GATEWAY_TIMEOUT = Self(504, "Gateway Timeout")
+    """HTTP 504: The server did not receive a timely response from an upstream server."""
     comptime HTTP_VERSION_NOT_SUPPORTED = Self(505, "HTTP Version Not Supported")
+    """HTTP 505: The server does not support the HTTP protocol version used in the request."""
     comptime VARIANT_ALSO_NEGOTIATES = Self(506, "Variant Also Negotiates")
+    """HTTP 506: Transparent content negotiation for the request results in a circular reference."""
     comptime INSUFFICIENT_STORAGE = Self(507, "Insufficient Storage")
+    """HTTP 507: The server is unable to store the representation needed to complete the request."""
     comptime LOOP_DETECTED = Self(508, "Loop Detected")
+    """HTTP 508: The server detected an infinite loop while processing the request."""
     comptime NOT_EXTENDED = Self(510, "Not Extended")
+    """HTTP 510: Further extensions to the request are required for the server to fulfill it."""
     comptime NETWORK_AUTHENTICATION_REQUIRED = Self(511, "Network Authentication Required")
+    """HTTP 511: The client needs to authenticate to gain network access."""
 
     fn __init__(out self, code: Int) raises:
         """Creates a Status instance from an integer representation.
 
-        Arguments:
-            s: The integer representation of the status code.
+        Args:
+            code: The integer representation of the status code.
 
         Returns:
             A Status instance corresponding to the provided integer.
+        
+        Raises:
+            Error: If the integer does not correspond to a known status code.
         """
         # For every comptime defined in Status, check if the integer matches
         # the value of the alias.
@@ -228,21 +312,10 @@ struct Status(Copyable, Equatable, Writable, TrivialRegisterPassable):
         else:
             raise Error("Unknown status code: ", code)
 
-    fn __eq__(self, other: Self) -> Bool:
-        """Compares two Status instances for equality.
-
-        Arguments:
-            other: The Status instance to compare with.
-
-        Returns:
-            True if both instances have the same value, otherwise False.
-        """
-        return self.code == other.code and self.message == other.message
-
     fn __eq__(self, other: Int) -> Bool:
         """Compares a Status instance with an integer for equality.
 
-        Arguments:
+        Args:
             other: The integer to compare with.
 
         Returns:
@@ -259,14 +332,6 @@ struct Status(Copyable, Equatable, Writable, TrivialRegisterPassable):
             writer: The writer to which the status code will be written.
         """
         writer.write(self.code, " ", self.message)
-
-    fn __str__(self) -> String:
-        """Converts the Status instance to its string representation.
-
-        Returns:
-            A string representation of the status code.
-        """
-        return String.write(self)
 
 
 @fieldwise_init
@@ -291,6 +356,14 @@ struct RequestMethod(Equatable, ImplicitlyCopyable, Writable):
     """The OPTIONS method is used to describe the communication options for the target resource. It allows clients to discover which HTTP methods are supported by the server for a specific resource."""
 
     fn __init__(out self, s: StringSlice) raises:
+        """Constructs a RequestMethod from its string representation.
+
+        Args:
+            s: The string representation of the HTTP method (e.g. "GET", "POST").
+
+        Raises:
+            Error: If the string does not match a known HTTP method.
+        """
         if s == "GET":
             self = RequestMethod.GET
         elif s == "POST":
@@ -307,14 +380,3 @@ struct RequestMethod(Equatable, ImplicitlyCopyable, Writable):
             self = RequestMethod.OPTIONS
         else:
             raise Error("Invalid HTTP method: ", s)
-
-    fn __eq__(self, other: Self) -> Bool:
-        return self.value == other.value
-    
-    fn write_to(self, mut writer: Some[Writer]):
-        """Writes the RequestMethod instance to a writer.
-
-        Args:
-            writer: The writer to which the HTTP method will be written.
-        """
-        writer.write(self.value)
