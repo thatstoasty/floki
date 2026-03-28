@@ -24,6 +24,14 @@ fn get(
     
     Raises:
         Error: If the request fails.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        var r = floki.get("https://httpbin.org/get")
+    ```
     """
     return Session().send[RequestMethod.GET](
         url=url,
@@ -53,6 +61,14 @@ fn post(
     
     Raises:
         Error: If the data cannot be serialized to JSON or if the request fails.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        var r = floki.post("https://httpbin.org/post", data={"key": "value"})
+    ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
     return Session().send[RequestMethod.POST](
@@ -85,6 +101,14 @@ fn post[origin: ImmutOrigin, //](
     
     Raises:
         Error: If the data cannot be sent as bytes.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        var r = floki.post("https://httpbin.org/post", data="hello".as_bytes())
+    ```
     """
     return Session().send[RequestMethod.POST](
         url=url,
@@ -113,6 +137,15 @@ fn post(
     
     Raises:
         Error: If the data cannot be sent from the file handle.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        with open("data.json", "r") as file:
+            var r = floki.post("https://httpbin.org/post", data=file)
+    ```
     """
     return Session().send[RequestMethod.POST](
         url=url,
@@ -141,6 +174,14 @@ fn put(
     
     Raises:
         Error: If the data cannot be serialized to JSON or if the request fails.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        var r = floki.put("https://httpbin.org/put", data={"key": "value"})
+    ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
     return Session().send[RequestMethod.PUT](
@@ -173,6 +214,14 @@ fn put[origin: ImmutOrigin, //](
     
     Raises:
         Error: If the data cannot be sent as bytes.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        var r = floki.put("https://httpbin.org/put", data="hello".as_bytes())
+    ```
     """
     return Session().send[RequestMethod.PUT](
         url=url,
@@ -201,6 +250,15 @@ fn put(
     
     Raises:
         Error: If the data cannot be sent from the file handle.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        with open("data.json", "r") as file:
+            var r = floki.put("https://httpbin.org/put", data=file)
+    ```
     """
     return Session().send[RequestMethod.PUT](
         url=url,
@@ -227,6 +285,14 @@ fn delete(
     
     Raises:
         Error: If the request fails.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        var r = floki.delete("https://httpbin.org/delete")
+    ```
     """
     return Session().send[RequestMethod.DELETE](
         url=url,
@@ -255,6 +321,14 @@ fn patch(
     
     Raises:
         Error: If the data cannot be serialized to JSON or if the request fails.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        var r = floki.patch("https://httpbin.org/patch", data={"key": "value"})
+    ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
     return Session().send[RequestMethod.PATCH](
@@ -286,6 +360,15 @@ fn patch[origin: ImmutOrigin, //](
     
     Raises:
         Error: If the data cannot be sent as bytes.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        var data = String("hello").as_bytes()
+        var r = floki.patch("https://httpbin.org/patch", data="hello".as_bytes())
+    ```
     """
     return Session().send[RequestMethod.PATCH](
         url=url,
@@ -313,6 +396,15 @@ fn patch(
     
     Raises:
         Error: If the data cannot be sent from the file handle.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        with open("data.json", "r") as file:
+            var r = floki.patch("https://httpbin.org/patch", data=file)
+    ```
     """
     return Session().send[RequestMethod.PATCH](
         url=url,
@@ -339,6 +431,14 @@ fn head(
     
     Raises:
         Error: If the request fails.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        var r = floki.head("https://httpbin.org/get")
+    ```
     """
     return Session().send[RequestMethod.HEAD](
         url=url,
@@ -365,6 +465,14 @@ fn options(
     
     Raises:
         Error: If the request fails.
+    
+    #### Examples:
+    ```mojo
+    import floki
+
+    fn main() raises:
+        var r = floki.options("https://httpbin.org/get")
+    ```
     """
     return Session().send[RequestMethod.OPTIONS](
         url=url,
