@@ -1,5 +1,5 @@
-from utils import Variant
-from testing import TestSuite, assert_equal, assert_true
+from std.utils import Variant
+from std.testing import TestSuite, assert_equal, assert_true
 import emberjson
 from floki.session import Session
 from floki.http import Status
@@ -29,7 +29,7 @@ fn test_get() raises -> None:
         "userId": 1, "id": 1, "title": "delectus aut autem", "completed": False
     }
     for node in response.body.as_json().object().items():
-        assert_variant_equal(expected[node.key], node.data)
+        assert_variant_equal(expected[node.key], node.value)
 
 
 fn test_post() raises -> None:
@@ -48,7 +48,7 @@ fn test_post() raises -> None:
         "title": "booggg", "body": "bar", "userId": 1, "active": True
     }
     for node in response.body.as_json()["json"].object().items():
-        assert_variant_equal(expected[node.key], node.data)
+        assert_variant_equal(expected[node.key], node.value)
     
 
 fn test_post_file() raises -> None:
@@ -72,11 +72,11 @@ fn test_post_file() raises -> None:
         )
         assert_equal(response.status, Status.CREATED)
         for node in response.body.as_json().object().items():
-            if node.data.is_string():
-                assert_equal(expected[node.key][String], node.data.string())
-            elif node.data.is_object():
-                for subnode in node.data.object().items():
-                    for item in subnode.data.array():
+            if node.value.is_string():
+                assert_equal(expected[node.key][String], node.value.string())
+            elif node.value.is_object():
+                for subnode in node.value.object().items():
+                    for item in subnode.value.array():
                         assert_equal(expected[node.key][Dict[String, List[String]]][subnode.key][0], item.string())
                 
 
@@ -90,9 +90,9 @@ fn test_put() raises -> None:
         data={"key1": "updated_value1", "key2": "updated_value2"},
     )
     assert_equal(response.status, Status.OK)
+    var expected: List[String] = ["key1", "key2", "id"]
     for node in response.body.as_json().object().items():
-        assert_true(node.key in ["key1", "key2", "id"])
-
+        assert_true(node.key in expected)
 
 fn test_put_file() raises -> None:
     var expected: Dict[String, Variant[Int, String]] = {
@@ -110,7 +110,7 @@ fn test_put_file() raises -> None:
         )
         assert_equal(response.status, Status.OK)
         for node in response.body.as_json().object().items():
-            assert_variant_equal2(expected[node.key], node.data)
+            assert_variant_equal2(expected[node.key], node.value)
 
 
 fn test_patch() raises -> None:   
@@ -131,7 +131,7 @@ fn test_patch() raises -> None:
     )
     assert_equal(response.status, Status.OK)
     for node in response.body.as_json().object().items():
-        assert_variant_equal2(expected[node.key], node.data)
+        assert_variant_equal2(expected[node.key], node.value)
 
 
 fn test_patch_file() raises -> None:
@@ -153,7 +153,7 @@ fn test_patch_file() raises -> None:
         )
         assert_equal(response.status, Status.OK)
         for node in response.body.as_json().object().items():
-            assert_variant_equal2(expected[node.key], node.data)
+            assert_variant_equal2(expected[node.key], node.value)
 
 
 fn test_delete() raises -> None:    

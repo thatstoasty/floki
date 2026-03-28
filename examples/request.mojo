@@ -51,7 +51,7 @@ fn main() raises -> None:
     )
 
     # Response Status Codes
-    r = floki.get('https://httpbin.org/get')
+    r = floki.get("https://httpbin.org/get")
     print(r.status.code)
     print(Status.OK == r.status)
     # r.raise_for_status() # To raise if the response was an HTTP error

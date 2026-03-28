@@ -1,4 +1,4 @@
-from testing import TestSuite, assert_equal
+from std.testing import TestSuite, assert_equal
 from floki.http import Status
 import floki
 

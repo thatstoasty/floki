@@ -34,34 +34,34 @@ api_server = "fastapi run utils/test_server.py"
 
 [package]
 name = "floki"
-version = "0.1.0"
+version = "0.2.0"
 
 [package.build]
 backend = { name = "pixi-build-mojo", version = "0.*", channel = "https://prefix.dev/pixi-build-backends" }
 
 [dependencies]
-mojo = ">=0.26.1.0,<0.26.2.0"
-emberjson = "=0.3.0"
-mojo-curl =  "=0.1.0"
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", branch = "main" }
-small_time = ">=26.1.0,<26.2.0"
+mojo = ">=0.26.2.0,<0.26.3.0"
+emberjson = "=0.3.1"
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.2.1" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.2.1"  }
+small_time = ">=26.2.0,<26.3.0"
 
 [package.build-dependencies]
-mojo-compiler = ">=0.26.1.0,<0.26.2.0"
-emberjson = "=0.3.0"
-mojo-curl =  "=0.1.0"
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", branch = "main" }
-small_time = ">=26.1.0,<26.2.0"
+mojo-compiler = ">=0.26.2.0,<0.26.3.0"
+emberjson = "=0.3.1"
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.2.1" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.2.1"  }
+small_time = ">=26.2.0,<26.3.0"
 
 [package.host-dependencies]
-mojo-compiler = ">=0.26.1.0,<0.26.2.0"
+mojo-compiler = ">=0.26.2.0,<0.26.3.0"
 
 [package.run-dependencies]
-mojo-compiler = ">=0.26.1.0,<0.26.2.0"
-emberjson = "=0.3.0"
-mojo-curl =  "=0.1.0"
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", branch = "main" }
-small_time = ">=26.1.0,<26.2.0"
+mojo-compiler = ">=0.26.2.0,<0.26.3.0"
+emberjson = "=0.3.1"
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.2.1" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.2.1"  }
+small_time = ">=26.2.0,<26.3.0"
 
 [feature.util.dependencies]
 isort = ">=6.0.1,<7"

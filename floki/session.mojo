@@ -1,5 +1,5 @@
-from reflection import get_base_type_name
-from utils import Variant
+from std.reflection import get_base_type_name
+from std.utils import Variant
 from mojo_curl.easy import Easy, Result
 from mojo_curl.list import CurlList
 from floki.callbacks import read_callback, fd_read_callback, write_callback
@@ -10,7 +10,60 @@ from floki.cookie.cookie_jar import CookieJar
 import emberjson
 
 
-fn _handle_post(easy: Easy, data: Span[mut=False, Byte]) raises:
+@fieldwise_init
+struct RequestData[origin: ImmutOrigin]:
+    """Data variant to represent either a FileHandle or a Span of bytes for request bodies."""
+    var data: Variant[Pointer[FileHandle, Self.origin], Span[Byte, Self.origin]]
+    """The `data` field can hold either a pointer to a `FileHandle` or a span of bytes, allowing for flexible handling of request bodies in different formats."""
+
+    @implicit
+    fn __init__(
+        out self,
+        data: Pointer[FileHandle, Self.origin],
+    ):
+        """Initializes a `RequestData` instance with the provided data.
+
+        Args:
+            data: A pointer to a `FileHandle`, representing the request body.
+        """
+        self.data = data
+    
+    @implicit
+    fn __init__(
+        out self,
+        data: Span[Byte, Self.origin],
+    ):
+        """Initializes a `RequestData` instance with the provided data.
+
+        Args:
+            data: A span of bytes, representing the request body.
+        """
+        self.data = data
+    
+    fn isa[T: AnyType](self) -> Bool:
+        """Checks if the contained data is of the specified type.
+
+        Parameters:
+            T: The type to check against.
+
+        Returns:
+            True if the contained data is of type T, False otherwise.
+        """
+        return self.data.isa[T]()
+    
+    fn __getitem_param__[T: AnyType](ref self) -> ref [self.data] T:
+        """Retrieves the contained data as the specified type.
+
+        Parameters:
+            T: The type to retrieve.
+
+        Returns:
+            The contained data cast to type T.
+        """
+        return self.data[T]
+
+
+fn _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
     if data:
         var data_size = len(data)
         # libcurl dictates the usage of the large post field size option over 2GB.
@@ -33,7 +86,7 @@ fn _handle_post(easy: Easy, data: Span[mut=False, Byte]) raises:
             raise Error("_handle_post: Failed to set POST method: ", easy.describe_error(result))
 
 
-fn _handle_post(easy: Easy, mut data: FileHandle) raises:
+fn _handle_post(easy: Easy, data: FileHandle) raises:
     var result = easy.post(True)
     if result != Result.OK:
         raise Error("_handle_post: Failed to set POST method: ", easy.describe_error(result))
@@ -47,8 +100,8 @@ fn _handle_post(easy: Easy, mut data: FileHandle) raises:
         raise Error("_handle_post: Failed to set read data: ", easy.describe_error(result))
 
 
-fn _handle_put(easy: Easy, data: Span[mut=False, Byte]) raises:
-    var http_method = "PUT"
+fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
+    comptime http_method = "PUT"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
         raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
@@ -76,8 +129,8 @@ fn _handle_put(easy: Easy, data: Span[mut=False, Byte]) raises:
         raise Error("_handle_put: Failed to set PUT request post fields: ", easy.describe_error(result))
 
 
-fn _handle_put(easy: Easy, mut data: FileHandle) raises:
-    var http_method = "PUT"
+fn _handle_put(easy: Easy, data: FileHandle) raises:
+    comptime http_method = "PUT"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
         raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
@@ -101,14 +154,14 @@ fn _handle_put(easy: Easy, mut data: FileHandle) raises:
 
 
 fn _handle_delete(easy: Easy) raises:
-    var http_method = "DELETE"
+    comptime http_method = "DELETE"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
         raise Error("_handle_delete: Failed to set DELETE method: ", easy.describe_error(result))
 
 
-fn _handle_patch(easy: Easy, data: Span[mut=False, Byte]) raises:
-    var http_method = "PATCH"
+fn _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
+    comptime http_method = "PATCH"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
         raise Error("_handle_patch: Failed to set PATCH method: ", easy.describe_error(result))
@@ -119,19 +172,19 @@ fn _handle_patch(easy: Easy, data: Span[mut=False, Byte]) raises:
         if data_size > 2_000_000_000_000:
             var result = easy.post_field_size_large(data_size)
             if result != Result.OK:
-                raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
+                raise Error("_handle_patch: Failed to set post fields size: ", easy.describe_error(result))
         else:
             var result = easy.post_field_size(data_size)
             if result != Result.OK:
-                raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
+                raise Error("_handle_patch: Failed to set post fields size: ", easy.describe_error(result))
 
         result = easy.post_fields(data)
         if result != Result.OK:
             raise Error("_handle_patch: Failed to set PATCH request post fields: ", easy.describe_error(result))
 
 
-fn _handle_patch(easy: Easy, mut data: FileHandle) raises:
-    var http_method = "PATCH"
+fn _handle_patch(easy: Easy, data: FileHandle) raises:
+    comptime http_method = "PATCH"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
         raise Error("_handle_patch: Failed to set PATCH method: ", easy.describe_error(result))
@@ -153,20 +206,25 @@ fn _handle_head(easy: Easy) raises:
 
 
 fn _handle_options(easy: Easy) raises:
-    var http_method = "OPTIONS"
+    comptime http_method = "OPTIONS"
     var result = easy.custom_request(http_method)
     if result != Result.OK:
         raise Error("_handle_options: Failed to set OPTIONS method: ", easy.describe_error(result))
 
 
 struct Session(Movable):
+    """A Session object to manage and persist settings across multiple HTTP requests."""
     var easy: Easy
+    """Wraps a libcurl easy handle, which is used to configure and perform HTTP requests."""
     var allow_redirects: Bool
+    """Indicates whether the session should automatically follow HTTP redirects."""
     var headers: Dict[String, String]
+    """Default headers to include in every request made with this session."""
     var verbose: Bool
+    """Indicates whether libcurl's verbose logging mode is enabled for this session."""
 
     comptime DEFAULT_HEADERS = {
-        "User-Agent": "floki/0.1.0",
+        "User-Agent": "floki/0.2.0",
     }
 
     fn __init__(
@@ -196,11 +254,11 @@ struct Session(Movable):
         if code != Result.OK:
             raise Error(message, self.easy.describe_error(code))
 
-    fn send[method: RequestMethod](
+    fn send[origin: ImmutOrigin, //, method: RequestMethod](
         self,
         mut url: String,
         var headers: Dict[String, String],
-        data: Span[mut=False, Byte],
+        data: RequestData[origin],
         timeout: Optional[Int] = None,
         query_parameters: Dict[String, String] = {},
     ) raises -> HTTPResponse:
@@ -212,7 +270,7 @@ struct Session(Movable):
         Args:
             url: The URL to which the request is sent.
             headers: A dictionary of HTTP headers to include in the request.
-            data: An optional Span of bytes representing the request body.
+            data: An optional `RequestData` variant representing the request body.
             timeout: An optional timeout in seconds for the request.
             query_parameters: An optional dictionary of query parameters to include in the URL. GET requests only.
 
@@ -250,15 +308,23 @@ struct Session(Movable):
             self.raise_if_error(self.easy.write_function(write_callback), "Failed to set write function: ")
 
             # Set method specific curl options
-            @parameter
-            if method == RequestMethod.POST:
-                _handle_post(self.easy, data)
+            comptime if method == RequestMethod.POST:
+                if data.isa[Span[Byte, origin]]():
+                    _handle_post(self.easy, data[Span[Byte, origin]])
+                else:
+                    _handle_post(self.easy, data[Pointer[FileHandle, origin]][])
             elif method == RequestMethod.PUT:
-                _handle_put(self.easy, data)
+                if data.isa[Span[Byte, origin]]():
+                    _handle_put(self.easy, data[Span[Byte, origin]])
+                else:
+                    _handle_put(self.easy, data[Pointer[FileHandle, origin]][])
             elif method == RequestMethod.DELETE:
                 _handle_delete(self.easy)
             elif method == RequestMethod.PATCH:
-                _handle_patch(self.easy, data)
+                if data.isa[Span[Byte, origin]]():
+                    _handle_patch(self.easy, data[Span[Byte, origin]])
+                else:
+                    _handle_patch(self.easy, data[Pointer[FileHandle, origin]][])
             elif method == RequestMethod.HEAD:
                 _handle_head(self.easy)
             elif method == RequestMethod.OPTIONS:
@@ -295,88 +361,6 @@ struct Session(Movable):
         finally:
             self.easy.reset() # Reset the easy handle to clear any state for the next request.
 
-    # TODO: Temporary extra send function to handle File Descriptors
-    fn send[
-        method: RequestMethod
-    ](
-        self,
-        mut url: String,
-        var headers: Dict[String, String],
-        mut file: FileHandle,
-        timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
-        """Sends an HTTP request and returns the corresponding response.
-
-        Params:
-            method: The HTTP method to use for the request.
-
-        Args:
-            url: The URL to which the request is sent.
-            headers: A dictionary of HTTP headers to include in the request.
-            file: An optional FileHandle representing the request body.
-            timeout: An optional timeout in seconds for the request.
-
-        Returns:
-            The received response as an `HTTPResponse` object.
-
-        Raises:
-            Error: If there is a failure in sending or receiving the message.
-        """
-        constrained[
-            method in [RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH],
-            String("send: FileHandle data only supported for POST, PUT, and PATCH methods. Received: ", method),
-        ]()
-        try:
-            self.raise_if_error(self.easy.url(url), "Failed to set URL: ")
-
-            # Set the buffer to load the response into
-            var response_body = List[UInt8](capacity=8192)
-            self.raise_if_error(
-                self.easy.write_data(UnsafePointer(to=response_body).bitcast[NoneType]()),
-                "Failed to set write data: ",
-            )
-
-            # Set the write callback to load the response data into the above buffer.
-            self.raise_if_error(self.easy.write_function(write_callback), "Failed to set write function: ")
-
-            # Set method specific curl options
-            @parameter
-            if method == RequestMethod.POST:
-                _handle_post(self.easy, file)
-            elif method == RequestMethod.PUT:
-                _handle_put(self.easy, file)
-            elif method == RequestMethod.PATCH:
-                _handle_patch(self.easy, file)
-
-            var list = CurlList(headers^)
-            try:
-                # If there's any headers set on the session, add them too.
-                for header in self.headers.items():
-                    if header.key not in headers:
-                        var h = String(header.key, ": ", header.value)
-                        list.append(h)
-            
-                # Set headers
-                self.raise_if_error(self.easy.http_headers(list), "Failed to set HTTP headers: ")
-
-                # Enable the cookie engine
-                self.raise_if_error(self.easy.cookie_file(), "Failed to enable cookie engine: ")
-
-                # Perform the transfer
-                self.raise_if_error(self.easy.perform(), "Failed to perform the request: ")
-            finally:
-                list^.free() # Free headers after performing the request.
-
-            return HTTPResponse(
-                body=response_body^,
-                headers=self.easy.headers(),
-                protocol=Protocol(self.easy.get_scheme()),
-                status=Status(Int(self.easy.response_code())),
-                cookies=CookieJar(self.easy.cookies()),
-            )
-        finally:
-            self.easy.reset() # Reset the easy handle to clear any state for the next request.
-
     fn get(
         self,
         var url: String,
@@ -399,7 +383,7 @@ struct Session(Movable):
             url=url,
             headers=headers^,
             timeout=timeout,
-            data=List[Byte](),
+            data=RequestData(List[Byte]()),
             query_parameters=query_parameters,
         )
 
@@ -425,14 +409,14 @@ struct Session(Movable):
         return self.send[RequestMethod.POST](
             url=url,
             headers=headers^,
-            data=json_data,
+            data=RequestData(json_data),
             timeout=timeout,
         )
 
-    fn post(
+    fn post[origin: ImmutOrigin, //](
         self,
         var url: String,
-        data: Span[mut=False, Byte],
+        data: Span[Byte, origin],
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:
@@ -450,14 +434,14 @@ struct Session(Movable):
         return self.send[RequestMethod.POST](
             url=url,
             headers=headers^,
-            data=data,
+            data=RequestData(data),
             timeout=timeout,
         )
 
     fn post(
         self,
         var url: String,
-        mut data: FileHandle,
+        data: FileHandle,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:
@@ -475,7 +459,7 @@ struct Session(Movable):
         return self.send[RequestMethod.POST](
             url=url,
             headers=headers^,
-            file=data,
+            data=RequestData(Pointer(to=data)),
             timeout=timeout,
         )
 
@@ -505,10 +489,10 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn put(
+    fn put[origin: ImmutOrigin, //](
         self,
         var url: String,
-        data: Span[mut=False, Byte],
+        data: Span[Byte, origin],
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:
@@ -533,7 +517,7 @@ struct Session(Movable):
     fn put(
         self,
         var url: String,
-        mut data: FileHandle,
+        data: FileHandle,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:
@@ -551,7 +535,7 @@ struct Session(Movable):
         return self.send[RequestMethod.PUT](
             url=url,
             headers=headers^,
-            file=data,
+            data=Pointer(to=data),
             timeout=timeout,
         )
 
@@ -574,7 +558,7 @@ struct Session(Movable):
         return self.send[RequestMethod.DELETE](
             url=url,
             headers=headers^,
-            data=List[Byte](),
+            data=RequestData(List[Byte]()),
             timeout=timeout,
         )
 
@@ -604,10 +588,10 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn patch(
+    fn patch[origin: ImmutOrigin, //](
         self,
         var url: String,
-        data: Span[Byte],
+        data: Span[Byte, origin],
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:
@@ -632,7 +616,7 @@ struct Session(Movable):
     fn patch(
         self,
         var url: String,
-        mut data: FileHandle,
+        data: FileHandle,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
     ) raises -> HTTPResponse:
@@ -650,7 +634,7 @@ struct Session(Movable):
         return self.send[RequestMethod.PATCH](
             url=url,
             headers=headers^,
-            file=data,
+            data=Pointer(to=data),
             timeout=timeout,
         )
 
@@ -673,7 +657,7 @@ struct Session(Movable):
         return self.send[RequestMethod.HEAD](
             url=url,
             headers=headers^,
-            data=List[Byte](),
+            data=RequestData(List[Byte]()),
             timeout=timeout,
         )
 
@@ -696,6 +680,6 @@ struct Session(Movable):
         return self.send[RequestMethod.OPTIONS](
             url=url,
             headers=headers^,
-            data=List[Byte](),
+            data=RequestData(List[Byte]()),
             timeout=timeout,
         )

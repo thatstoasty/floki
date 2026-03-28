@@ -1,8 +1,12 @@
 @fieldwise_init
 struct Protocol(Equatable, ImplicitlyCopyable, Writable):
+    """Represents the protocol used in an HTTP request or response."""
     var value: UInt8
+    """Internal enum value."""
     comptime HTTP = Self(0)
+    """Represents the HTTP protocol. This is the default protocol used for web communication."""
     comptime HTTPS = Self(1)
+    """Represents the HTTPS protocol, which is the secure version of HTTP. It uses encryption to protect data transmitted between the client and server."""
 
     fn __init__(out self, s: StringSlice) raises:
         if s == "http":
@@ -23,10 +27,11 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
 
 
 @fieldwise_init
-@register_passable("trivial")
-struct Status(Copyable, Equatable, Stringable, Writable):
+struct Status(Copyable, Equatable, Writable, TrivialRegisterPassable):
     var code: UInt16
+    """Represents the status code of an HTTP response. The status code indicates the result of the HTTP request and provides information about the success or failure of the request."""
     var message: StaticString
+    """A human-readable message corresponding to the status code. This message provides additional information about the status of the HTTP response."""
 
     comptime CONTINUE = Self(100, "Continue")
     comptime SWITCHING_PROTOCOLS = Self(101, "Switching Protocols")
@@ -243,7 +248,7 @@ struct Status(Copyable, Equatable, Stringable, Writable):
         Returns:
             True if the Status instance's value matches the integer, otherwise False.
         """
-        return self.code == other
+        return self.code == UInt16(other)
 
     fn write_to(self, mut writer: Some[Writer]) -> None:
         """Writes the Status instance to a writer.
@@ -266,15 +271,24 @@ struct Status(Copyable, Equatable, Stringable, Writable):
 
 @fieldwise_init
 struct RequestMethod(Equatable, ImplicitlyCopyable, Writable):
+    """Represents the HTTP method used in an HTTP request, such as GET, POST, PUT, DELETE, etc."""
     var value: UInt8
+    """Internal enum value."""
 
     comptime GET = Self(0)
+    """The GET method is used to retrieve data from a server. It is a read-only operation and should not have any side effects on the server's state."""
     comptime POST = Self(1)
+    """The POST method is used to submit data to a server, often resulting in a change in the server's state or side effects. It is commonly used for creating new resources or submitting form data."""
     comptime PUT = Self(2)
+    """The PUT method is used to update an existing resource on the server or create a new resource if it does not exist. It is idempotent, meaning that multiple identical requests should have the same effect as a single request."""
     comptime DELETE = Self(3)
+    """The DELETE method is used to delete a resource on the server. It is also idempotent, meaning that multiple identical requests should have the same effect as a single request."""
     comptime HEAD = Self(4)
+    """The HEAD method is similar to GET, but it only retrieves the headers of a resource without the body. It is often used to check if a resource exists or to retrieve metadata about a resource without downloading the entire content."""
     comptime PATCH = Self(5)
+    """The PATCH method is used to apply partial modifications to a resource on the server. It is not idempotent, meaning that multiple identical requests may have different effects."""
     comptime OPTIONS = Self(6)
+    """The OPTIONS method is used to describe the communication options for the target resource. It allows clients to discover which HTTP methods are supported by the server for a specific resource."""
 
     fn __init__(out self, s: StringSlice) raises:
         if s == "GET":
@@ -298,4 +312,9 @@ struct RequestMethod(Equatable, ImplicitlyCopyable, Writable):
         return self.value == other.value
     
     fn write_to(self, mut writer: Some[Writer]):
+        """Writes the RequestMethod instance to a writer.
+
+        Args:
+            writer: The writer to which the HTTP method will be written.
+        """
         writer.write(self.value)
