@@ -29,9 +29,9 @@ fn write_callback(
 struct DataToRead:
     """Struct to hold data that will be read by the `read_callback` function for libcurl."""
     var data: ImmutExternalPointer[Byte]
-    """The total number of bytes remaining to be read from the data pointer."""
-    var bytes_remaining: UInt
     """The pointer to the data that will be read by the `read_callback` function for libcurl."""
+    var bytes_remaining: UInt
+    """The total number of bytes remaining to be read from the data pointer."""
 
 
 fn read_callback(
