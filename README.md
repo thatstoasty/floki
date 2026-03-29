@@ -9,8 +9,6 @@ A `requests` like HTTP client for Mojo, leveraging `libcurl` under the hood.
 
 ## Adding the `floki` package to your project
 
-First, you'll need to configure your `pixi.toml` file to include a few community Conda channels. Add both Modular (`"https://repo.prefix.dev/modular-community"`) and my (`"https://repo.prefix.dev/mojo-community"`) Conda channels to the list of channels. 
-
 ### Installing it from the `mojo-community` Conda channel
 
 First, you'll need to install the `curl_wrapper` library, which provides a thin wrapper around libcurl to avoid issues with variadic arguments. You'll need to enable the `pixi-build` preview by adding this to the `workspace section of your `pixi.toml` file.
@@ -27,14 +25,6 @@ pixi add curl_wrapper -g "https://github.com/thatstoasty/mojo-curl.git" --subdir
 
 > Note: Mojo cannot currently support calling C functions with variadic arguments, and the libcurl client interface makes heavy use of them. The `curl_wrapper` library provides a thin wrapper around libcurl to avoid this issue. Remember to always validate the code you're pulling from third-party sources!
 
-Next, run the following commands in your terminal:
-
-```bash
-pixi add floki && pixi install
-```
-
-This will add `floki` to your project's dependencies and install it along with its dependencies.
-
 ### Building it from source
 
 There's two ways to build `floki` from source: directly from the Git repository or by cloning the repository locally.
@@ -44,7 +34,7 @@ There's two ways to build `floki` from source: directly from the Git repository 
 Run the following commands in your terminal:
 
 ```bash
-pixi add -g "https://github.com/thatstoasty/floki.git" && pixi install
+pixi add -g "https://github.com/thatstoasty/floki.git" --tag v0.2.0 && pixi install
 ```
 
 #### Building from source: Local
