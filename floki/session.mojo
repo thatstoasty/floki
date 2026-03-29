@@ -9,6 +9,8 @@ from floki.body import Body
 from floki.cookie.cookie_jar import CookieJar
 import emberjson
 
+comptime SIZE_LIMIT = 2_147_483_648
+"""Size limit (2GB) for using the standard post field size option in libcurl. Requests with body sizes above this threshold will use the large post field size option."""
 
 @fieldwise_init
 struct RequestData[origin: ImmutOrigin]:
@@ -79,8 +81,6 @@ fn _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) r
     """
     if data:
         var data_size = len(data)
-        # libcurl dictates the usage of the large post field size option over 2GB.
-        comptime SIZE_LIMIT = 2_147_483_648
         if data_size > SIZE_LIMIT:
             var result = easy.post_field_size_large(data_size)
             if result != Result.OK:
@@ -100,7 +100,7 @@ fn _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) r
             raise Error("_handle_post: Failed to set POST method: ", easy.describe_error(result))
 
 
-fn _handle_post(easy: Easy, data: FileHandle) raises:
+fn _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
     """Configures the libcurl easy handle for a POST request with file data.
 
     Args:
@@ -115,7 +115,7 @@ fn _handle_post(easy: Easy, data: FileHandle) raises:
     if result != Result.OK:
         raise Error("_handle_post: Failed to set read function: ", easy.describe_error(result))
 
-    result = easy.read_data(UnsafePointer(to=data).bitcast[NoneType]())
+    result = easy.read_data(UnsafePointer(to=data[]).bitcast[NoneType]())
     if result != Result.OK:
         raise Error("_handle_post: Failed to set read data: ", easy.describe_error(result))
 
@@ -142,7 +142,7 @@ fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) ra
     if data:
         var data_size = len(data)
         # libcurl dictates the usage of the large post field size option over 2GB.
-        if data_size > 2_000_000_000_000:
+        if data_size > SIZE_LIMIT:
             var result = easy.post_field_size_large(data_size)
             if result != Result.OK:
                 raise Error("_handle_put: Failed to set post fields size: ", easy.describe_error(result))
@@ -158,7 +158,7 @@ fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) ra
         raise Error("_handle_put: Failed to set PUT request post fields: ", easy.describe_error(result))
 
 
-fn _handle_put(easy: Easy, data: FileHandle) raises:
+fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
     """Configures the libcurl easy handle for a PUT request with file data.
 
     Args:
@@ -178,7 +178,7 @@ fn _handle_put(easy: Easy, data: FileHandle) raises:
     if result != Result.OK:
         raise Error("_handle_put: Failed to set read function: ", easy.describe_error(result))
 
-    result = easy.read_data(UnsafePointer(to=data).bitcast[NoneType]())
+    result = easy.read_data(UnsafePointer(to=data[]).bitcast[NoneType]())
     if result != Result.OK:
         raise Error("_handle_put: Failed to set read data: ", easy.describe_error(result))
 
@@ -217,8 +217,7 @@ fn _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) 
 
     if data:
         var data_size = len(data)
-        # libcurl dictates the usage of the large post field size option over 2GB.
-        if data_size > 2_000_000_000_000:
+        if data_size > SIZE_LIMIT:
             var result = easy.post_field_size_large(data_size)
             if result != Result.OK:
                 raise Error("_handle_patch: Failed to set post fields size: ", easy.describe_error(result))
@@ -232,7 +231,7 @@ fn _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) 
             raise Error("_handle_patch: Failed to set PATCH request post fields: ", easy.describe_error(result))
 
 
-fn _handle_patch(easy: Easy, data: FileHandle) raises:
+fn _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
     """Configures the libcurl easy handle for a PATCH request with file data.
 
     Args:
@@ -248,7 +247,7 @@ fn _handle_patch(easy: Easy, data: FileHandle) raises:
     if result != Result.OK:
         raise Error("_handle_patch: Failed to set read function: ", easy.describe_error(result))
 
-    result = easy.read_data(UnsafePointer(to=data).bitcast[NoneType]())
+    result = easy.read_data(UnsafePointer(to=data[]).bitcast[NoneType]())
     if result != Result.OK:
         raise Error("_handle_patch: Failed to set read data: ", easy.describe_error(result))
 
@@ -391,19 +390,19 @@ struct Session(Movable):
                 if data.isa[Span[Byte, origin]]():
                     _handle_post(self.easy, data[Span[Byte, origin]])
                 else:
-                    _handle_post(self.easy, data[Pointer[FileHandle, origin]][])
+                    _handle_post(self.easy, data[Pointer[FileHandle, origin]])
             elif method == RequestMethod.PUT:
                 if data.isa[Span[Byte, origin]]():
                     _handle_put(self.easy, data[Span[Byte, origin]])
                 else:
-                    _handle_put(self.easy, data[Pointer[FileHandle, origin]][])
+                    _handle_put(self.easy, data[Pointer[FileHandle, origin]])
             elif method == RequestMethod.DELETE:
                 _handle_delete(self.easy)
             elif method == RequestMethod.PATCH:
                 if data.isa[Span[Byte, origin]]():
                     _handle_patch(self.easy, data[Span[Byte, origin]])
                 else:
-                    _handle_patch(self.easy, data[Pointer[FileHandle, origin]][])
+                    _handle_patch(self.easy, data[Pointer[FileHandle, origin]])
             elif method == RequestMethod.HEAD:
                 _handle_head(self.easy)
             elif method == RequestMethod.OPTIONS:
