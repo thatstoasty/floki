@@ -80,7 +80,8 @@ fn _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) r
     if data:
         var data_size = len(data)
         # libcurl dictates the usage of the large post field size option over 2GB.
-        if data_size > 2_000_000_000_000:
+        comptime SIZE_LIMIT = 2_147_483_648
+        if data_size > SIZE_LIMIT:
             var result = easy.post_field_size_large(data_size)
             if result != Result.OK:
                 raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
