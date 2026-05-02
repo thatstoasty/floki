@@ -9,6 +9,7 @@ from floki.cookie.duration import Duration
 struct Cookie(Copyable, Writable):
     """Represents an HTTP cookie with its attributes and provides methods for constructing, manipulating, and serializing cookies.
     """
+
     comptime EXPIRES = "Expires"
     """The `Expires` attribute of a cookie, indicating the expiration date and time of the cookie.
     """
@@ -87,17 +88,17 @@ struct Cookie(Copyable, Writable):
         self.partitioned = partitioned
 
     fn __init__[origin: Origin, //](out self, header: StringSlice[origin]) raises:
-        """Constructs a Cookie by parsing a tab-separated cookie header string.
+        """Constructs a Cookie by parsing a tab-separated libcurl cookie-list string.
 
         Parameters:
             origin: The origin of the StringSlice.
 
         Args:
-            header: A tab-separated string containing cookie fields
+            header: A tab-separated libcurl cookie-list string containing cookie fields
                     (domain, partitioned, path, secure, expires, name, value).
 
         Raises:
-            Error: If the header string cannot be parsed.
+            Error: If the cookie-list string cannot be parsed.
         """
         var raw_parts = header.split("\t")
         var parts: List[StringSlice[origin].Immutable] = [part for part in raw_parts]
@@ -105,10 +106,11 @@ struct Cookie(Copyable, Writable):
         self.partitioned = parts[1] == "TRUE"
         self.path = String(parts[2])
         self.secure = parts[3] == "TRUE"
-        self.expires = Expiration(parts[4])
+        # libcurl cookie-list expiration is a Unix timestamp in seconds, or 0 for session cookies.
+        self.expires = Expiration.from_libcurl_expires(parts[4])
         self.name = String(parts[5])
         self.value = String(parts[6])
-    
+
     fn write_to(self, mut writer: Some[Writer]):
         """Writes a debug representation of the cookie to a writer.
 
@@ -170,4 +172,3 @@ struct Cookie(Copyable, Writable):
     # fn is_expired(self, now: SmallTime) -> Bool:
     #     if self.expires.is_datetime():
     #         return self.expires.datetime.value() <= now
-    
