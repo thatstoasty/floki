@@ -3,6 +3,7 @@ from std.testing import TestSuite, assert_equal, assert_true
 import emberjson
 from floki.session import Session
 from floki.http import Status
+from floki.cookie.cookie import Cookie
 from floki.cookie.cookie_jar import CookieKey
 
 
@@ -179,6 +180,20 @@ fn test_cookie_parsing() raises -> None:
     )
     assert_equal(response.status, Status.OK)
     assert_equal(response.cookies[CookieKey("freeform", "httpbin.org", path="/")].value, "my_val")
+
+
+fn test_cookie_parsing_with_expiration() raises -> None:
+    var cookie = Cookie("httpbin.org\tFALSE\t/\tFALSE\t1893456000\tfreeform\tmy_val")
+    assert_equal(cookie.name, "freeform")
+    assert_equal(cookie.value, "my_val")
+    assert_true(cookie.expires.is_datetime())
+    var expires = cookie.expires.datetime.value()
+    assert_equal(expires.year, 2030)
+    assert_equal(expires.month, 1)
+    assert_equal(expires.day, 1)
+    assert_equal(expires.hour, 0)
+    assert_equal(expires.minute, 0)
+    assert_equal(expires.second, 0)
 
 
 fn main() raises -> None:

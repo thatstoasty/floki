@@ -1,5 +1,5 @@
 from small_time import SmallTime, TimeZone
-from small_time.small_time import parse_time_with_format
+from small_time.small_time import from_timestamp, parse_time_with_format
 
 
 comptime HTTP_DATE_FORMAT = "ddd, DD MMM YYYY HH:mm:ss ZZZ"
@@ -7,8 +7,10 @@ comptime HTTP_DATE_FORMAT = "ddd, DD MMM YYYY HH:mm:ss ZZZ"
 
 
 @fieldwise_init
-struct Expiration(Copyable, Equatable, Defaultable):
-    """Represents the expiration setting for a cookie, which can be either session-scoped (no explicit expiry) or a specific datetime. Provides methods for constructing, comparing, and formatting expiration values."""
+struct Expiration(Copyable, Defaultable, Equatable):
+    """Represents the expiration setting for a cookie, which can be either session-scoped (no explicit expiry) or a specific datetime. Provides methods for constructing, comparing, and formatting expiration values.
+    """
+
     var variant: UInt8
     """An internal variant discriminator to determine if this is a session expiration (variant 0) or a datetime expiration (variant 1)."""
     var datetime: Optional[SmallTime]
@@ -29,7 +31,7 @@ struct Expiration(Copyable, Equatable, Defaultable):
         self.datetime = time
 
     fn __init__(out self, text: StringSlice) raises:
-        """Constructs an Expiration by parsing a date string.
+        """Constructs an Expiration by parsing an HTTP date string.
 
         Args:
             text: The string representation of the expiration date, or "0" for session-scoped.
@@ -42,6 +44,25 @@ struct Expiration(Copyable, Equatable, Defaultable):
             self.datetime = None
         else:
             self = Self(time=parse_time_with_format(text, HTTP_DATE_FORMAT, TimeZone.UTC))
+
+    @staticmethod
+    fn from_libcurl_expires(text: StringSlice) raises -> Self:
+        """Constructs an Expiration from libcurl's cookie-list expires field.
+
+        Args:
+            text: The libcurl cookie-list expiration value, either "0" for a session cookie or a Unix
+                timestamp in seconds.
+
+        Returns:
+            An Expiration parsed from the libcurl expires value.
+
+        Raises:
+            Error: If the timestamp cannot be parsed into a valid date.
+        """
+        var expires_timestamp = atol(text)
+        if expires_timestamp == 0:
+            return Self()
+        return Self(from_timestamp(Float64(expires_timestamp), utc=True))
 
     @staticmethod
     fn invalidate() -> Self:
@@ -73,7 +94,7 @@ struct Expiration(Copyable, Equatable, Defaultable):
 
         Returns:
             The formatted date string, or None if no datetime is set.
-        
+
         Raises:
             Error: If the datetime is not valid.
         """
