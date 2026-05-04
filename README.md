@@ -34,7 +34,7 @@ There's two ways to build `floki` from source: directly from the Git repository 
 Run the following commands in your terminal:
 
 ```bash
-pixi add -g "https://github.com/thatstoasty/floki.git" --tag v0.2.0 && pixi install
+pixi add -g "https://github.com/thatstoasty/floki.git" --tag v0.2.1 && pixi install
 ```
 
 #### Building from source: Local
