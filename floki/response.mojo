@@ -28,7 +28,7 @@ struct HTTPResponse(Movable, Writable):
     var protocol: Protocol
     """The HTTP protocol used in the response."""
 
-    fn __init__(
+    def __init__(
         out self,
         var body: List[Byte],
         var cookies: CookieJar,
@@ -54,7 +54,7 @@ struct HTTPResponse(Movable, Writable):
         self.protocol = protocol
         self.body = Body(body^)
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         """Writes the HTTP response to a writer in a standard HTTP format.
 
         Args:
@@ -73,7 +73,7 @@ struct HTTPResponse(Movable, Writable):
         )
 
     @always_inline
-    fn is_redirect(self) -> Bool:
+    def is_redirect(self) -> Bool:
         """Checks if the response status code indicates a redirect (i.e., 3xx status codes).
         
         Returns:
@@ -87,7 +87,7 @@ struct HTTPResponse(Movable, Writable):
         ]
     
     @always_inline
-    fn is_ok(self) -> Bool:
+    def is_ok(self) -> Bool:
         """Checks if the response status code indicates success (i.e., a 2xx status code).
 
         Returns:
@@ -95,7 +95,7 @@ struct HTTPResponse(Movable, Writable):
         """
         return self.status == Status.OK
     
-    fn raise_for_status(self) raises HTTPError:
+    def raise_for_status(self) raises HTTPError:
         """Raises an HTTPError if the response status code indicates a failure (i.e., a non-2xx status code).
 
         Raises:

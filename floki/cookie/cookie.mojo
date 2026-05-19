@@ -1,5 +1,5 @@
 # from floki.header import HeaderKey, Header
-from small_time import SmallTime
+from mojo_datetime import DateTime
 from floki.cookie.same_site import SameSite
 from floki.cookie.expiration import Expiration
 from floki.cookie.duration import Duration
@@ -57,7 +57,7 @@ struct Cookie(Copyable, Writable):
     var path: Optional[String]
     """The URL path for which the cookie is valid. If not specified, defaults to `/`."""
 
-    fn __init__(
+    def __init__(
         out self,
         var name: String,
         var value: String,
@@ -87,7 +87,7 @@ struct Cookie(Copyable, Writable):
         self.secure = secure
         self.partitioned = partitioned
 
-    fn __init__[origin: Origin, //](out self, header: StringSlice[origin]) raises:
+    def __init__[origin: Origin, //](out self, header: StringSlice[origin]) raises:
         """Constructs a Cookie by parsing a tab-separated libcurl cookie-list string.
 
         Parameters:
@@ -111,7 +111,7 @@ struct Cookie(Copyable, Writable):
         self.name = String(parts[5])
         self.value = String(parts[6])
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         """Writes a debug representation of the cookie to a writer.
 
         Args:
@@ -119,7 +119,7 @@ struct Cookie(Copyable, Writable):
         """
         writer.write("Cookie(", "name=", self.name, ", value=", self.value, ")")
 
-    fn __str__(self) -> String:
+    def __str__(self) -> String:
         """Returns a string representation of the cookie.
 
         Returns:
@@ -127,15 +127,15 @@ struct Cookie(Copyable, Writable):
         """
         return String.write("Name: ", self.name, " Value: ", self.value)
 
-    fn clear_cookie(mut self):
+    def clear_cookie(mut self):
         """Invalidates the cookie by clearing its expiration."""
         # self.max_age = None
         self.expires = Expiration.invalidate()
 
-    # fn to_header(self) raises -> Header:
+    # def to_header(self) raises -> Header:
     #     return Header(HeaderKey.SET_COOKIE, self.build_header_value())
 
-    fn build_header_value(self) -> String:
+    def build_header_value(self) -> String:
         """Builds the `Set-Cookie` header value string for this cookie.
 
         Returns:
@@ -169,6 +169,7 @@ struct Cookie(Copyable, Writable):
             header_value.write(Self.SEPERATOR, Self.PARTITIONED)
         return header_value^
 
-    # fn is_expired(self, now: SmallTime) -> Bool:
-    #     if self.expires.is_datetime():
-    #         return self.expires.datetime.value() <= now
+    def is_expired(self, now: DateTime) -> Bool:
+        if self.expires.is_datetime():
+            return self.expires.datetime.value() <= now
+        return False

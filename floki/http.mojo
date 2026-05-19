@@ -8,7 +8,7 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
     comptime HTTPS = Self(1)
     """Represents the HTTPS protocol, which is the secure version of HTTP. It uses encryption to protect data transmitted between the client and server."""
 
-    fn __init__(out self, s: StringSlice) raises:
+    def __init__(out self, s: StringSlice) raises:
         """Constructs a Protocol from its string representation.
 
         Args:
@@ -22,9 +22,9 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
         elif s == "https":
             return Self.HTTPS
         else:
-            raise Error("Invalid protocol: ", s)
+            raise Error(t"Invalid protocol: {s}")
     
-    fn __eq__(self, other: Self) -> Bool:
+    def __eq__(self, other: Self) -> Bool:
         """Compares two Protocol instances for equality.
 
         Args:
@@ -35,7 +35,7 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
         """
         return self.value == other.value
     
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         """Writes the protocol name to a writer.
 
         Args:
@@ -177,7 +177,7 @@ struct Status(Copyable, Equatable, Writable, TrivialRegisterPassable):
     comptime NETWORK_AUTHENTICATION_REQUIRED = Self(511, "Network Authentication Required")
     """HTTP 511: The client needs to authenticate to gain network access."""
 
-    fn __init__(out self, code: Int) raises:
+    def __init__(out self, code: Int) raises:
         """Creates a Status instance from an integer representation.
 
         Args:
@@ -312,7 +312,7 @@ struct Status(Copyable, Equatable, Writable, TrivialRegisterPassable):
         else:
             raise Error("Unknown status code: ", code)
 
-    fn __eq__(self, other: Int) -> Bool:
+    def __eq__(self, other: Int) -> Bool:
         """Compares a Status instance with an integer for equality.
 
         Args:
@@ -323,7 +323,7 @@ struct Status(Copyable, Equatable, Writable, TrivialRegisterPassable):
         """
         return self.code == UInt16(other)
 
-    fn write_to(self, mut writer: Some[Writer]) -> None:
+    def write_to(self, mut writer: Some[Writer]) -> None:
         """Writes the Status instance to a writer.
 
         This method is used to write the status code in a human-readable format.
@@ -355,7 +355,7 @@ struct RequestMethod(Equatable, ImplicitlyCopyable, Writable):
     comptime OPTIONS = Self(6)
     """The OPTIONS method is used to describe the communication options for the target resource. It allows clients to discover which HTTP methods are supported by the server for a specific resource."""
 
-    fn __init__(out self, s: StringSlice) raises:
+    def __init__(out self, s: StringSlice) raises:
         """Constructs a RequestMethod from its string representation.
 
         Args:

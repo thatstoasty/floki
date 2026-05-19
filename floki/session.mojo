@@ -23,7 +23,7 @@ struct RequestData[origin: ImmutOrigin]:
     """The `data` field can hold either a pointer to a `FileHandle` or a span of bytes, allowing for flexible handling of request bodies in different formats."""
 
     @implicit
-    fn __init__(
+    def __init__(
         out self,
         data: Pointer[FileHandle, Self.origin],
     ):
@@ -35,7 +35,7 @@ struct RequestData[origin: ImmutOrigin]:
         self.data = data
     
     @implicit
-    fn __init__(
+    def __init__(
         out self,
         data: Span[Byte, Self.origin],
     ):
@@ -46,7 +46,7 @@ struct RequestData[origin: ImmutOrigin]:
         """
         self.data = data
     
-    fn isa[T: AnyType](self) -> Bool:
+    def isa[T: AnyType](self) -> Bool:
         """Checks if the contained data is of the specified type.
 
         Parameters:
@@ -57,7 +57,7 @@ struct RequestData[origin: ImmutOrigin]:
         """
         return self.data.isa[T]()
     
-    fn __getitem_param__[T: AnyType](ref self) -> ref [self.data] T:
+    def __getitem_param__[T: AnyType](ref self) -> ref [self.data] T:
         """Retrieves the contained data as the specified type.
 
         Parameters:
@@ -69,7 +69,7 @@ struct RequestData[origin: ImmutOrigin]:
         return self.data[T]
 
 
-fn _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
+def _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
     """Configures the libcurl easy handle for a POST request with byte data.
 
     Parameters:
@@ -95,19 +95,19 @@ fn _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) r
             raise Error("_handle_post: Failed to set post fields: ", easy.describe_error(result))
     else:
         # Set POST with zero-length body
-        var result = easy.post(True)
+        var result = easy.post()
         if result != Result.OK:
             raise Error("_handle_post: Failed to set POST method: ", easy.describe_error(result))
 
 
-fn _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
+def _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
     """Configures the libcurl easy handle for a POST request with file data.
 
     Args:
         easy: The libcurl easy handle to configure.
         data: The file handle to read request body data from.
     """
-    var result = easy.post(True)
+    var result = easy.post()
     if result != Result.OK:
         raise Error("_handle_post: Failed to set POST method: ", easy.describe_error(result))
 
@@ -120,7 +120,7 @@ fn _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, o
         raise Error("_handle_post: Failed to set read data: ", easy.describe_error(result))
 
 
-fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
+def _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
     """Configures the libcurl easy handle for a PUT request with byte data.
 
     Parameters:
@@ -135,7 +135,7 @@ fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) ra
     if result != Result.OK:
         raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
 
-    result = easy.upload(True)
+    result = easy.upload()
     if result != Result.OK:
         raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
 
@@ -158,7 +158,7 @@ fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) ra
         raise Error("_handle_put: Failed to set PUT request post fields: ", easy.describe_error(result))
 
 
-fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
+def _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
     """Configures the libcurl easy handle for a PUT request with file data.
 
     Args:
@@ -170,7 +170,7 @@ fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, or
     if result != Result.OK:
         raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
 
-    result = easy.upload(True)
+    result = easy.upload()
     if result != Result.OK:
         raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
 
@@ -188,7 +188,7 @@ fn _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, or
     #     raise Error("_handle_put: Failed to set read file size: ", easy.describe_error(result))
 
 
-fn _handle_delete(easy: Easy) raises:
+def _handle_delete(easy: Easy) raises:
     """Configures the libcurl easy handle for a DELETE request.
 
     Args:
@@ -200,7 +200,7 @@ fn _handle_delete(easy: Easy) raises:
         raise Error("_handle_delete: Failed to set DELETE method: ", easy.describe_error(result))
 
 
-fn _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
+def _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
     """Configures the libcurl easy handle for a PATCH request with byte data.
 
     Parameters:
@@ -231,7 +231,7 @@ fn _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) 
             raise Error("_handle_patch: Failed to set PATCH request post fields: ", easy.describe_error(result))
 
 
-fn _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
+def _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
     """Configures the libcurl easy handle for a PATCH request with file data.
 
     Args:
@@ -252,19 +252,19 @@ fn _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, 
         raise Error("_handle_patch: Failed to set read data: ", easy.describe_error(result))
 
 
-fn _handle_head(easy: Easy) raises:
+def _handle_head(easy: Easy) raises:
     """Configures the libcurl easy handle for a HEAD request.
 
     Args:
         easy: The libcurl easy handle to configure.
     """
     # Set NOBODY to true to avoid downloading the body, also tells libcurl to use HEAD.
-    result = easy.nobody(True)
+    result = easy.nobody()
     if result != Result.OK:
         raise Error("_handle_head: Failed to set NOBODY option: ", easy.describe_error(result))
 
 
-fn _handle_options(easy: Easy) raises:
+def _handle_options(easy: Easy) raises:
     """Configures the libcurl easy handle for an OPTIONS request.
 
     Args:
@@ -292,7 +292,7 @@ struct Session(Movable):
     }
     """Default headers that are included in every request made with this session, unless overridden by request-specific headers."""
 
-    fn __init__(
+    def __init__(
         out self,
         allow_redirects: Bool = True,
         headers: Dict[String, String] = {},
@@ -314,11 +314,11 @@ struct Session(Movable):
         self.headers.update(headers)
         self.verbose = verbose
         if self.allow_redirects:
-            self.raise_if_error(self.easy.follow_location(True), "Failed to set follow location to enable redirects: ")
+            self.raise_if_error(self.easy.follow_location(), "Failed to set follow location to enable redirects: ")
         if self.verbose:
-            self.raise_if_error(self.easy.verbose(True), "Failed to set libcurl verbose mode: ")
+            self.raise_if_error(self.easy.verbose(), "Failed to set libcurl verbose mode: ")
 
-    fn raise_if_error(self, code: Result, message: StringSlice) raises:
+    def raise_if_error(self, code: Result, message: StringSlice) raises:
         """Raises an error if the libcurl result code indicates failure.
 
         Args:
@@ -331,7 +331,7 @@ struct Session(Movable):
         if code != Result.OK:
             raise Error(message, self.easy.describe_error(code))
 
-    fn send[origin: ImmutOrigin, //, method: RequestMethod](
+    def send[origin: ImmutOrigin, //, method: RequestMethod](
         self,
         mut url: String,
         var headers: Dict[String, String],
@@ -439,7 +439,7 @@ struct Session(Movable):
         finally:
             self.easy.reset() # Reset the easy handle to clear any state for the next request.
 
-    fn get(
+    def get(
         self,
         var url: String,
         var headers: Dict[String, String] = {},
@@ -464,7 +464,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             var r = session.get("https://httpbin.org/get")
         ```
@@ -477,7 +477,7 @@ struct Session(Movable):
             query_parameters=query_parameters,
         )
 
-    fn post(
+    def post(
         self,
         var url: String,
         var headers: Dict[String, String] = {},
@@ -502,7 +502,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             var r = session.post("https://httpbin.org/post", data={"key": "value"})
         ```
@@ -515,7 +515,7 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn post[origin: ImmutOrigin, //](
+    def post[origin: ImmutOrigin, //](
         self,
         var url: String,
         data: Span[Byte, origin],
@@ -543,7 +543,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             var r = session.post("https://httpbin.org/post", data="hello".as_bytes())
         ```
@@ -555,7 +555,7 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn post(
+    def post(
         self,
         var url: String,
         data: FileHandle,
@@ -580,7 +580,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             with open("data.json", "r") as file:
                 var r = session.post("https://httpbin.org/post", data=file)
@@ -593,7 +593,7 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn put(
+    def put(
         self,
         var url: String,
         var headers: Dict[String, String] = {},
@@ -618,7 +618,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             var r = session.put("https://httpbin.org/put", data={"key": "value"})
         ```
@@ -631,7 +631,7 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn put[origin: ImmutOrigin, //](
+    def put[origin: ImmutOrigin, //](
         self,
         var url: String,
         data: Span[Byte, origin],
@@ -659,7 +659,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             var r = session.put("https://httpbin.org/put", data="hello".as_bytes())
         ```
@@ -671,7 +671,7 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn put(
+    def put(
         self,
         var url: String,
         data: FileHandle,
@@ -696,7 +696,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             with open("data.json", "r") as file:
                 var r = session.put("https://httpbin.org/put", data=file)
@@ -709,7 +709,7 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn delete(
+    def delete(
         self,
         var url: String,
         var headers: Dict[String, String] = {},
@@ -732,7 +732,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             var r = session.delete("https://httpbin.org/delete")
         ```
@@ -744,7 +744,7 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn patch(
+    def patch(
         self,
         var url: String,
         var headers: Dict[String, String] = {},
@@ -769,7 +769,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             var r = session.patch("https://httpbin.org/patch", data={"key": "value"})
         ```
@@ -782,7 +782,7 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn patch[origin: ImmutOrigin, //](
+    def patch[origin: ImmutOrigin, //](
         self,
         var url: String,
         data: Span[Byte, origin],
@@ -810,7 +810,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             var r = session.patch("https://httpbin.org/patch", data="hello".as_bytes())
         ```
@@ -822,7 +822,7 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn patch(
+    def patch(
         self,
         var url: String,
         data: FileHandle,
@@ -847,7 +847,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             with open("data.json", "r") as file:
                 var r = session.patch("https://httpbin.org/patch", data=file)
@@ -860,7 +860,7 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn head(
+    def head(
         self,
         var url: String,
         var headers: Dict[String, String] = {},
@@ -883,7 +883,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             var r = session.head("https://httpbin.org/get")
         ```
@@ -895,7 +895,7 @@ struct Session(Movable):
             timeout=timeout,
         )
 
-    fn options(
+    def options(
         self,
         var url: String,
         var headers: Dict[String, String] = {},
@@ -918,7 +918,7 @@ struct Session(Movable):
         ```mojo
         from floki.session import Session
 
-        fn main() raises:
+        def main() raises:
             var session = Session()
             var r = session.options("https://httpbin.org/get")
         ```

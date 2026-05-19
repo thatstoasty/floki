@@ -2,11 +2,9 @@
 description = "Requests like HTTP client leveraging libcurl under the hood."
 authors = ["Mikhail Tavarez <miktavarez@gmail.com>"]
 channels = [
-    "https://repo.prefix.dev/mojo-community",
     "https://repo.prefix.dev/modular-community",
     "conda-forge",
     "https://conda.modular.com/max",
-    "https://prefix.dev/pixi-build-backends",
 ]
 platforms = ["osx-arm64", "linux-64", "linux-aarch64"]
 license = "MIT"
@@ -34,38 +32,38 @@ api_server = "fastapi run utils/test_server.py"
 
 [package]
 name = "floki"
-version = "0.2.1"
+version = "0.3.0"
 
 [package.build]
-backend = { name = "pixi-build-mojo", version = "0.*", channel = "https://prefix.dev/pixi-build-backends" }
+backend = { name = "pixi-build-mojo", version = "0.*" }
 
 [dependencies]
-mojo = ">=0.26.2.0,<0.26.3.0"
-emberjson = "=0.3.1"
-mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.2.1" }
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.2.1"  }
-small_time = ">=26.2.0,<26.3.0"
+mojo = ">=1.0.0b1,<2"
+emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.2" }
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.0" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.0"  }
+mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", branch = "main"}
 
 [package.build-dependencies]
-mojo-compiler = ">=0.26.2.0,<0.26.3.0"
-emberjson = "=0.3.1"
-mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.2.1" }
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.2.1"  }
-small_time = ">=26.2.0,<26.3.0"
+mojo-compiler = ">=1.0.0b1,<1.0.0b2"
+emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.2" }
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.0" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.0"  }
+mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", branch = "main"}
 
 [package.host-dependencies]
-mojo-compiler = ">=0.26.2.0,<0.26.3.0"
+mojo-compiler = ">=1.0.0b1,<1.0.0b2"
 
 [package.run-dependencies]
-mojo-compiler = ">=0.26.2.0,<0.26.3.0"
-emberjson = "=0.3.1"
-mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.2.1" }
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.2.1"  }
-small_time = ">=26.2.0,<26.3.0"
+mojo-compiler = ">=1.0.0b1,<1.0.0b2"
+emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.2" }
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.0" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.0"  }
+mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", branch = "main"}
 
 [feature.util.dependencies]
-isort = ">=6.0.1,<7"
-fastapi = ">=0.105.0,<0.106"
+isort = ">=8.0.1,<9"
+fastapi = ">=0.115.4,<0.116"
 
 [environments]
 default = { solve-group = "default" }

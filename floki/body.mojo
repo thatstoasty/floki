@@ -14,7 +14,7 @@ struct Body(Copyable, Sized):
     var _json_cache: Optional[emberjson.Value]
     """An optional cache for the parsed JSON value, to avoid redundant parsing on multiple accesses."""
 
-    fn __init__(out self, var body: List[Byte]) raises:
+    def __init__(out self, var body: List[Byte]) raises:
         """Constructs a Body instance from a list of bytes.
 
         Args:
@@ -29,7 +29,7 @@ struct Body(Copyable, Sized):
         self.body = body^
         self._json_cache = None
 
-    fn __init__[origin: ImmutOrigin, //](out self, body: Span[Byte, origin]) raises:
+    def __init__[origin: ImmutOrigin, //](out self, body: Span[Byte, origin]) raises:
         """Alternate constructor that accepts a Span[Byte] for the body content.
 
         Parameters:
@@ -46,7 +46,7 @@ struct Body(Copyable, Sized):
         self.body = List[Byte](body)
         self._json_cache = None
 
-    fn __len__(self) -> Int:
+    def __len__(self) -> Int:
         """Returns the length of the body in bytes.
 
         Returns:
@@ -54,7 +54,7 @@ struct Body(Copyable, Sized):
         """
         return len(self.body)
 
-    fn as_bytes(self) -> Span[Byte, origin_of(self.body)]:
+    def as_bytes(self) -> Span[Byte, origin_of(self.body)]:
         """Returns a view of the body content as a span of bytes.
 
         Returns:
@@ -62,7 +62,7 @@ struct Body(Copyable, Sized):
         """
         return Span(self.body)
 
-    fn as_string_slice(self) -> StringSlice[origin_of(self.body)]:
+    def as_string_slice(self) -> StringSlice[origin_of(self.body)]:
         """Creates and returns a `StringSlice` view of the body content.
 
         Returns:
@@ -70,7 +70,7 @@ struct Body(Copyable, Sized):
         """
         return StringSlice(unsafe_from_utf8=Span(self.body))
 
-    fn as_json(mut self) raises -> ref [origin_of(self._json_cache._value)] emberjson.Value:
+    def as_json(mut self) raises -> ref [origin_of(self._json_cache._value)] emberjson.Value:
         """Converts the response body to a JSON object.
         
         Returns:
@@ -88,7 +88,7 @@ struct Body(Copyable, Sized):
         self._json_cache = emberjson.parse(StringSlice(from_utf8=self.body))
         return self._json_cache.value()
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         """Writes the body to a writer.
 
         Args:
@@ -96,7 +96,7 @@ struct Body(Copyable, Sized):
         """
         writer.write(StringSlice(unsafe_from_utf8=self.body))
 
-    fn consume(deinit self) -> List[Byte]:
+    def consume(deinit self) -> List[Byte]:
         """Consumes the body and returns it as List[Byte].
         
         Returns:

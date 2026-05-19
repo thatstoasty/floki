@@ -1,13 +1,13 @@
 from std.memory import memcpy
 from std.ffi import c_char, c_size_t, get_errno
 from std.sys import stderr
-from mojo_curl.c.types import ImmutExternalPointer, MutExternalPointer, MutExternalOpaquePointer
+from mojo_curl.c.types import ImmutExternalPointer, MutExternalPointer
 
 
 # To read HTTP response data into a list of bytes.
-fn write_callback(
-    ptr: MutExternalPointer[c_char], size: c_size_t, nmemb: c_size_t, userdata: MutExternalOpaquePointer
-) -> c_size_t:
+def write_callback(
+    ptr: MutExternalPointer[c_char], size: c_size_t, nmemb: c_size_t, userdata: MutExternalPointer[NoneType]
+) abi("C") -> c_size_t:
     """Callback for libcurl to write received HTTP response data into a byte buffer.
 
     Args:
@@ -34,9 +34,9 @@ struct DataToRead:
     """The total number of bytes remaining to be read from the data pointer."""
 
 
-fn read_callback(
-    ptr: MutExternalPointer[c_char], size: c_size_t, nmemb: c_size_t, userdata: MutExternalOpaquePointer
-) -> c_size_t:
+def read_callback(
+    ptr: MutExternalPointer[c_char], size: c_size_t, nmemb: c_size_t, userdata: MutExternalPointer[NoneType]
+) abi("C") -> c_size_t:
     """Callback for libcurl to read request body data from a byte buffer.
 
     Args:
@@ -75,9 +75,9 @@ fn read_callback(
     return 0
 
 
-fn fd_read_callback(
-    ptr: MutExternalPointer[c_char], size: c_size_t, nmemb: c_size_t, userdata: MutExternalOpaquePointer
-) -> c_size_t:
+def fd_read_callback(
+    ptr: MutExternalPointer[c_char], size: c_size_t, nmemb: c_size_t, userdata: MutExternalPointer[NoneType]
+) abi("C") -> c_size_t:
     """Callback for libcurl to read request body data from a file descriptor.
 
     Args:

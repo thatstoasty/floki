@@ -2,7 +2,7 @@ import floki
 from floki import Status
 
 
-fn main() raises -> None:
+def main() raises -> None:
     # Make a Request
     var r = floki.get("https://api.github.com/events")
     r = floki.post("https://httpbin.org/post", data={"key": "value"})
