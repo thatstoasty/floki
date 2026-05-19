@@ -5,7 +5,7 @@ from floki.body import Body
 import emberjson
 
 
-fn get(
+def get(
     var url: String,
     var headers: Dict[String, String] = {},
     query_parameters: Dict[String, String] = {},
@@ -29,7 +29,7 @@ fn get(
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         var r = floki.get("https://httpbin.org/get")
     ```
     """
@@ -42,7 +42,7 @@ fn get(
     )
 
 
-fn post(
+def post(
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
@@ -66,7 +66,7 @@ fn post(
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         var r = floki.post("https://httpbin.org/post", data={"key": "value"})
     ```
     """
@@ -79,7 +79,7 @@ fn post(
     )
 
 
-fn post[origin: ImmutOrigin, //](
+def post[origin: ImmutOrigin, //](
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
@@ -106,7 +106,7 @@ fn post[origin: ImmutOrigin, //](
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         var r = floki.post("https://httpbin.org/post", data="hello".as_bytes())
     ```
     """
@@ -118,7 +118,7 @@ fn post[origin: ImmutOrigin, //](
     )
 
 
-fn post(
+def post(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
@@ -142,7 +142,7 @@ fn post(
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         with open("data.json", "r") as file:
             var r = floki.post("https://httpbin.org/post", data=file)
     ```
@@ -155,7 +155,7 @@ fn post(
     )
 
 
-fn put(
+def put(
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
@@ -179,7 +179,7 @@ fn put(
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         var r = floki.put("https://httpbin.org/put", data={"key": "value"})
     ```
     """
@@ -192,7 +192,7 @@ fn put(
     )
 
 
-fn put[origin: ImmutOrigin, //](
+def put[origin: ImmutOrigin, //](
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
@@ -219,7 +219,7 @@ fn put[origin: ImmutOrigin, //](
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         var r = floki.put("https://httpbin.org/put", data="hello".as_bytes())
     ```
     """
@@ -231,7 +231,7 @@ fn put[origin: ImmutOrigin, //](
     )
 
 
-fn put(
+def put(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
@@ -255,7 +255,7 @@ fn put(
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         with open("data.json", "r") as file:
             var r = floki.put("https://httpbin.org/put", data=file)
     ```
@@ -268,7 +268,7 @@ fn put(
     )
 
 
-fn delete(
+def delete(
     var url: String,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
@@ -290,7 +290,7 @@ fn delete(
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         var r = floki.delete("https://httpbin.org/delete")
     ```
     """
@@ -302,7 +302,7 @@ fn delete(
     )
 
 
-fn patch(
+def patch(
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
@@ -326,7 +326,7 @@ fn patch(
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         var r = floki.patch("https://httpbin.org/patch", data={"key": "value"})
     ```
     """
@@ -338,7 +338,7 @@ fn patch(
         timeout=timeout,
     )
 
-fn patch[origin: ImmutOrigin, //](
+def patch[origin: ImmutOrigin, //](
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
@@ -365,7 +365,7 @@ fn patch[origin: ImmutOrigin, //](
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         var data = String("hello").as_bytes()
         var r = floki.patch("https://httpbin.org/patch", data="hello".as_bytes())
     ```
@@ -377,7 +377,7 @@ fn patch[origin: ImmutOrigin, //](
         timeout=timeout,
     )
 
-fn patch(
+def patch(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
@@ -401,7 +401,7 @@ fn patch(
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         with open("data.json", "r") as file:
             var r = floki.patch("https://httpbin.org/patch", data=file)
     ```
@@ -414,7 +414,7 @@ fn patch(
     )
 
 
-fn head(
+def head(
     var url: String,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
@@ -436,7 +436,7 @@ fn head(
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         var r = floki.head("https://httpbin.org/get")
     ```
     """
@@ -448,7 +448,7 @@ fn head(
     )
 
 
-fn options(
+def options(
     var url: String,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
@@ -470,7 +470,7 @@ fn options(
     ```mojo
     import floki
 
-    fn main() raises:
+    def main() raises:
         var r = floki.options("https://httpbin.org/get")
     ```
     """

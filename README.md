@@ -34,7 +34,7 @@ There's two ways to build `floki` from source: directly from the Git repository 
 Run the following commands in your terminal:
 
 ```bash
-pixi add -g "https://github.com/thatstoasty/floki.git" --tag v0.2.1 && pixi install
+pixi add -g "https://github.com/thatstoasty/floki.git" --tag v0.3.0 && pixi install
 ```
 
 #### Building from source: Local
@@ -50,7 +50,7 @@ pixi add -s ./path/to/floki && pixi install
 ```mojo
 import floki
 
-fn main() raises -> None:
+def main() raises -> None:
     var response = floki.get("https://example.com")
     for pair in response.headers.items():
         print(pair.key, ": ", pair.value)

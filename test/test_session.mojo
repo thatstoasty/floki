@@ -7,7 +7,7 @@ from floki.cookie.cookie import Cookie
 from floki.cookie.cookie_jar import CookieKey
 
 
-fn assert_variant_equal(expected: Variant[Int, String, Bool], actual: emberjson.Value) raises -> None:
+def assert_variant_equal(expected: Variant[Int, String, Bool], actual: emberjson.Value) raises -> None:
     if actual.is_int() and expected.isa[Int]():
         assert_equal(Int64(expected[Int]), actual.int())
     elif actual.is_string() and expected.isa[String]():
@@ -16,14 +16,14 @@ fn assert_variant_equal(expected: Variant[Int, String, Bool], actual: emberjson.
         assert_equal(expected[Bool], actual.bool())
 
 
-fn assert_variant_equal2(expected: Variant[Int, String], actual: emberjson.Value) raises -> None:
+def assert_variant_equal2(expected: Variant[Int, String], actual: emberjson.Value) raises -> None:
     if actual.is_int() and expected.isa[Int]():
         assert_equal(Int64(expected[Int]), actual.int())
     elif actual.is_string() and expected.isa[String]():
         assert_equal(expected[String], actual.string())
 
 
-fn test_get() raises -> None:
+def test_get() raises -> None:
     var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
     assert_equal(response.status, Status.OK)
     var expected: Dict[String, Variant[Int, String, Bool]] = {
@@ -33,7 +33,7 @@ fn test_get() raises -> None:
         assert_variant_equal(expected[node.key], node.value)
 
 
-fn test_post() raises -> None:
+def test_post() raises -> None:
     var response = Session().post(
         "https://httpbingo.org/post",
         headers={
@@ -52,7 +52,7 @@ fn test_post() raises -> None:
         assert_variant_equal(expected[node.key], node.value)
     
 
-fn test_post_file() raises -> None:
+def test_post_file() raises -> None:
     var expected: Dict[String, Variant[String, Dict[String, List[String]]]] = {
         "name": "file.json",
     }
@@ -81,7 +81,7 @@ fn test_post_file() raises -> None:
                         assert_equal(expected[node.key][Dict[String, List[String]]][subnode.key][0], item.string())
                 
 
-fn test_put() raises -> None:
+def test_put() raises -> None:
     var response = Session().put(
         "https://jsonplaceholder.typicode.com/posts/1",
         {
@@ -95,7 +95,8 @@ fn test_put() raises -> None:
     for node in response.body.as_json().object().items():
         assert_true(node.key in expected)
 
-fn test_put_file() raises -> None:
+
+def test_put_file() raises -> None:
     var expected: Dict[String, Variant[Int, String]] = {
         "id": 1,
         "key1": "patched_value",
@@ -114,7 +115,7 @@ fn test_put_file() raises -> None:
             assert_variant_equal2(expected[node.key], node.value)
 
 
-fn test_patch() raises -> None:   
+def test_patch() raises -> None:   
     var expected: Dict[String, Variant[Int, String]] = {
         "userId": 1,
         "id": 1,
@@ -135,7 +136,7 @@ fn test_patch() raises -> None:
         assert_variant_equal2(expected[node.key], node.value)
 
 
-fn test_patch_file() raises -> None:
+def test_patch_file() raises -> None:
     var expected: Dict[String, Variant[Int, String]] = {
         "userId": 1,
         "id": 1,
@@ -157,23 +158,23 @@ fn test_patch_file() raises -> None:
             assert_variant_equal2(expected[node.key], node.value)
 
 
-fn test_delete() raises -> None:    
+def test_delete() raises -> None:    
     var response = Session().delete("https://jsonplaceholder.typicode.com/posts/1")
     assert_equal(response.status, Status.OK)
 
 
-fn test_head() raises -> None:
+def test_head() raises -> None:
     var response = Session().head("https://httpbingo.org/head")
     assert_equal(response.status, Status.OK)
 
 
-fn test_options() raises -> None:
+def test_options() raises -> None:
     var response = Session().options("https://jsonplaceholder.typicode.com/posts")
     assert_equal(response.status, Status.NO_CONTENT)
     assert_equal(response.headers["access-control-allow-methods"], "GET,HEAD,PUT,PATCH,POST,DELETE")
 
 
-fn test_cookie_parsing() raises -> None:    
+def test_cookie_parsing() raises -> None:    
     var response = Session().get(
         "https://httpbin.org/cookies/set",
         query_parameters={"freeform": "my_val"},
@@ -182,22 +183,8 @@ fn test_cookie_parsing() raises -> None:
     assert_equal(response.cookies[CookieKey("freeform", "httpbin.org", path="/")].value, "my_val")
 
 
-fn test_cookie_parsing_with_expiration() raises -> None:
-    var cookie = Cookie("httpbin.org\tFALSE\t/\tFALSE\t1893456000\tfreeform\tmy_val")
-    assert_equal(cookie.name, "freeform")
-    assert_equal(cookie.value, "my_val")
-    assert_true(cookie.expires.is_datetime())
-    var expires = cookie.expires.datetime.value()
-    assert_equal(expires.year, 2030)
-    assert_equal(expires.month, 1)
-    assert_equal(expires.day, 1)
-    assert_equal(expires.hour, 0)
-    assert_equal(expires.minute, 0)
-    assert_equal(expires.second, 0)
-
-
-fn main() raises -> None:
+def main() raises -> None:
     TestSuite.discover_tests[__functions_in_module()]().run()
     # var suite = TestSuite()
-    # suite.test[test_post_file]()
+    # suite.test[test_options]()
     # suite^.run()

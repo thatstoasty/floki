@@ -1,5 +1,5 @@
-from small_time import SmallTime, TimeZone
-from small_time.small_time import from_timestamp, parse_time_with_format
+from mojo_datetime import DateTime, TimeZone, TimeDelta, SITimeUnit, TZ_UTC
+from floki._time import from_utc_timestamp
 
 
 comptime HTTP_DATE_FORMAT = "ddd, DD MMM YYYY HH:mm:ss ZZZ"
@@ -13,15 +13,15 @@ struct Expiration(Copyable, Defaultable, Equatable):
 
     var variant: UInt8
     """An internal variant discriminator to determine if this is a session expiration (variant 0) or a datetime expiration (variant 1)."""
-    var datetime: Optional[SmallTime]
+    var datetime: Optional[DateTime[TZ_UTC]]
     """The specific expiration datetime if variant is 1, or None if this is a session expiration (variant 0)."""
 
-    fn __init__(out self):
+    def __init__(out self):
         """Constructs a session-scoped Expiration (no explicit expiry)."""
         self.variant = 0
         self.datetime = None
 
-    fn __init__(out self, time: SmallTime):
+    def __init__(out self, time: DateTime[TZ_UTC]):
         """Constructs an Expiration with a specific datetime.
 
         Args:
@@ -30,7 +30,7 @@ struct Expiration(Copyable, Defaultable, Equatable):
         self.variant = 1
         self.datetime = time
 
-    fn __init__(out self, text: StringSlice) raises:
+    def __init__(out self, text: StringSlice) raises:
         """Constructs an Expiration by parsing an HTTP date string.
 
         Args:
@@ -43,10 +43,10 @@ struct Expiration(Copyable, Defaultable, Equatable):
             self.variant = 0
             self.datetime = None
         else:
-            self = Self(time=parse_time_with_format(text, HTTP_DATE_FORMAT, TimeZone.UTC))
+            self = Self(time=DateTime.parse[fmt_str=HTTP_DATE_FORMAT](text))
 
     @staticmethod
-    fn from_libcurl_expires(text: StringSlice) raises -> Self:
+    def from_libcurl_expires(text: StringSlice) raises -> Self:
         """Constructs an Expiration from libcurl's cookie-list expires field.
 
         Args:
@@ -62,18 +62,19 @@ struct Expiration(Copyable, Defaultable, Equatable):
         var expires_timestamp = atol(text)
         if expires_timestamp == 0:
             return Self()
-        return Self(from_timestamp(Float64(expires_timestamp), utc=True))
+        return Self(from_utc_timestamp(expires_timestamp))
+        # return Self(DateTime.from_unix_epoch(TimeDelta(expires_timestamp)))
 
     @staticmethod
-    fn invalidate() -> Self:
+    def invalidate() -> Self:
         """Creates an Expiration set to the Unix epoch, effectively invalidating the cookie.
 
         Returns:
             An Expiration representing January 1, 1970.
         """
-        return Self(variant=1, datetime=SmallTime(1970, 1, 1, 0, 0, 0, 0))
+        return Self(variant=1, datetime=DateTime(1970, 1, 1, 0, 0, 0, 0))
 
-    fn is_session(self) -> Bool:
+    def is_session(self) -> Bool:
         """Checks if this is a session-scoped expiration (no explicit expiry).
 
         Returns:
@@ -81,7 +82,7 @@ struct Expiration(Copyable, Defaultable, Equatable):
         """
         return self.variant == 0
 
-    fn is_datetime(self) -> Bool:
+    def is_datetime(self) -> Bool:
         """Checks if this expiration has an explicit datetime.
 
         Returns:
@@ -89,7 +90,7 @@ struct Expiration(Copyable, Defaultable, Equatable):
         """
         return self.variant == 1
 
-    fn http_date_timestamp(self) raises -> Optional[String]:
+    def http_date_timestamp(self) raises -> Optional[String]:
         """Formats the expiration datetime as an HTTP date string.
 
         Returns:
@@ -103,10 +104,10 @@ struct Expiration(Copyable, Defaultable, Equatable):
 
         # TODO fix this it breaks time and space (replacing timezone might add or remove something sometimes)
         var dt = self.datetime.value()
-        # dt.time_zone = TimeZone.UTC
-        return dt.format[HTTP_DATE_FORMAT]()
+        var result = String()
+        return dt.write_to[HTTP_DATE_FORMAT](result)
 
-    fn __eq__(self, other: Self) -> Bool:
+    def __eq__(self, other: Self) -> Bool:
         """Compares two Expiration instances for equality.
 
         Args:
@@ -122,6 +123,6 @@ struct Expiration(Copyable, Defaultable, Equatable):
                 return False
             elif not Bool(self.datetime) and not Bool(other.datetime):
                 return True
-            return self.datetime.value().isoformat() == other.datetime.value().isoformat()
+            return self.datetime.value() == other.datetime.value()
 
         return True

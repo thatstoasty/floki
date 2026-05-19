@@ -1,6 +1,6 @@
 from std.collections.dict import Hasher
-from small_time import now
 from mojo_curl.list import CurlList
+from floki._time import now
 from floki.cookie.cookie import Cookie
 
 
@@ -15,7 +15,7 @@ struct CookieKey(KeyElement):
     """The cookie path."""
 
     @implicit
-    fn __init__(
+    def __init__(
         out self,
         name: String,
         domain: Optional[String] = None,
@@ -32,7 +32,7 @@ struct CookieKey(KeyElement):
         self.domain = domain.or_else("")
         self.path = path.or_else("/")
 
-    fn __eq__(self: Self, other: Self) -> Bool:
+    def __eq__(self: Self, other: Self) -> Bool:
         """Compares two CookieKey instances for equality.
 
         Args:
@@ -43,7 +43,7 @@ struct CookieKey(KeyElement):
         """
         return self.name == other.name and self.domain == other.domain and self.path == other.path
 
-    fn __hash__[H: Hasher](self, mut hasher: H):
+    def __hash__[H: Hasher](self, mut hasher: H):
         """Updates hasher with the underlying bytes.
 
         Parameters:
@@ -61,11 +61,11 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
     var _inner: Dict[CookieKey, Cookie]
     """Internal dictionary storing cookies by their keys."""
 
-    fn __init__(out self):
+    def __init__(out self):
         """Constructs an empty CookieJar."""
         self._inner = Dict[CookieKey, Cookie]()
 
-    fn __init__(out self, *cookies: Cookie) raises:
+    def __init__(out self, *cookies: Cookie) raises:
         """Constructs a CookieJar pre-populated with the given cookies.
         
         Args:
@@ -78,7 +78,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         for cookie in cookies:
             self.set_cookie(cookie.copy())
 
-    fn __init__(out self, var raw_cookies: CurlList) raises:
+    def __init__(out self, var raw_cookies: CurlList) raises:
         """Constructs a CookieJar by parsing cookies from a libcurl cookie list.
 
         Args:
@@ -95,7 +95,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
             raw_cookies^.free()
 
     @always_inline
-    fn __setitem__(mut self, var key: CookieKey, var value: Cookie):
+    def __setitem__(mut self, var key: CookieKey, var value: Cookie):
         """Sets a cookie in the jar by key.
 
         Args:
@@ -104,7 +104,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         """
         self._inner[key^] = value^
 
-    fn __getitem__(ref self, var key: CookieKey) raises -> ref [self._inner] Cookie:
+    def __getitem__(ref self, var key: CookieKey) raises -> ref [self._inner] Cookie:
         """Retrieves a cookie from the jar by key.
 
         Args:
@@ -118,7 +118,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         """
         return self._inner[key^]
 
-    fn get(self, key: CookieKey) -> Optional[Cookie]:
+    def get(self, key: CookieKey) -> Optional[Cookie]:
         """Retrieves a cookie from the jar by key, returning None if not found.
 
         Args:
@@ -130,7 +130,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         return self._inner.get(key)
 
     @always_inline
-    fn __contains__(self, key: CookieKey) -> Bool:
+    def __contains__(self, key: CookieKey) -> Bool:
         """Checks if a cookie with the given key exists in the jar.
 
         Args:
@@ -142,7 +142,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         return key in self._inner
 
     @always_inline
-    fn __contains__(self, key: Cookie) -> Bool:
+    def __contains__(self, key: Cookie) -> Bool:
         """Checks if the given cookie exists in the jar.
 
         Args:
@@ -154,7 +154,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         return CookieKey(key.name, key.domain, key.path) in self
 
     @always_inline
-    fn __len__(self) -> Int:
+    def __len__(self) -> Int:
         """Returns the number of cookies in the jar.
 
         Returns:
@@ -163,7 +163,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         return len(self._inner)
 
     @always_inline
-    fn __bool__(self) -> Bool:
+    def __bool__(self) -> Bool:
         """Returns True if the cookie jar is empty.
 
         Returns:
@@ -172,7 +172,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         return len(self) == 0
 
     @always_inline
-    fn set_cookie(mut self, var cookie: Cookie):
+    def set_cookie(mut self, var cookie: Cookie):
         """Adds or replaces a cookie in the jar.
 
         Args:
@@ -180,7 +180,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         """
         self[CookieKey(cookie.name, cookie.domain, cookie.path)] = cookie^
 
-    fn add_headers_to_jar(mut self, headers: List[String]) raises:
+    def add_headers_to_jar(mut self, headers: List[String]) raises:
         """Parses cookie header strings and adds them to the jar.
 
         Args:
@@ -198,7 +198,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
             
             self.set_cookie(cookie^)
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         """Writes all cookies as `Set-Cookie` headers to a writer.
 
         Args:
@@ -207,12 +207,12 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         for cookie in self._inner.values():
             writer.write("set-cookie", ": ", cookie.build_header_value())
 
-    # fn clear_expired_cookies(mut self) raises:
-    #     var now = now()
-    #     var keys_to_remove = List[CookieKey]()
-    #     for kv in self._inner.items():
-    #         if kv.value.is_expired(now):
-    #             keys_to_remove.append(kv.key)
+    def clear_expired_cookies(mut self) raises:
+        var now = now()
+        var keys_to_remove = List[CookieKey]()
+        for kv in self._inner.items():
+            if kv.value.is_expired(now):
+                keys_to_remove.append(kv.key.copy())
 
-    #     for key in keys_to_remove:
-    #         self._inner.remove(key)
+        for key in keys_to_remove:
+            _ = self._inner.pop(key)
