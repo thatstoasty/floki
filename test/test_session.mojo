@@ -2,7 +2,7 @@ from std.utils import Variant
 from std.testing import TestSuite, assert_equal, assert_true
 import emberjson
 from floki.session import Session
-from floki.http import Status
+from floki.http import Status, Protocol
 from floki.cookie.cookie import Cookie
 from floki.cookie.cookie_jar import CookieKey
 
@@ -181,6 +181,65 @@ def test_cookie_parsing() raises -> None:
     )
     assert_equal(response.status, Status.OK)
     assert_equal(response.cookies[CookieKey("freeform", "httpbin.org", path="/")].value, "my_val")
+
+
+def test_session_reuse() raises -> None:
+    var session = Session()
+    var r1 = session.get("https://jsonplaceholder.typicode.com/todos/1")
+    assert_equal(r1.status, Status.OK)
+    var r2 = session.get("https://jsonplaceholder.typicode.com/todos/2")
+    assert_equal(r2.status, Status.OK)
+
+
+def test_session_level_headers() raises -> None:
+    var response = Session(headers={"X-Floki-Test": "session-headers"}).get(
+        "https://httpbin.org/get",
+    )
+    assert_equal(response.status, Status.OK)
+    assert_equal(
+        response.body.as_json()["headers"]["X-Floki-Test"].string(),
+        "session-headers",
+    )
+
+
+def test_session_no_redirects() raises -> None:
+    var response = Session(allow_redirects=False).get(
+        "https://httpbin.org/redirect/1"
+    )
+    assert_true(response.is_redirect())
+
+
+def test_response_is_ok() raises -> None:
+    var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
+    assert_true(response.is_ok())
+
+
+def test_response_body_as_bytes() raises -> None:
+    var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
+    assert_true(len(response.body.as_bytes()) > 0)
+
+
+def test_response_protocol_is_https() raises -> None:
+    var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
+    assert_true(response.protocol == Protocol.HTTPS)
+
+
+def test_response_raise_for_status_passes_on_200() raises -> None:
+    var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
+    try:
+        response.raise_for_status()  # must not raise
+    except e:
+        raise Error(t"raise_for_status raised unexpectedly on 200 OK: {e}")
+    
+
+def test_response_raise_for_status_raises_on_4xx() raises -> None:
+    var raised = False
+    var response = Session().get("https://httpbingo.org/status/404")
+    try:
+        response.raise_for_status()
+    except:
+        raised = True
+    assert_true(raised)
 
 
 def main() raises -> None:

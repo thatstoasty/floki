@@ -8,7 +8,7 @@ comptime CRLF = "\r\n"
 """Carriage return and line feed characters used in HTTP formatting."""
 
 @fieldwise_init
-struct HTTPError(Movable):
+struct HTTPError(Movable, Writable):
     """An error that is raised when an HTTP response indicates a failure (i.e., a non-2xx status code)."""
     var status: Status
     """The HTTP status code that caused the error."""
