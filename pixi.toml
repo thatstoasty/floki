@@ -1,11 +1,7 @@
 [workspace]
 description = "Requests like HTTP client leveraging libcurl under the hood."
 authors = ["Mikhail Tavarez <miktavarez@gmail.com>"]
-channels = [
-    "https://repo.prefix.dev/modular-community",
-    "conda-forge",
-    "https://conda.modular.com/max",
-]
+channels = ["conda-forge", "https://conda.modular.com/max"]
 platforms = ["osx-arm64", "linux-64", "linux-aarch64"]
 license = "MIT"
 license-file = "LICENSE"
@@ -42,14 +38,14 @@ mojo = ">=1.0.0b1,<2"
 emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.2" }
 mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.0" }
 curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.0"  }
-mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", branch = "main"}
+mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "f056d586d14bce1e6e531670a3cfc84bea67017d" }
 
 [package.build-dependencies]
 mojo-compiler = ">=1.0.0b1,<1.0.0b2"
 emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.2" }
 mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.0" }
 curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.0"  }
-mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", branch = "main"}
+mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "f056d586d14bce1e6e531670a3cfc84bea67017d" }
 
 [package.host-dependencies]
 mojo-compiler = ">=1.0.0b1,<1.0.0b2"
@@ -59,7 +55,7 @@ mojo-compiler = ">=1.0.0b1,<1.0.0b2"
 emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.2" }
 mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.0" }
 curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.0"  }
-mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", branch = "main"}
+mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "f056d586d14bce1e6e531670a3cfc84bea67017d" }
 
 [feature.util.dependencies]
 isort = ">=8.0.1,<9"
