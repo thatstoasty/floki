@@ -158,7 +158,8 @@ def test_from_utc_timestamp_mid_day() raises -> None:
 
 def test_now_does_not_raise() raises -> None:
     var dt = now()
-    assert_true(dt.year >= 1970)
+    assert_true(dt.year >= 2020)
+    assert_true(dt.year <= 2100)
 
 
 # === parse_time_with_format tests ===
