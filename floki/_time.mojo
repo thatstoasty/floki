@@ -7,10 +7,6 @@ from mojo_datetime import DateTime, TimeZone, TZ_UTC, TimeDelta, SITimeUnit
 
 comptime time_t = Int64
 """C `time_t` type, representing time in seconds since the Epoch (1970-01-01 00:00:00 UTC)."""
-comptime suseconds_t = time_t
-"""C `suseconds_t` type, representing microseconds. It is typically the same as `time_t`."""
-comptime c_void = NoneType
-"""C `void` type, used for generic pointers."""
 
 comptime ImmutExternalUnsafePointer = UnsafePointer[origin=ImmutExternalOrigin, ...]
 comptime MutExternalUnsafePointer = UnsafePointer[origin=MutExternalOrigin, ...]
@@ -66,7 +62,7 @@ struct _CTime(ImplicitlyCopyable, Writable):
             writer: The writer to write to.
         """
         writer.write(
-            "tm(seconds=",
+            "_CTime(seconds=",
             self.seconds,
             ", minutes=",
             self.minutes,
@@ -92,58 +88,11 @@ struct _CTime(ImplicitlyCopyable, Writable):
         writer.write(")")
 
 
-@fieldwise_init
-struct _CTimeValue(ImplicitlyCopyable, Writable, TrivialRegisterPassable):
-    """C `TimeValue` struct."""
-
-    var seconds: time_t
-    """Seconds to wait. Corresponds to `tv_sec` in C."""
-    var microseconds: suseconds_t
-    """Microseconds to wait. Corresponds to `tv_usec` in C."""
-
-
-@fieldwise_init
-struct _CTimeZone(ImplicitlyCopyable, Writable, TrivialRegisterPassable):
-    """C `timezone` struct."""
-
-    var minutes_west: c_int
-    """Minutes west of Greenwich."""
-    var dst_time_correction: c_int
-    """Type of DST correction."""
-
-
-# def now[utc: Bool = False]() raises -> DateTime[TZ_UTC]:
-#     """Return the current time in UTC or local time.
-
-#     Parameters:
-#         utc: If True, return the current time in UTC. Otherwise, return the current time in local time.
-
-#     Returns:
-#         The current time.
-
-#     Raises:
-#         Error: If unable to get the current time via C.
-#     """
-#     return from_timestamp[utc=utc](get_time_of_day())
-
-
-def now() raises -> DateTime[TZ_UTC]:
-    """Construct a datetime from `time.now()`.
-
-    Returns:
-        A UTC DateTime.
-    """
-    return from_utc_timestamp(get_time_of_day())
-
-
-def _validate_timestamp[timezone: TimeZone = TZ_UTC](
-    tm: _CTime, time_val: Optional[_CTimeValue] = None
-) raises -> DateTime[timezone]:
+def _validate_timestamp[timezone: TimeZone = TZ_UTC](tm: _CTime) raises -> DateTime[timezone]:
     """Validate the timestamp.
 
     Args:
         tm: The time struct.
-        time_val: The time value.
 
     Returns:
         The validated timestamp.
@@ -175,10 +124,6 @@ def _validate_timestamp[timezone: TimeZone = TZ_UTC](
     if not -1 < seconds < 61:
         raise Error("The day of the month parsed out from the timestamp is too large or negative. Received: ", seconds)
 
-    var microseconds = Int(time_val.value().microseconds) if time_val else 0
-    if microseconds < 0:
-        raise Error("Received negative microseconds. Received: ", microseconds)
-
     return DateTime[timezone](
         year,
         month,
@@ -186,84 +131,8 @@ def _validate_timestamp[timezone: TimeZone = TZ_UTC](
         hours,
         minutes,
         seconds,
-        microseconds,
+        0,
     )
-
-
-def _gettimeofday(tv: MutUnsafePointer[_CTimeValue, ...], tz: MutUnsafePointer[_CTimeZone, ...]) -> c_int:
-    """Gets the current time. It's a wrapper around libc `gettimeofday`.
-    The `tv` parameter is a pointer to a `struct timeval` that will be filled.
-
-    Args:
-        tv: UnsafePointer to a `struct timeval` that will be filled with the current time.
-        tz: UnsafePointer to a `struct timezone` that will be filled with the timezone information.
-
-    Returns:
-        The return value is 0 on success, or -1 on error. If an error occurs,
-        the global variable `errno` is set to indicate the error.
-
-    #### C Function:
-    ```c
-    int gettimeofday(struct timeval *restrict tv, struct timezone *_Nullable restrict tz);
-    ```
-    """
-    return external_call["gettimeofday", c_int, type_of(tv), type_of(tz)](tv, tz)
-
-
-def get_time_of_day() raises -> _CTimeValue:
-    """Gets the current time. Wrapper around libc `gettimeofday`.
-
-    Returns:
-        The current time.
-
-    #### C Function:
-    ```c
-    int gettimeofday(struct timeval *restrict tv, struct timezone *restrict tz);
-    ```
-    """
-    var tv = InlineArray[_CTimeValue, 1](uninitialized=True)
-    var tz = InlineArray[_CTimeZone, 1](uninitialized=True)
-    var result = _gettimeofday(tv.unsafe_ptr(), tz.unsafe_ptr())
-    if result != 0:
-        var errno = get_errno()
-        if errno == errno.EFAULT:
-            raise Error(
-                "[EFAULT] gettimeofday failed: One of `tv` or `tz` pointed outside the accessible address space."
-            )
-        else:
-            raise Error("[UNKNOWN] gettimeofday failed with unknown errno code: ", errno)
-    return tv[0].copy()
-
-
-def _localtime_r(timep: ImmutUnsafePointer[time_t, ...], result: MutUnsafePointer[_CTime, ...]) -> None:
-    """Converts a time value to a broken-down local time.
-
-    Args:
-        timep: UnsafePointer to a time value in seconds since the Epoch.
-        result: UnsafePointer to a `_CTime` struct where the broken-down local time will be stored.
-
-    #### C Function:
-    ```c
-    struct tm *localtime_r(const time_t *timep, struct tm *result);
-    ```
-    """
-    _ = external_call["localtime_r", ImmutExternalUnsafePointer[_CTime], type_of(timep), type_of(result)](timep, result)
-
-
-def get_local_time(seconds_since_epoch: time_t) raises -> _CTime:
-    """Converts a time value to a broken-down local time.
-
-    Args:
-        seconds_since_epoch: Time value in seconds since the Epoch.
-
-    #### C Function:
-    ```c
-    struct tm *localtime_r(const time_t *timep, struct tm *result);
-    ```
-    """
-    var result = InlineArray[_CTime, 1](uninitialized=True)
-    _localtime_r(UnsafePointer(to=seconds_since_epoch), result.unsafe_ptr())
-    return result[0].copy()
 
 
 def _gmtime(timep: ImmutUnsafePointer[time_t, ...]) -> Optional[MutExternalUnsafePointer[_CTime]]:
@@ -297,59 +166,13 @@ def get_gm_time(time: time_t) raises -> _CTime:
     struct tm *gmtime(const time_t *timep);
     ```
     """
-    var result = _gmtime(UnsafePointer[mut=False](to=time))
+    var result = _gmtime(UnsafePointer(to=time))
     if not result:
         raise Error(
             "get_gm_time failed: The pointer to the result is still null, which indicates the conversion failed."
         )
 
-    # TODO (Mikhail): Maybe copy the result, not sure if take_pointee is safe here.
-    return result.value().take_pointee()
-
-
-comptime MAX_TIMESTAMP: Float64 = 32503737600
-"""Maximum timestamp."""
-comptime MAX_TIMESTAMP_MS = MAX_TIMESTAMP * 1000
-"""Maximum timestamp in milliseconds."""
-comptime MAX_TIMESTAMP_US = MAX_TIMESTAMP * 1_000_000
-"""Maximum timestamp in microseconds."""
-
-
-def normalize_timestamp(var timestamp: Float64) raises -> Float64:
-    """Normalize millisecond and microsecond timestamps into normal timestamps.
-
-    Args:
-        timestamp: The timestamp to normalize.
-
-    Returns:
-        The normalized timestamp.
-
-    Raises:
-        Error: If the timestamp is too large.
-    """
-    if timestamp > MAX_TIMESTAMP:
-        if timestamp < MAX_TIMESTAMP_MS:
-            timestamp /= 1000
-        elif timestamp < MAX_TIMESTAMP_US:
-            timestamp /= 1_000_000
-        else:
-            raise Error("The specified timestamp ", timestamp, " is too large.")
-    return timestamp
-
-
-def from_utc_timestamp(time: _CTimeValue) raises -> DateTime[TZ_UTC]:
-    """Create a DateTime instance from a timestamp.
-
-    Args:
-        time: The timestamp as a C TimeValue.
-
-    Returns:
-        The DateTime instance.
-
-    Raises:
-        Error: If the timestamp is invalid.
-    """
-    return _validate_timestamp[timezone=TZ_UTC](get_gm_time(time.seconds), time)
+    return result.value()[].copy()
 
 
 def from_utc_timestamp(timestamp: Int) raises -> DateTime[TZ_UTC]:
@@ -364,8 +187,17 @@ def from_utc_timestamp(timestamp: Int) raises -> DateTime[TZ_UTC]:
     Raises:
         Error: If the timestamp is invalid.
     """
-    var t = _CTimeValue(seconds=Int64(timestamp), microseconds=0)
-    return _validate_timestamp[timezone=TZ_UTC](get_gm_time(t.seconds), t)
+    return _validate_timestamp[timezone=TZ_UTC](get_gm_time(Int64(timestamp)))
+
+
+def now() raises -> DateTime[TZ_UTC]:
+    """Construct a datetime from `time.now()`.
+
+    Returns:
+        A UTC DateTime.
+    """
+    comptime NANOSECONDS_IN_SECOND = 1_000_000_000
+    return from_utc_timestamp(Int(time.monotonic() / NANOSECONDS_IN_SECOND))
 
 
 def _strptime(
