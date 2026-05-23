@@ -20,7 +20,7 @@ preview = ["pixi-build"]
 Next, you can add `curl_wrapper` by running:
 
 ```bash
-pixi add curl_wrapper -g "https://github.com/thatstoasty/mojo-curl.git" --subdir shim --tag v0.3.1
+pixi add curl_wrapper -g "https://github.com/thatstoasty/mojo-curl.git" --subdir shim --tag v0.3.0
 ```
 
 > Note: Mojo cannot currently support calling C functions with variadic arguments, and the libcurl client interface makes heavy use of them. The `curl_wrapper` library provides a thin wrapper around libcurl to avoid this issue. Remember to always validate the code you're pulling from third-party sources!
