@@ -1,9 +1,7 @@
-import std.sys._libc as libc
-from std.ffi import c_char, c_int, c_long, c_uchar, external_call, get_errno
-from std.sys import CompilationTarget
+from std.ffi import c_char, c_int, c_long, external_call
 from std import time
-
-from mojo_datetime import DateTime, TimeZone, TZ_UTC, TimeDelta, SITimeUnit
+from std.time.time import _realtime_nanoseconds
+from mojo_datetime import DateTime, TimeZone, TZ_UTC
 
 comptime time_t = Int64
 """C `time_t` type, representing time in seconds since the Epoch (1970-01-01 00:00:00 UTC)."""
@@ -197,7 +195,7 @@ def now() raises -> DateTime[TZ_UTC]:
         A UTC DateTime.
     """
     comptime NANOSECONDS_IN_SECOND = 1_000_000_000
-    return from_utc_timestamp(Int(time.monotonic() / NANOSECONDS_IN_SECOND))
+    return from_utc_timestamp(Int(_realtime_nanoseconds() / NANOSECONDS_IN_SECOND))
 
 
 def _strptime(

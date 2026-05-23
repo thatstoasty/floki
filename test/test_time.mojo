@@ -1,5 +1,6 @@
 from std.testing import TestSuite, assert_equal, assert_true
-from mojo_datetime import TZ_UTC
+from std.python import Python, PythonObject
+from mojo_datetime import TZ_UTC, DateTime
 from floki._time import (
     _CTime,
     _validate_timestamp,
@@ -8,6 +9,27 @@ from floki._time import (
     now,
     parse_time_with_format,
 )
+
+
+def py_dt_datetime() raises -> PythonObject:
+    var _datetime = Python.import_module("datetime")
+    return _datetime.datetime
+
+
+# TODO: Need a better way to test this, since it's not deterministic.
+def assert_datetime_equal(dt: DateTime, py_dt: PythonObject) raises:
+    assert_true(
+        dt.year == UInt16(Int(String(py_dt.year)))
+        and dt.month == UInt8(Int(String(py_dt.month)))
+        and dt.hour == UInt8(Int(String(py_dt.hour)))
+        and dt.minute == UInt8(Int(String(py_dt.minute)))
+        and dt.second == UInt8(Int(String(py_dt.second))),
+        String(t"dt: {dt} is not equal to py_dt: {py_dt}"),
+    )
+
+
+def test_utc_now() raises:
+    assert_datetime_equal(py_dt=py_dt_datetime().utcnow(), dt=now())
 
 
 # === _CTime tests ===
