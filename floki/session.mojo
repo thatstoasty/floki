@@ -135,10 +135,6 @@ def _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) r
     if result != Result.OK:
         raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
 
-    result = easy.upload()
-    if result != Result.OK:
-        raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
-
     if data:
         var data_size = len(data)
         # libcurl dictates the usage of the large post field size option over 2GB.
@@ -229,6 +225,11 @@ def _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin])
         result = easy.post_fields(data)
         if result != Result.OK:
             raise Error("_handle_patch: Failed to set PATCH request post fields: ", easy.describe_error(result))
+    else:
+        # Set PATCH with zero-length body
+        var result = easy.post()
+        if result != Result.OK:
+            raise Error("_handle_patch: Failed to set zero-length PATCH body: ", easy.describe_error(result))
 
 
 def _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
@@ -263,7 +264,7 @@ def _handle_head(easy: Easy) raises:
         easy: The libcurl easy handle to configure.
     """
     # Set NOBODY to true to avoid downloading the body, also tells libcurl to use HEAD.
-    result = easy.nobody()
+    var result = easy.nobody()
     if result != Result.OK:
         raise Error("_handle_head: Failed to set NOBODY option: ", easy.describe_error(result))
 
@@ -370,8 +371,9 @@ struct Session(Movable):
                 # references to the values in the dictionary as we iterate rn.
                 var params: List[String] = []
                 for pair in query_parameters.items():
+                    var key = pair.key
                     var value = pair.value
-                    params.append(String(pair.key, "=", self.easy.escape(value)))
+                    params.append(String(self.easy.escape(key), "=", self.easy.escape(value)))
 
                 # Append the query parameters to the URL. Thi
                 var full_url = String(url, "?", "&".join(params))
@@ -412,6 +414,9 @@ struct Session(Movable):
             elif method == RequestMethod.OPTIONS:
                 _handle_options(self.easy)
 
+            if timeout:
+                self.raise_if_error(self.easy.timeout(timeout.value()), "Failed to set timeout: ")
+
             var list = CurlList(headers)
             try:
                 # If there's any headers set on the session, add them too.
@@ -442,6 +447,10 @@ struct Session(Movable):
             )
         finally:
             self.easy.reset() # Reset the easy handle to clear any state for the next request.
+            if self.allow_redirects:
+                _ = self.easy.follow_location()
+            if self.verbose:
+                _ = self.easy.verbose()
 
     def get(
         self,
