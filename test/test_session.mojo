@@ -232,7 +232,7 @@ def test_patch() raises -> None:
 
 def test_patch_file() raises -> None:
     with open("test/data/update.json", "r") as f:
-        var response = Session(verbose=True).patch(
+        var response = Session().patch(
             "https://jsonplaceholder.typicode.com/posts/1",
             headers={
                 "Content-Type": "application/json",

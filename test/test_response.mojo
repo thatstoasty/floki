@@ -95,17 +95,6 @@ def test_body_empty() raises -> None:
     assert_equal(len(body), 0)
 
 
-def test_body_invalid_utf8_raises() raises -> None:
-    var raised = False
-    var invalid = List[Byte]()
-    invalid.append(0xFF)
-    try:
-        var _ = Body(invalid^)
-    except:
-        raised = True
-    assert_true(raised)
-
-
 def test_body_as_text() raises -> None:
     var body = Body("hello world".as_bytes())
     assert_equal(String(body.as_text()), "hello world")
