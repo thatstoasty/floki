@@ -3,7 +3,7 @@ from std.utils import Variant
 from mojo_curl.easy import Easy, Result
 from mojo_curl.list import CurlList
 from floki.callbacks import read_callback, fd_read_callback, write_callback
-from floki.response import HTTPResponse
+from floki.response import Response
 from floki.http import RequestMethod
 from floki.body import Body
 from floki.cookie.cookie_jar import CookieJar
@@ -288,7 +288,7 @@ struct Session(Movable):
     """Indicates whether libcurl's verbose logging mode is enabled for this session."""
 
     comptime DEFAULT_HEADERS = {
-        "User-Agent": "floki/0.2.0",
+        "User-Agent": "floki/0.3.2",
     }
     """Default headers that are included in every request made with this session, unless overridden by request-specific headers."""
 
@@ -338,7 +338,7 @@ struct Session(Movable):
         data: RequestData[origin],
         timeout: Optional[Int] = None,
         query_parameters: Dict[String, String] = {},
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends an HTTP request and returns the corresponding response.
 
         Parameters:
@@ -353,7 +353,7 @@ struct Session(Movable):
             query_parameters: An optional dictionary of query parameters to include in the URL. GET requests only.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -429,7 +429,7 @@ struct Session(Movable):
             finally:
                 list^.free() # Free headers after performing the request.
             
-            return HTTPResponse(
+            return Response(
                 body=response_body^,
                 headers=self.easy.headers(),
                 protocol=Protocol(self.easy.get_scheme()),
@@ -445,7 +445,7 @@ struct Session(Movable):
         var headers: Dict[String, String] = {},
         query_parameters: Dict[String, String] = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a GET request to the specified URL.
 
         Args:
@@ -455,7 +455,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -483,7 +483,7 @@ struct Session(Movable):
         var headers: Dict[String, String] = {},
         var data: emberjson.Object = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a POST request to the specified URL.
 
         Args:
@@ -493,7 +493,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -521,7 +521,7 @@ struct Session(Movable):
         data: Span[Byte, origin],
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a POST request to the specified URL.
 
         Parameters:
@@ -534,7 +534,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -561,7 +561,7 @@ struct Session(Movable):
         data: FileHandle,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a POST request to the specified URL.
 
         Args:
@@ -571,7 +571,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -599,7 +599,7 @@ struct Session(Movable):
         var headers: Dict[String, String] = {},
         var data: emberjson.Object = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a PUT request to the specified URL.
 
         Args:
@@ -609,7 +609,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -637,7 +637,7 @@ struct Session(Movable):
         data: Span[Byte, origin],
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a PUT request to the specified URL.
 
         Parameters:
@@ -650,7 +650,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -677,7 +677,7 @@ struct Session(Movable):
         data: FileHandle,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a PUT request to the specified URL.
 
         Args:
@@ -687,7 +687,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -714,7 +714,7 @@ struct Session(Movable):
         var url: String,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a DELETE request to the specified URL.
 
         Args:
@@ -723,7 +723,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -750,7 +750,7 @@ struct Session(Movable):
         var headers: Dict[String, String] = {},
         var data: emberjson.Object = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
         Args:
@@ -760,7 +760,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -788,7 +788,7 @@ struct Session(Movable):
         data: Span[Byte, origin],
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
         Parameters:
@@ -801,7 +801,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -828,7 +828,7 @@ struct Session(Movable):
         data: FileHandle,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
         Args:
@@ -838,7 +838,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -865,7 +865,7 @@ struct Session(Movable):
         var url: String,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends a HEAD request to the specified URL.
 
         Args:
@@ -874,7 +874,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -900,7 +900,7 @@ struct Session(Movable):
         var url: String,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
-    ) raises -> HTTPResponse:
+    ) raises -> Response:
         """Sends an OPTIONS request to the specified URL.
 
         Args:
@@ -909,7 +909,7 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `HTTPResponse` object.
+            The received response as an `Response` object.
         
         Raises:
             Error: If there is a failure in sending or receiving the message.
