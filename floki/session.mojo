@@ -243,6 +243,10 @@ def _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle,
     if result != Result.OK:
         raise Error("_handle_patch: Failed to set PATCH method: ", easy.describe_error(result))
 
+    result = easy.post()
+    if result != Result.OK:
+        raise Error("_handle_patch: Failed to set POST method: ", easy.describe_error(result))
+
     result = easy.read_function(fd_read_callback)
     if result != Result.OK:
         raise Error("_handle_patch: Failed to set read function: ", easy.describe_error(result))
@@ -514,6 +518,49 @@ struct Session(Movable):
             data=RequestData(json_data),
             timeout=timeout,
         )
+    
+    def post[T: AnyType & ImplicitlyDestructible, //](
+        self,
+        var url: String,
+        data: T,
+        var headers: Dict[String, String] = {},
+        timeout: Optional[Int] = None,
+    ) raises -> Response:
+        """Sends a POST request to the specified URL.
+
+        Args:
+            url: The URL to which the request is sent.
+            data: The data to include in the body of the POST request.
+            headers: HTTP headers to include in the request.
+            timeout: An optional timeout in seconds for the request.
+
+        Returns:
+            The received response as an `Response` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        @fieldwise_init
+        struct Point:
+            var x: Int
+            var y: Int
+
+        def main() raises:
+            var session = Session()
+            var r = session.post("https://httpbin.org/post", data=Point(0, 1))
+        ```
+        """
+        var json_data = emberjson.serialize(data)
+        return self.send[RequestMethod.POST](
+            url=url,
+            headers=headers^,
+            data=json_data.as_bytes(),
+            timeout=timeout,
+        )
 
     def post[origin: ImmutOrigin, //](
         self,
@@ -628,6 +675,49 @@ struct Session(Movable):
             url=url,
             headers=headers^,
             data=json_data,
+            timeout=timeout,
+        )
+
+    def put[T: AnyType & ImplicitlyDestructible, //](
+        self,
+        var url: String,
+        data: T,
+        var headers: Dict[String, String] = {},
+        timeout: Optional[Int] = None,
+    ) raises -> Response:
+        """Sends a PUT request to the specified URL.
+
+        Args:
+            url: The URL to which the request is sent.
+            data: The data to include in the body of the PUT request.
+            headers: HTTP headers to include in the request.
+            timeout: An optional timeout in seconds for the request.
+
+        Returns:
+            The received response as an `Response` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        @fieldwise_init
+        struct Point:
+            var x: Int
+            var y: Int
+
+        def main() raises:
+            var session = Session()
+            var r = session.put("https://httpbin.org/put", data=Point(0, 1))
+        ```
+        """
+        var json_data = emberjson.serialize(data)
+        return self.send[RequestMethod.PUT](
+            url=url,
+            headers=headers^,
+            data=json_data.as_bytes(),
             timeout=timeout,
         )
 
@@ -779,6 +869,49 @@ struct Session(Movable):
             url=url,
             headers=headers^,
             data=json_data,
+            timeout=timeout,
+        )
+    
+    def patch[T: AnyType & ImplicitlyDestructible, //](
+        self,
+        var url: String,
+        data: T,
+        var headers: Dict[String, String] = {},
+        timeout: Optional[Int] = None,
+    ) raises -> Response:
+        """Sends a PATCH request to the specified URL.
+
+        Args:
+            url: The URL to which the request is sent.
+            data: The data to include in the body of the PATCH request.
+            headers: HTTP headers to include in the request.
+            timeout: An optional timeout in seconds for the request.
+
+        Returns:
+            The received response as an `Response` object.
+        
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
+        
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+
+        @fieldwise_init
+        struct Point:
+            var x: Int
+            var y: Int
+
+        def main() raises:
+            var session = Session()
+            var r = session.patch("https://httpbin.org/patch", data=Point(0, 1))
+        ```
+        """
+        var json_data = emberjson.serialize(data)
+        return self.send[RequestMethod.PATCH](
+            url=url,
+            headers=headers^,
+            data=json_data.as_bytes(),
             timeout=timeout,
         )
 
