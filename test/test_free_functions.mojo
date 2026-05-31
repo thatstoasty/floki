@@ -146,6 +146,63 @@ def test_patch_raw_bytes() raises -> None:
     assert_equal(response.status, Status.OK)
 
 
+@fieldwise_init
+struct PostPayload(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var title: String
+    var body: String
+    var userId: Int
+
+    def __init__(out self):
+        self.title = ""
+        self.body = ""
+        self.userId = 0
+
+
+def test_post_struct() raises -> None:
+    var response = floki.post(
+        "https://jsonplaceholder.typicode.com/todos",
+        data=PostPayload(title="test title", body="test body", userId=1),
+        headers={"Content-Type": "application/json"},
+    )
+    assert_equal(response.status, Status.CREATED)
+
+
+@fieldwise_init
+struct UpdatePayload(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var key1: String
+    var key2: String
+
+    def __init__(out self):
+        self.key1 = ""
+        self.key2 = ""
+
+
+def test_put_struct() raises -> None:
+    var response = floki.put(
+        "https://jsonplaceholder.typicode.com/posts/1",
+        data=UpdatePayload(key1="updated_value1", key2="updated_value2"),
+        headers={"Content-Type": "application/json"},
+    )
+    assert_equal(response.status, Status.OK)
+
+
+@fieldwise_init
+struct PatchPayload(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var key1: String
+
+    def __init__(out self):
+        self.key1 = ""
+
+
+def test_patch_struct() raises -> None:
+    var response = floki.patch(
+        "https://jsonplaceholder.typicode.com/todos/1",
+        data=PatchPayload(key1="patched_value"),
+        headers={"Content-Type": "application/json"},
+    )
+    assert_equal(response.status, Status.OK)
+
+
 def main() raises -> None:
     TestSuite.discover_tests[__functions_in_module()]().run()
     # var suite = TestSuite()

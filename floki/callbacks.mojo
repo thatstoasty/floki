@@ -1,7 +1,7 @@
 from std.memory import memcpy
 from std.ffi import c_char, c_size_t, get_errno
 from std.sys import stderr
-from mojo_curl.c.types import ImmutExternalPointer, MutExternalPointer
+from mojo_curl.c.types import ImmutExternalPointer, MutExternalPointer, CURL_READFUNC_ABORT
 
 
 # To read HTTP response data into a list of bytes.
@@ -101,6 +101,5 @@ def fd_read_callback(
         var fd = FileDescriptor(file[]._get_raw_fd())
         return fd.read_bytes(Span(ptr=ptr.bitcast[UInt8](), length=Int(buffer_size)))
     except e:
-        print("fd_read_callback: Error reading from file descriptor: ", e, " errno: ", get_errno(), file=stderr)
-        # TODO: Add READ_FUNC_ABORT constant to mojo-curl and return it here to signal an error.
-        return 0x10000000
+        print(t"fd_read_callback: Error reading from file descriptor: {e}. Errno: {get_errno()}", file=stderr)
+        return CURL_READFUNC_ABORT

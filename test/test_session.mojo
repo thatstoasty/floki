@@ -232,7 +232,7 @@ def test_patch() raises -> None:
 
 def test_patch_file() raises -> None:
     with open("test/data/update.json", "r") as f:
-        var response = Session().patch(
+        var response = Session(verbose=True).patch(
             "https://jsonplaceholder.typicode.com/posts/1",
             headers={
                 "Content-Type": "application/json",
@@ -241,7 +241,7 @@ def test_patch_file() raises -> None:
             data=f,
         )
         assert_equal(response.status, Status.OK)
-        print(response.body.as_text())
+
         var patched_todo = response.body.as_json[PatchedTodo]()
         assert_equal(patched_todo.userId, 1)
         assert_equal(patched_todo.id, 1)
@@ -348,8 +348,75 @@ def test_response_raise_for_status_raises_on_4xx() raises -> None:
     assert_true(raised)
 
 
+def test_post_struct() raises -> None:
+    var response = Session().post(
+        "https://httpbingo.org/post",
+        data=Record(userId=1, body="bar", title="booggg", active=True),
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+    )
+    assert_equal(response.status, Status.OK)
+    var post_response = response.body.as_json[ServerPostResponse]()
+    assert_equal(post_response.json.userId, 1)
+    assert_equal(post_response.json.body, "bar")
+    assert_equal(post_response.json.title, "booggg")
+    assert_equal(post_response.json.active, True)
+
+
+@fieldwise_init
+struct PutStructData(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var key1: String
+    var key2: String
+
+    def __init__(out self):
+        self.key1 = ""
+        self.key2 = ""
+
+
+def test_put_struct() raises -> None:
+    var response = Session().put(
+        "https://jsonplaceholder.typicode.com/posts/1",
+        data=PutStructData(key1="updated_value1", key2="updated_value2"),
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+    )
+    assert_equal(response.status, Status.OK)
+    var put_response = response.body.as_json[PutResponse]()
+    assert_equal(put_response.id, 1)
+    assert_equal(put_response.key1, "updated_value1")
+    assert_equal(put_response.key2, "updated_value2")
+
+
+@fieldwise_init
+struct PatchStructData(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var key1: String
+
+    def __init__(out self):
+        self.key1 = ""
+
+
+def test_patch_struct() raises -> None:
+    var response = Session().patch(
+        "https://jsonplaceholder.typicode.com/posts/1",
+        data=PatchStructData(key1="patched_value"),
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+    )
+    assert_equal(response.status, Status.OK)
+    var patched_todo = response.body.as_json[PatchedTodo]()
+    assert_equal(patched_todo.userId, 1)
+    assert_equal(patched_todo.id, 1)
+    assert_equal(patched_todo.key1, "patched_value")
+
+
 def main() raises -> None:
-    # TestSuite.discover_tests[__functions_in_module()]().run()
-    var suite = TestSuite()
-    suite.test[test_patch_file]()
-    suite^.run()
+    TestSuite.discover_tests[__functions_in_module()]().run()
+    # var suite = TestSuite()
+    # suite.test[test_patch_file]()
+    # suite^.run()

@@ -79,6 +79,49 @@ def post(
     )
 
 
+def post[T: AnyType & ImplicitlyDestructible, //](
+    var url: String,
+    data: T,
+    var headers: Dict[String, String] = {},
+    timeout: Optional[Int] = None,
+) raises -> Response:
+    """Sends a POST request to the specified URL.
+
+    Args:
+        url: The URL to which the request is sent.
+        data: The data to include in the body of the POST request.
+        headers: HTTP headers to include in the request.
+        timeout: An optional timeout in seconds for the request.
+
+    Returns:
+        The received response as an `Response` object.
+    
+    Raises:
+        Error: If the data cannot be serialized to JSON or if the request fails.
+    
+    #### Examples:
+    ```mojo
+    from floki.session import Session
+
+    @fieldwise_init
+    struct Point:
+        var x: Int
+        var y: Int
+
+    def main() raises:
+        var session = Session()
+        var r = session.post("https://httpbin.org/post", data=Point(0, 1))
+    ```
+    """
+    var json_data = emberjson.serialize(data)
+    return Session().send[RequestMethod.POST](
+        url=url,
+        headers=headers^,
+        data=json_data.as_bytes(),
+        timeout=timeout,
+    )
+
+
 def post[origin: ImmutOrigin, //](
     var url: String,
     data: Span[Byte, origin],
@@ -188,6 +231,49 @@ def put(
         url=url,
         headers=headers^,
         data=json_data,
+        timeout=timeout,
+    )
+
+
+def put[T: AnyType & ImplicitlyDestructible, //](
+    var url: String,
+    data: T,
+    var headers: Dict[String, String] = {},
+    timeout: Optional[Int] = None,
+) raises -> Response:
+    """Sends a PUT request to the specified URL.
+
+    Args:
+        url: The URL to which the request is sent.
+        data: The data to include in the body of the PUT request.
+        headers: HTTP headers to include in the request.
+        timeout: An optional timeout in seconds for the request.
+
+    Returns:
+        The received response as an `Response` object.
+    
+    Raises:
+        Error: If the data cannot be serialized to JSON or if the request fails.
+    
+    #### Examples:
+    ```mojo
+    from floki.session import Session
+
+    @fieldwise_init
+    struct Point:
+        var x: Int
+        var y: Int
+
+    def main() raises:
+        var session = Session()
+        var r = session.put("https://httpbin.org/put", data=Point(0, 1))
+    ```
+    """
+    var json_data = emberjson.serialize(data)
+    return Session().send[RequestMethod.PUT](
+        url=url,
+        headers=headers^,
+        data=json_data.as_bytes(),
         timeout=timeout,
     )
 
@@ -338,6 +424,50 @@ def patch(
         timeout=timeout,
     )
 
+
+def patch[T: AnyType & ImplicitlyDestructible, //](
+    var url: String,
+    var data: T,
+    var headers: Dict[String, String] = {},
+    timeout: Optional[Int] = None,
+) raises -> Response:
+    """Sends a GET request to the specified URL.
+
+    Args:
+        url: The URL to which the request is sent.
+        data: The data to include in the body of the PATCH request.
+        headers: HTTP headers to include in the request.
+        timeout: An optional timeout in seconds for the request.
+
+    Returns:
+        The received response as an `Response` object.
+    
+    Raises:
+        Error: If the data cannot be serialized to JSON or if the request fails.
+    
+    #### Examples:
+    ```mojo
+    from floki.session import Session
+
+    @fieldwise_init
+    struct Point:
+        var x: Int
+        var y: Int
+
+    def main() raises:
+        var session = Session()
+        var r = session.patch("https://httpbin.org/patch", data=Point(0, 1))
+    ```
+    """
+    var json_data = emberjson.serialize(data)
+    return Session().send[RequestMethod.PATCH](
+        url=url,
+        headers=headers^,
+        data=json_data.as_bytes(),
+        timeout=timeout,
+    )
+
+
 def patch[origin: ImmutOrigin, //](
     var url: String,
     data: Span[Byte, origin],
@@ -366,7 +496,6 @@ def patch[origin: ImmutOrigin, //](
     import floki
 
     def main() raises:
-        var data = String("hello").as_bytes()
         var r = floki.patch("https://httpbin.org/patch", data="hello".as_bytes())
     ```
     """
