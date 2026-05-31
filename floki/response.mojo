@@ -15,7 +15,7 @@ struct HTTPError(Movable, Writable):
 
 
 @fieldwise_init
-struct HTTPResponse(Movable, Writable):
+struct Response(Movable, Writable):
     """Represents an HTTP response received from the server."""
     var headers: Dict[String, String]
     """The HTTP headers included in the response."""
@@ -36,7 +36,7 @@ struct HTTPResponse(Movable, Writable):
         protocol: Protocol,
         var headers: Dict[String, String] = {},
     ) raises:
-        """Constructs an HTTPResponse from its component parts.
+        """Constructs an Response from its component parts.
 
         Args:
             body: The raw response body as a list of bytes.
@@ -54,7 +54,7 @@ struct HTTPResponse(Movable, Writable):
         self.protocol = protocol
         self.body = Body(body^)
 
-    def write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]) raises:
         """Writes the HTTP response to a writer in a standard HTTP format.
 
         Args:
@@ -69,7 +69,7 @@ struct HTTPResponse(Movable, Writable):
             CRLF,
             self.headers,
             CRLF,
-            self.body.as_string_slice()
+            self.body.as_text()
         )
 
     @always_inline
@@ -103,3 +103,16 @@ struct HTTPResponse(Movable, Writable):
         """
         if not self.is_ok():
             raise HTTPError(self.status)
+        
+    def content_length(self) -> Int:
+        """Returns the length of the response body in bytes.
+
+        This does not necessarily correspond to the Content-Length header,
+        but rather the actual length of the body content.
+
+        Returns:
+            The number of bytes in the response body.
+        """
+        return len(self.body)
+    
+

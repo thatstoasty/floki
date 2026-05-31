@@ -1,5 +1,5 @@
 from floki.session import Session, RequestData
-from floki.response import HTTPResponse
+from floki.response import Response
 from floki.http import RequestMethod
 from floki.body import Body
 import emberjson
@@ -10,7 +10,7 @@ def get(
     var headers: Dict[String, String] = {},
     query_parameters: Dict[String, String] = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a GET request to the specified URL.
 
     Args:
@@ -20,7 +20,7 @@ def get(
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the request fails.
@@ -47,7 +47,7 @@ def post(
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a POST request to the specified URL.
 
     Args:
@@ -57,7 +57,7 @@ def post(
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the data cannot be serialized to JSON or if the request fails.
@@ -84,7 +84,7 @@ def post[origin: ImmutOrigin, //](
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a POST request to the specified URL.
 
     Parameters:
@@ -97,7 +97,7 @@ def post[origin: ImmutOrigin, //](
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the data cannot be sent as bytes.
@@ -123,7 +123,7 @@ def post(
     data: FileHandle,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a POST request to the specified URL.
 
     Args:
@@ -133,7 +133,7 @@ def post(
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the data cannot be sent from the file handle.
@@ -160,7 +160,7 @@ def put(
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a PUT request to the specified URL.
 
     Args:
@@ -170,7 +170,7 @@ def put(
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the data cannot be serialized to JSON or if the request fails.
@@ -197,7 +197,7 @@ def put[origin: ImmutOrigin, //](
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a PUT request to the specified URL.
 
     Parameters:
@@ -210,7 +210,7 @@ def put[origin: ImmutOrigin, //](
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the data cannot be sent as bytes.
@@ -236,7 +236,7 @@ def put(
     data: FileHandle,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a PUT request to the specified URL.
 
     Args:
@@ -246,7 +246,7 @@ def put(
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the data cannot be sent from the file handle.
@@ -272,7 +272,7 @@ def delete(
     var url: String,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a DELETE request to the specified URL.
 
     Args:
@@ -281,7 +281,7 @@ def delete(
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the request fails.
@@ -307,7 +307,7 @@ def patch(
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a GET request to the specified URL.
 
     Args:
@@ -317,7 +317,7 @@ def patch(
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the data cannot be serialized to JSON or if the request fails.
@@ -343,7 +343,7 @@ def patch[origin: ImmutOrigin, //](
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a GET request to the specified URL.
 
     Parameters:
@@ -356,7 +356,7 @@ def patch[origin: ImmutOrigin, //](
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the data cannot be sent as bytes.
@@ -382,7 +382,7 @@ def patch(
     data: FileHandle,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a GET request to the specified URL.
 
     Args:
@@ -392,7 +392,7 @@ def patch(
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the data cannot be sent from the file handle.
@@ -418,7 +418,7 @@ def head(
     var url: String,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends a HEAD request to the specified URL.
 
     Args:
@@ -427,7 +427,7 @@ def head(
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the request fails.
@@ -452,7 +452,7 @@ def options(
     var url: String,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
-) raises -> HTTPResponse:
+) raises -> Response:
     """Sends an OPTIONS request to the specified URL.
 
     Args:
@@ -461,7 +461,7 @@ def options(
         timeout: An optional timeout in seconds for the request.
 
     Returns:
-        The received response as an `HTTPResponse` object.
+        The received response as an `Response` object.
     
     Raises:
         Error: If the request fails.

@@ -3,7 +3,7 @@ from std.collections.string._utf8 import _is_valid_utf8
 import emberjson
 
 
-struct Body(Copyable, Sized):
+struct Body(Copyable, Sized, Writable, Equatable):
     """Represents the body of an HTTP request or response.
 
     At the moment, this only supports JSON serialization and deserialization.
@@ -11,25 +11,16 @@ struct Body(Copyable, Sized):
 
     var body: List[Byte]
     """The raw body content as a list of bytes."""
-    var _json_cache: Optional[emberjson.Value]
-    """An optional cache for the parsed JSON value, to avoid redundant parsing on multiple accesses."""
 
-    def __init__(out self, var body: List[Byte]) raises:
+    def __init__(out self, var body: List[Byte]):
         """Constructs a Body instance from a list of bytes.
 
         Args:
             body: The body content as a list of bytes.
-        
-        Raises:
-            * Error: if the body is not valid UTF-8.
         """
-        if not _is_valid_utf8(body):
-            raise Error("Body must be valid UTF-8")
-
         self.body = body^
-        self._json_cache = None
 
-    def __init__[origin: ImmutOrigin, //](out self, body: Span[Byte, origin]) raises:
+    def __init__[origin: ImmutOrigin, //](out self, body: Span[Byte, origin]):
         """Alternate constructor that accepts a Span[Byte] for the body content.
 
         Parameters:
@@ -37,14 +28,8 @@ struct Body(Copyable, Sized):
 
         Args:
             body: The body content as a span of bytes.
-        
-        Raises:
-            * Error: if the body is not valid UTF-8.
         """
-        if not _is_valid_utf8(body):
-            raise Error("Body must be valid UTF-8")
         self.body = List[Byte](body)
-        self._json_cache = None
 
     def __len__(self) -> Int:
         """Returns the length of the body in bytes.
@@ -62,15 +47,15 @@ struct Body(Copyable, Sized):
         """
         return Span(self.body)
 
-    def as_string_slice(self) -> StringSlice[origin_of(self.body)]:
+    def as_text(self) raises -> StringSlice[origin_of(self.body)]:
         """Creates and returns a `StringSlice` view of the body content.
 
         Returns:
             The body content as a string slice.
         """
-        return StringSlice(unsafe_from_utf8=Span(self.body))
-
-    def as_json(mut self) raises -> ref [origin_of(self._json_cache._value)] emberjson.Value:
+        return StringSlice(from_utf8=Span(self.body))
+    
+    def as_json[T: Movable & ImplicitlyDestructible & Defaultable](mut self, out result: T) raises:
         """Converts the response body to a JSON object.
         
         Returns:
@@ -79,24 +64,17 @@ struct Body(Copyable, Sized):
         Raises:
             Error: if the body is empty or cannot be parsed as JSON.
         """
-        if not self.body:
-            raise Error("Body is empty; cannot parse as JSON.")
+        return emberjson.deserialize[T](emberjson.Parser(self.as_text()))
 
-        if self._json_cache:
-            return self._json_cache.value()
-
-        self._json_cache = emberjson.parse(StringSlice(from_utf8=self.body))
-        return self._json_cache.value()
-
-    def write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]) raises:
         """Writes the body to a writer.
 
         Args:
             writer: The writer to which the body will be written.
         """
-        writer.write(StringSlice(unsafe_from_utf8=self.body))
+        writer.write(self.as_text())
 
-    def consume(deinit self) -> List[Byte]:
+    def take_bytes(deinit self) -> List[Byte]:
         """Consumes the body and returns it as List[Byte].
         
         Returns:

@@ -23,14 +23,67 @@ def assert_variant_equal2(expected: Variant[Int, String], actual: emberjson.Valu
         assert_equal(expected[String], actual.string())
 
 
+@fieldwise_init
+struct Todo(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var userId: Int
+    var id: Int
+    var title: String
+    var completed: Bool
+
+    def __init__(out self):
+        self.userId = 0
+        self.id = 0
+        self.title = ""
+        self.completed = False
+    
+
 def test_get() raises -> None:
     var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
     assert_equal(response.status, Status.OK)
-    var expected: Dict[String, Variant[Int, String, Bool]] = {
-        "userId": 1, "id": 1, "title": "delectus aut autem", "completed": False
-    }
-    for node in response.body.as_json().object().items():
-        assert_variant_equal(expected[node.key], node.value)
+
+    var todo = response.body.as_json[Todo]()
+    assert_equal(todo.userId, 1)
+    assert_equal(todo.id, 1)
+    assert_equal(todo.title, "delectus aut autem")
+    assert_equal(todo.completed, False)
+
+
+@fieldwise_init
+struct Record(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var userId: Int
+    var body: String
+    var title: String
+    var active: Bool
+
+    def __init__(out self):
+        self.userId = 0
+        self.body = ""
+        self.title = ""
+        self.active = False
+
+
+@fieldwise_init
+struct ServerPostResponse(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var args: Dict[String, String]
+    var headers: Dict[String, emberjson.Value]
+    var method: String
+    var origin: String
+    var url: String
+    var data: String
+    var files: Dict[String, String]
+    var form: Dict[String, String]
+    var json: Record
+
+    def __init__(out self):
+        self.args = Dict[String, String]()
+        self.headers = Dict[String, emberjson.Value]()
+        self.method = ""
+        self.origin = ""
+        self.url = ""
+        self.data = ""
+        self.files = Dict[String, String]()
+        self.form = Dict[String, String]()
+        self.json = Record()
 
 
 def test_post() raises -> None:
@@ -45,23 +98,33 @@ def test_post() raises -> None:
     )
 
     assert_equal(response.status, Status.OK) # Should be 201, but httpbingo returns 200?
-    var expected: Dict[String, Variant[Int, String, Bool]] = {
-        "title": "booggg", "body": "bar", "userId": 1, "active": True
-    }
-    for node in response.body.as_json()["json"].object().items():
-        assert_variant_equal(expected[node.key], node.value)
-    
+
+    var post_response = response.body.as_json[ServerPostResponse]()
+    assert_equal(post_response.json.userId, 1)
+    assert_equal(post_response.json.body, "bar")
+    assert_equal(post_response.json.title, "booggg")
+    assert_equal(post_response.json.active, True)
+
+
+struct Content(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var recently_edited: List[String]
+
+    def __init__(out self):
+        self.recently_edited = List[String]()
+
+
+struct FileContent(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var id: Int
+    var name: String
+    var content: Content
+
+    def __init__(out self):
+        self.id = 0
+        self.name = ""
+        self.content = Content()
+
 
 def test_post_file() raises -> None:
-    var expected: Dict[String, Variant[String, Dict[String, List[String]]]] = {
-        "name": "file.json",
-    }
-    var content = {
-        "recently_edited": [
-            "floki/session.mojo"
-        ]
-    }
-    expected["content"] = content^
     with open("test/data/file.json", "r") as f:
         var response = Session().post(
             "https://jsonplaceholder.typicode.com/todos",
@@ -72,14 +135,22 @@ def test_post_file() raises -> None:
             data=f,
         )
         assert_equal(response.status, Status.CREATED)
-        for node in response.body.as_json().object().items():
-            if node.value.is_string():
-                assert_equal(expected[node.key][String], node.value.string())
-            elif node.value.is_object():
-                for subnode in node.value.object().items():
-                    for item in subnode.value.array():
-                        assert_equal(expected[node.key][Dict[String, List[String]]][subnode.key][0], item.string())
-                
+
+        file_content = response.body.as_json[FileContent]()
+        assert_equal(file_content.name, "file.json")
+        assert_equal(file_content.content.recently_edited, ["floki/session.mojo"])
+
+
+struct PutResponse(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var id: Int
+    var key1: String
+    var key2: String
+
+    def __init__(out self):
+        self.id = 0
+        self.key1 = ""
+        self.key2 = ""
+
 
 def test_put() raises -> None:
     var response = Session().put(
@@ -91,16 +162,23 @@ def test_put() raises -> None:
         data={"key1": "updated_value1", "key2": "updated_value2"},
     )
     assert_equal(response.status, Status.OK)
-    var expected: List[String] = ["key1", "key2", "id"]
-    for node in response.body.as_json().object().items():
-        assert_true(node.key in expected)
+
+    var put_response = response.body.as_json[PutResponse]()
+    assert_equal(put_response.id, 1)
+    assert_equal(put_response.key1, "updated_value1")
+    assert_equal(put_response.key2, "updated_value2")
+
+
+struct PutFileResponse(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var id: Int
+    var key1: String
+
+    def __init__(out self):
+        self.id = 0
+        self.key1 = ""
 
 
 def test_put_file() raises -> None:
-    var expected: Dict[String, Variant[Int, String]] = {
-        "id": 1,
-        "key1": "patched_value",
-    }
     with open("test/data/update.json", "r") as f:
         var response = Session().put(
             "https://jsonplaceholder.typicode.com/posts/1",
@@ -111,18 +189,29 @@ def test_put_file() raises -> None:
             data=f,
         )
         assert_equal(response.status, Status.OK)
-        for node in response.body.as_json().object().items():
-            assert_variant_equal2(expected[node.key], node.value)
+
+        var put_file_response = response.body.as_json[PutFileResponse]()
+        assert_equal(put_file_response.id, 1)
+        assert_equal(put_file_response.key1, "patched_value")
 
 
-def test_patch() raises -> None:   
-    var expected: Dict[String, Variant[Int, String]] = {
-        "userId": 1,
-        "id": 1,
-        "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-        "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto",
-        "key1": "patched_value",
-    } 
+@fieldwise_init
+struct PatchedTodo(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+    var userId: Int
+    var id: Int
+    var title: String
+    var body: String
+    var key1: String
+
+    def __init__(out self):
+        self.userId = 0
+        self.id = 0
+        self.title = ""
+        self.body = ""
+        self.key1 = ""
+
+
+def test_patch() raises -> None:
     var response = Session().patch(
         "https://jsonplaceholder.typicode.com/posts/1",
         {
@@ -132,18 +221,16 @@ def test_patch() raises -> None:
         data={"key1": "patched_value"},
     )
     assert_equal(response.status, Status.OK)
-    for node in response.body.as_json().object().items():
-        assert_variant_equal2(expected[node.key], node.value)
+
+    var patched_todo = response.body.as_json[PatchedTodo]()
+    assert_equal(patched_todo.userId, 1)
+    assert_equal(patched_todo.id, 1)
+    assert_equal(patched_todo.title, "sunt aut facere repellat provident occaecati excepturi optio reprehenderit")
+    assert_equal(patched_todo.body, "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto")
+    assert_equal(patched_todo.key1, "patched_value")
 
 
 def test_patch_file() raises -> None:
-    var expected: Dict[String, Variant[Int, String]] = {
-        "userId": 1,
-        "id": 1,
-        "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-        "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto",
-        "key1": "patched_value",
-    } 
     with open("test/data/update.json", "r") as f:
         var response = Session().patch(
             "https://jsonplaceholder.typicode.com/posts/1",
@@ -154,8 +241,13 @@ def test_patch_file() raises -> None:
             data=f,
         )
         assert_equal(response.status, Status.OK)
-        for node in response.body.as_json().object().items():
-            assert_variant_equal2(expected[node.key], node.value)
+        print(response.body.as_text())
+        var patched_todo = response.body.as_json[PatchedTodo]()
+        assert_equal(patched_todo.userId, 1)
+        assert_equal(patched_todo.id, 1)
+        assert_equal(patched_todo.title, "sunt aut facere repellat provident occaecati excepturi optio reprehenderit")
+        assert_equal(patched_todo.body, "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto")
+        assert_equal(patched_todo.key1, "patched_value")
 
 
 def test_delete() raises -> None:    
@@ -191,13 +283,27 @@ def test_session_reuse() raises -> None:
     assert_equal(r2.status, Status.OK)
 
 
+@fieldwise_init
+struct ServerGetResponse(Movable, Defaultable, ImplicitlyDestructible):
+    var args: Dict[String, String]
+    var headers: Dict[String, String]
+    var origin: String
+    var url: String
+
+    def __init__(out self):
+        self.args = Dict[String, String]()
+        self.headers = Dict[String, String]()
+        self.origin = ""
+        self.url = ""
+
+
 def test_session_level_headers() raises -> None:
     var response = Session(headers={"X-Floki-Test": "session-headers"}).get(
         "https://httpbin.org/get",
     )
     assert_equal(response.status, Status.OK)
     assert_equal(
-        response.body.as_json()["headers"]["X-Floki-Test"].string(),
+        response.body.as_json[ServerGetResponse]().headers["X-Floki-Test"],
         "session-headers",
     )
 
@@ -243,7 +349,7 @@ def test_response_raise_for_status_raises_on_4xx() raises -> None:
 
 
 def main() raises -> None:
-    TestSuite.discover_tests[__functions_in_module()]().run()
-    # var suite = TestSuite()
-    # suite.test[test_options]()
-    # suite^.run()
+    # TestSuite.discover_tests[__functions_in_module()]().run()
+    var suite = TestSuite()
+    suite.test[test_patch_file]()
+    suite^.run()

@@ -59,13 +59,49 @@ def test_options() raises -> None:
     assert_equal(response.headers["access-control-allow-methods"], "GET,HEAD,PUT,PATCH,POST,DELETE")
 
 
+@fieldwise_init
+struct QueryParameters(Movable, Defaultable, ImplicitlyDestructible):
+    var foo: String
+
+    def __init__(out self):
+        self.foo = ""
+
+
+@fieldwise_init
+struct ArgResponse(Movable, Defaultable, ImplicitlyDestructible):
+    var args: QueryParameters
+    var headers: Dict[String, String]
+    var origin: String
+    var url: String
+
+    def __init__(out self):
+        self.args = QueryParameters()
+        self.headers = Dict[String, String]()
+        self.origin = ""
+        self.url = ""
+
+
 def test_get_with_query_parameters() raises -> None:
     var response = floki.get(
         "https://httpbin.org/get",
         query_parameters={"foo": "bar"},
     )
     assert_equal(response.status, Status.OK)
-    assert_equal(response.body.as_json()["args"]["foo"].string(), "bar")
+    assert_equal(response.body.as_json[ArgResponse]().args.foo, "bar")
+
+
+@fieldwise_init
+struct CustomHeaderResponse(Movable, Defaultable, ImplicitlyDestructible):
+    var args: Dict[String, String]
+    var headers: Dict[String, String]
+    var origin: String
+    var url: String
+
+    def __init__(out self):
+        self.args = Dict[String, String]()
+        self.headers = Dict[String, String]()
+        self.origin = ""
+        self.url = ""
 
 
 def test_get_with_custom_headers() raises -> None:
@@ -75,7 +111,7 @@ def test_get_with_custom_headers() raises -> None:
     )
     assert_equal(response.status, Status.OK)
     assert_equal(
-        response.body.as_json()["headers"]["X-Custom-Header"].string(),
+        response.body.as_json[CustomHeaderResponse]().headers["X-Custom-Header"],
         "floki-test",
     )
 
