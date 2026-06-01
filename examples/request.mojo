@@ -20,11 +20,11 @@ def main() raises -> None:
     
     # Response Content
     r = floki.get("https://api.github.com/events")
-    # print(r.body.as_string_slice())
+    # print(r.body.as_text())
 
     ## Get the raw bytes of the response body
     var bytes = r.body.as_bytes()
-    # print(bytes.__str__())
+    # print(bytes)
 
     # JSON Response Content
     r = floki.get("https://api.github.com/events")
@@ -41,7 +41,7 @@ def main() raises -> None:
     # so you have to do it manually for now. This should be added as a feature in the future.
     # r = floki.post("https://httpbin.org/post", data={"key1": "value1", "key2": "value2"})
     r = floki.post("https://httpbin.org/post", data="key1=value1&key2=value2".as_bytes())
-    print(r.body.as_string_slice())
+    print(r.body.as_text())
 
     ## Send json data
     r = floki.post(
