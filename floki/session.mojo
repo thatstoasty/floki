@@ -2,283 +2,14 @@ from std.reflection import get_base_type_name
 from std.utils import Variant
 from mojo_curl.easy import Easy, Result
 from mojo_curl.list import CurlList
-from floki.callbacks import read_callback, fd_read_callback, write_callback
+from floki.callbacks import read_callback, write_callback
 from floki.response import Response
 from floki.http import RequestMethod
 from floki.body import Body
 from floki.cookie.cookie_jar import CookieJar
+from floki.data import RequestData
+from floki.handlers import _handle_post, _handle_put, _handle_delete, _handle_patch, _handle_head, _handle_options
 import emberjson
-
-comptime SIZE_LIMIT = 2_147_483_648
-"""Size limit (2GB) for using the standard post field size option in libcurl. Requests with body sizes above this threshold will use the large post field size option."""
-
-@fieldwise_init
-struct RequestData[origin: ImmutOrigin]:
-    """Data variant to represent either a FileHandle or a Span of bytes for request bodies.
-    
-    Parameters:
-        origin: The origin of the data span.
-    """
-    var data: Variant[Pointer[FileHandle, Self.origin], Span[Byte, Self.origin]]
-    """The `data` field can hold either a pointer to a `FileHandle` or a span of bytes, allowing for flexible handling of request bodies in different formats."""
-
-    @implicit
-    def __init__(
-        out self,
-        data: Pointer[FileHandle, Self.origin],
-    ):
-        """Initializes a `RequestData` instance with the provided data.
-
-        Args:
-            data: A pointer to a `FileHandle`, representing the request body.
-        """
-        self.data = data
-    
-    @implicit
-    def __init__(
-        out self,
-        data: Span[Byte, Self.origin],
-    ):
-        """Initializes a `RequestData` instance with the provided data.
-
-        Args:
-            data: A span of bytes, representing the request body.
-        """
-        self.data = data
-    
-    def isa[T: AnyType](self) -> Bool:
-        """Checks if the contained data is of the specified type.
-
-        Parameters:
-            T: The type to check against.
-
-        Returns:
-            True if the contained data is of type T, False otherwise.
-        """
-        return self.data.isa[T]()
-    
-    def __getitem_param__[T: AnyType](ref self) -> ref [self.data] T:
-        """Retrieves the contained data as the specified type.
-
-        Parameters:
-            T: The type to retrieve.
-
-        Returns:
-            The contained data cast to type T.
-        """
-        return self.data[T]
-
-
-def _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
-    """Configures the libcurl easy handle for a POST request with byte data.
-
-    Parameters:
-        origin: The origin of the data span.
-
-    Args:
-        easy: The libcurl easy handle to configure.
-        data: The request body as a span of bytes.
-    """
-    if data:
-        var data_size = len(data)
-        if data_size > SIZE_LIMIT:
-            var result = easy.post_field_size_large(data_size)
-            if result != Result.OK:
-                raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
-        else:
-            var result = easy.post_field_size(data_size)
-            if result != Result.OK:
-                raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
-
-        result = easy.post_fields(data)
-        if result != Result.OK:
-            raise Error("_handle_post: Failed to set post fields: ", easy.describe_error(result))
-    else:
-        # Set POST with zero-length body
-        var result = easy.post()
-        if result != Result.OK:
-            raise Error("_handle_post: Failed to set POST method: ", easy.describe_error(result))
-
-
-def _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
-    """Configures the libcurl easy handle for a POST request with file data.
-
-    Args:
-        easy: The libcurl easy handle to configure.
-        data: The file handle to read request body data from.
-    """
-    var result = easy.post()
-    if result != Result.OK:
-        raise Error("_handle_post: Failed to set POST method: ", easy.describe_error(result))
-
-    result = easy.read_function(fd_read_callback)
-    if result != Result.OK:
-        raise Error("_handle_post: Failed to set read function: ", easy.describe_error(result))
-
-    result = easy.read_data(UnsafePointer(to=data[]).bitcast[NoneType]())
-    if result != Result.OK:
-        raise Error("_handle_post: Failed to set read data: ", easy.describe_error(result))
-
-
-def _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
-    """Configures the libcurl easy handle for a PUT request with byte data.
-
-    Parameters:
-        origin: The origin of the data span.
-
-    Args:
-        easy: The libcurl easy handle to configure.
-        data: The request body as a span of bytes.
-    """
-    comptime http_method = "PUT"
-    var result = easy.custom_request(http_method)
-    if result != Result.OK:
-        raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
-
-    if data:
-        var data_size = len(data)
-        # libcurl dictates the usage of the large post field size option over 2GB.
-        if data_size > SIZE_LIMIT:
-            var result = easy.post_field_size_large(data_size)
-            if result != Result.OK:
-                raise Error("_handle_put: Failed to set post fields size: ", easy.describe_error(result))
-        else:
-            var result = easy.post_field_size(data_size)
-            if result != Result.OK:
-                raise Error("_handle_put: Failed to set post fields size: ", easy.describe_error(result))
-        result = easy.post_fields(data)
-    else:
-        # Set PUT with zero-length body
-        result = easy.post_fields(List[Byte]())
-    if result != Result.OK:
-        raise Error("_handle_put: Failed to set PUT request post fields: ", easy.describe_error(result))
-
-
-def _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
-    """Configures the libcurl easy handle for a PUT request with file data.
-
-    Args:
-        easy: The libcurl easy handle to configure.
-        data: The file handle to read request body data from.
-    """
-    comptime http_method = "PUT"
-    var result = easy.custom_request(http_method)
-    if result != Result.OK:
-        raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
-
-    result = easy.upload()
-    if result != Result.OK:
-        raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
-
-    result = easy.read_function(fd_read_callback)
-    if result != Result.OK:
-        raise Error("_handle_put: Failed to set read function: ", easy.describe_error(result))
-
-    result = easy.read_data(UnsafePointer(to=data[]).bitcast[NoneType]())
-    if result != Result.OK:
-        raise Error("_handle_put: Failed to set read data: ", easy.describe_error(result))
-
-    # TODO: Need a way to set the file read size.
-    # result = easy.read_file_size(len(temp))
-    # if result != Result.OK:
-    #     raise Error("_handle_put: Failed to set read file size: ", easy.describe_error(result))
-
-
-def _handle_delete(easy: Easy) raises:
-    """Configures the libcurl easy handle for a DELETE request.
-
-    Args:
-        easy: The libcurl easy handle to configure.
-    """
-    comptime http_method = "DELETE"
-    var result = easy.custom_request(http_method)
-    if result != Result.OK:
-        raise Error("_handle_delete: Failed to set DELETE method: ", easy.describe_error(result))
-
-
-def _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
-    """Configures the libcurl easy handle for a PATCH request with byte data.
-
-    Parameters:
-        origin: The origin of the data span.
-
-    Args:
-        easy: The libcurl easy handle to configure.
-        data: The request body as a span of bytes.
-    """
-    comptime http_method = "PATCH"
-    var result = easy.custom_request(http_method)
-    if result != Result.OK:
-        raise Error("_handle_patch: Failed to set PATCH method: ", easy.describe_error(result))
-
-    if data:
-        var data_size = len(data)
-        if data_size > SIZE_LIMIT:
-            var result = easy.post_field_size_large(data_size)
-            if result != Result.OK:
-                raise Error("_handle_patch: Failed to set post fields size: ", easy.describe_error(result))
-        else:
-            var result = easy.post_field_size(data_size)
-            if result != Result.OK:
-                raise Error("_handle_patch: Failed to set post fields size: ", easy.describe_error(result))
-
-        result = easy.post_fields(data)
-        if result != Result.OK:
-            raise Error("_handle_patch: Failed to set PATCH request post fields: ", easy.describe_error(result))
-    else:
-        # Set PATCH with zero-length body
-        var result = easy.post()
-        if result != Result.OK:
-            raise Error("_handle_patch: Failed to set zero-length PATCH body: ", easy.describe_error(result))
-
-
-def _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
-    """Configures the libcurl easy handle for a PATCH request with file data.
-
-    Args:
-        easy: The libcurl easy handle to configure.
-        data: The file handle to read request body data from.
-    """
-    comptime http_method = "PATCH"
-    var result = easy.custom_request(http_method)
-    if result != Result.OK:
-        raise Error("_handle_patch: Failed to set PATCH method: ", easy.describe_error(result))
-
-    result = easy.post()
-    if result != Result.OK:
-        raise Error("_handle_patch: Failed to set POST method: ", easy.describe_error(result))
-
-    result = easy.read_function(fd_read_callback)
-    if result != Result.OK:
-        raise Error("_handle_patch: Failed to set read function: ", easy.describe_error(result))
-
-    result = easy.read_data(UnsafePointer(to=data[]).bitcast[NoneType]())
-    if result != Result.OK:
-        raise Error("_handle_patch: Failed to set read data: ", easy.describe_error(result))
-
-
-def _handle_head(easy: Easy) raises:
-    """Configures the libcurl easy handle for a HEAD request.
-
-    Args:
-        easy: The libcurl easy handle to configure.
-    """
-    # Set NOBODY to true to avoid downloading the body, also tells libcurl to use HEAD.
-    var result = easy.nobody()
-    if result != Result.OK:
-        raise Error("_handle_head: Failed to set NOBODY option: ", easy.describe_error(result))
-
-
-def _handle_options(easy: Easy) raises:
-    """Configures the libcurl easy handle for an OPTIONS request.
-
-    Args:
-        easy: The libcurl easy handle to configure.
-    """
-    comptime http_method = "OPTIONS"
-    var result = easy.custom_request(http_method)
-    if result != Result.OK:
-        raise Error("_handle_options: Failed to set OPTIONS method: ", easy.describe_error(result))
 
 
 struct Session(Movable):
@@ -300,7 +31,7 @@ struct Session(Movable):
     def __init__(
         out self,
         allow_redirects: Bool = True,
-        headers: Dict[String, String] = {},
+        var headers: Dict[String, String] = {},
         verbose: Bool = False,
     ) raises:
         """Initialize a new Session.
@@ -339,7 +70,7 @@ struct Session(Movable):
     def send[origin: ImmutOrigin, //, method: RequestMethod](
         self,
         mut url: String,
-        var headers: Dict[String, String],
+        headers: Dict[String, String],
         data: RequestData[origin],
         timeout: Optional[Int] = None,
         query_parameters: Dict[String, String] = {},
@@ -369,20 +100,19 @@ struct Session(Movable):
                 # URL-encode the parameter values
                 # TODO: This is inefficient w/ string copies, but it's ok for now. I'm not sure if we can get mutable
                 # references to the values in the dictionary as we iterate rn.
-                var params: List[String] = []
-                for pair in query_parameters.items():
-                    var key = pair.key
-                    var value = pair.value
-                    params.append(String(self.easy.escape(key), "=", self.easy.escape(value)))
-
-                # Append the query parameters to the URL. Thi
-                var full_url = String(url, "?", "&".join(params))
+                var params: List[String] = [
+                    String(t"{self.easy.escape(pair.key)}={self.easy.escape(pair.value)}")
+                    for pair in query_parameters.items()
+                ]
+   
+                # Append the query parameters to the URL.
+                var full_url = String(t"{url}?{'&'.join(params)}")
                 self.raise_if_error(self.easy.url(full_url), "Failed to set URL with query parameters: ")
             else:
                 self.raise_if_error(self.easy.url(url), "Failed to set URL: ")
 
             # Set the buffer to load the response into
-            var response_body = List[UInt8](capacity=8192)
+            var response_body = List[Byte](capacity=8192)
             self.raise_if_error(
                 self.easy.write_data(UnsafePointer(to=response_body).bitcast[NoneType]()),
                 "Failed to set write data: ",
@@ -417,26 +147,24 @@ struct Session(Movable):
             if timeout:
                 self.raise_if_error(self.easy.timeout(timeout.value()), "Failed to set timeout: ")
 
-            var list = CurlList(headers)
+            var header_list = CurlList(headers)
             try:
                 # If there's any headers set on the session, add them too.
                 # but only if they aren't already set in the request-specific headers, since those should take precedence.
                 for header in self.headers.items():
                     if header.key not in headers:
-                        var h = String(header.key, ": ", header.value)
-                        list.append(h)
+                        header_list.append(String(t"{header.key}: {header.value}"))
         
                 # Set headers
-                self.raise_if_error(self.easy.http_headers(list), "Failed to set HTTP headers: ")
+                self.raise_if_error(self.easy.http_headers(header_list), "Failed to set HTTP headers: ")
 
                 # Enable the cookie engine
                 self.raise_if_error(self.easy.cookie_file(), "Failed to enable cookie engine: ")
-                # self.raise_if_error(self.easy.cookie_jar(), "Failed to enable cookie engine: ")
 
                 # Perform the transfer
                 self.raise_if_error(self.easy.perform(), "Failed to perform the request: ")
             finally:
-                list^.free() # Free headers after performing the request.
+                header_list^.free() # Free headers after performing the request.
             
             return Response(
                 body=response_body^,

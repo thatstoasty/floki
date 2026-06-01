@@ -427,7 +427,7 @@ def patch(
 
 def patch[T: AnyType & ImplicitlyDestructible, //](
     var url: String,
-    var data: T,
+    data: T,
     var headers: Dict[String, String] = {},
     timeout: Optional[Int] = None,
 ) raises -> Response:
