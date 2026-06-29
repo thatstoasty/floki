@@ -5,7 +5,7 @@ from floki.cookie.cookie import Cookie
 
 
 @fieldwise_init
-struct CookieKey(KeyElement):
+struct CookieKey(KeyElement, Copyable):
     """A key for identifying cookies in the CookieJar, based on name, domain, and path."""
     var name: String
     """The cookie name."""
@@ -90,7 +90,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         self._inner = Dict[CookieKey, Cookie]()
         try:
             for cookie in raw_cookies:
-                self.set_cookie(Cookie(cookie))
+                self.set_cookie(Cookie(StringSlice(unsafe_from_utf8=cookie)))
         finally:
             raw_cookies^.free()
 

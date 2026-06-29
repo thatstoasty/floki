@@ -1,4 +1,3 @@
-from std.reflection import get_base_type_name
 from std.utils import Variant
 from mojo_curl.easy import Easy, Result
 from mojo_curl.list import CurlList

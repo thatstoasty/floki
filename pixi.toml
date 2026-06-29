@@ -16,7 +16,7 @@ examples = "sh -c 'find examples -name \"*.mojo\" -exec mojo -D ASSERT=all -I . 
 
 # Linting and Formatting
 lint_docs = "mojo doc --Werror --diagnose-missing-doc-strings -o /dev/null ./floki"
-mojo_format = "mojo format floki --line-length 120"
+mojo_format = "mojo format floki test examples --line-length 120"
 sort_imports = "isort **/*.mojo -m 3 --line-length 120 --lines-after-imports 2 --trailing-comma"
 format = [{ task = "mojo_format" }, { task = "sort_imports" }]
 
@@ -34,32 +34,32 @@ version = "0.3.3"
 backend = { name = "pixi-build-mojo", version = "0.*" }
 
 [dependencies]
-mojo = ">=1.0.0b1,<2"
-emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.2" }
-mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.0" }
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.0"  }
-mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "f056d586d14bce1e6e531670a3cfc84bea67017d" }
+mojo = ">=1.0.0b2,<2"
+emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.3" }
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.1" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.1"  }
+mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "1.0.0b2" }
 
 [package.build-dependencies]
-mojo-compiler = ">=1.0.0b1,<1.0.0b2"
-emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.2" }
-mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.0" }
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.0"  }
-mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "f056d586d14bce1e6e531670a3cfc84bea67017d" }
+mojo-compiler = ">=1.0.0b2,<1.0.0b3"
+emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.3" }
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.1" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.1"  }
+mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "1.0.0b2" }
 
 [package.host-dependencies]
-mojo-compiler = ">=1.0.0b1,<1.0.0b2"
+mojo-compiler = ">=1.0.0b2,<1.0.0b3"
 
 [package.run-dependencies]
-mojo-compiler = ">=1.0.0b1,<1.0.0b2"
-emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.2" }
-mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.0" }
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.0"  }
-mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "f056d586d14bce1e6e531670a3cfc84bea67017d" }
+mojo-compiler = ">=1.0.0b2,<1.0.0b3"
+emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.3" }
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.1" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.1"  }
+mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "1.0.0b2" }
 
 [feature.util.dependencies]
 isort = ">=8.0.1,<9"
-fastapi = ">=0.115.4,<0.116"
+fastapi = ">=0.138.1,<0.139"
 
 [environments]
 default = { solve-group = "default" }
