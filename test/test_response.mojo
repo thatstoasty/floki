@@ -1,11 +1,12 @@
-from std.testing import TestSuite, assert_equal, assert_true
-from floki.http import Status, Protocol
 from floki.body import Body
-from floki.response import Response
 from floki.cookie.cookie_jar import CookieJar
+from floki.http import Protocol, Status
+from floki.response import Response
+from std.testing import TestSuite, assert_equal, assert_true
 
 
 # === Status ===
+
 
 def test_status_from_int_200() raises -> None:
     var s = Status(200)
@@ -56,6 +57,7 @@ def test_status_write_to_not_found() raises -> None:
 
 # === Protocol ===
 
+
 def test_protocol_from_string_http() raises -> None:
     var p = Protocol("http")
     assert_true(p == Protocol.HTTP)
@@ -85,6 +87,7 @@ def test_protocol_write_to_https() raises -> None:
 
 # === Body ===
 
+
 def test_body_valid_utf8_from_span() raises -> None:
     var body = Body("hello".as_bytes())
     assert_equal(len(body), 5)
@@ -110,7 +113,7 @@ def test_body_len() raises -> None:
     assert_equal(len(body), 5)
 
 
-struct TestJSON(Movable, Defaultable, ImplicitlyDestructible):
+struct TestJSON(Defaultable, ImplicitlyDestructible, Movable):
     var name: String
 
     def __init__(out self):
@@ -140,10 +143,13 @@ def test_body_consume() raises -> None:
 
 # === Response ===
 
+
 def test_http_response_is_ok_true() raises -> None:
     var response = Response(
-        body=List[Byte](), cookies=CookieJar(),
-        status=Status.OK, protocol=Protocol.HTTPS,
+        body=List[Byte](),
+        cookies=CookieJar(),
+        status=Status.OK,
+        protocol=Protocol.HTTPS,
     )
     assert_true(response.is_ok())
 
@@ -151,64 +157,80 @@ def test_http_response_is_ok_true() raises -> None:
 def test_http_response_is_ok_false_for_201() raises -> None:
     # is_ok() only matches status 200 exactly — 201 Created also returns False
     var response = Response(
-        body=List[Byte](), cookies=CookieJar(),
-        status=Status.CREATED, protocol=Protocol.HTTPS,
+        body=List[Byte](),
+        cookies=CookieJar(),
+        status=Status.CREATED,
+        protocol=Protocol.HTTPS,
     )
     assert_true(not response.is_ok())
 
 
 def test_http_response_is_ok_false_for_404() raises -> None:
     var response = Response(
-        body=List[Byte](), cookies=CookieJar(),
-        status=Status.NOT_FOUND, protocol=Protocol.HTTPS,
+        body=List[Byte](),
+        cookies=CookieJar(),
+        status=Status.NOT_FOUND,
+        protocol=Protocol.HTTPS,
     )
     assert_true(not response.is_ok())
 
 
 def test_http_response_is_redirect_301() raises -> None:
     var response = Response(
-        body=List[Byte](), cookies=CookieJar(),
-        status=Status.MOVED_PERMANENTLY, protocol=Protocol.HTTP,
+        body=List[Byte](),
+        cookies=CookieJar(),
+        status=Status.MOVED_PERMANENTLY,
+        protocol=Protocol.HTTP,
     )
     assert_true(response.is_redirect())
 
 
 def test_http_response_is_redirect_302() raises -> None:
     var response = Response(
-        body=List[Byte](), cookies=CookieJar(),
-        status=Status.FOUND, protocol=Protocol.HTTP,
+        body=List[Byte](),
+        cookies=CookieJar(),
+        status=Status.FOUND,
+        protocol=Protocol.HTTP,
     )
     assert_true(response.is_redirect())
 
 
 def test_http_response_is_redirect_307() raises -> None:
     var response = Response(
-        body=List[Byte](), cookies=CookieJar(),
-        status=Status.TEMPORARY_REDIRECT, protocol=Protocol.HTTP,
+        body=List[Byte](),
+        cookies=CookieJar(),
+        status=Status.TEMPORARY_REDIRECT,
+        protocol=Protocol.HTTP,
     )
     assert_true(response.is_redirect())
 
 
 def test_http_response_is_redirect_308() raises -> None:
     var response = Response(
-        body=List[Byte](), cookies=CookieJar(),
-        status=Status.PERMANENT_REDIRECT, protocol=Protocol.HTTP,
+        body=List[Byte](),
+        cookies=CookieJar(),
+        status=Status.PERMANENT_REDIRECT,
+        protocol=Protocol.HTTP,
     )
     assert_true(response.is_redirect())
 
 
 def test_http_response_is_not_redirect_200() raises -> None:
     var response = Response(
-        body=List[Byte](), cookies=CookieJar(),
-        status=Status.OK, protocol=Protocol.HTTPS,
+        body=List[Byte](),
+        cookies=CookieJar(),
+        status=Status.OK,
+        protocol=Protocol.HTTPS,
     )
     assert_true(not response.is_redirect())
 
 
 def test_http_response_raise_for_status_passes_on_200() raises -> None:
     var response = Response(
-        body=List[Byte](), cookies=CookieJar(),
-        status=Status.OK, protocol=Protocol.HTTPS,
+        body=List[Byte](),
+        cookies=CookieJar(),
+        status=Status.OK,
+        protocol=Protocol.HTTPS,
     )
     try:
         response.raise_for_status()  # must not raise
@@ -218,27 +240,31 @@ def test_http_response_raise_for_status_passes_on_200() raises -> None:
 
 def test_http_response_raise_for_status_raises_on_404() raises -> None:
     var response = Response(
-        body=List[Byte](), cookies=CookieJar(),
-        status=Status.NOT_FOUND, protocol=Protocol.HTTPS,
+        body=List[Byte](),
+        cookies=CookieJar(),
+        status=Status.NOT_FOUND,
+        protocol=Protocol.HTTPS,
     )
     try:
         response.raise_for_status()
     except HTTPError:
         return
-    
+
     raise Error("raise_for_status did not raise on 404")
 
 
 def test_http_response_raise_for_status_raises_on_500() raises -> None:
     var response = Response(
-        body=List[Byte](), cookies=CookieJar(),
-        status=Status.INTERNAL_ERROR, protocol=Protocol.HTTP,
+        body=List[Byte](),
+        cookies=CookieJar(),
+        status=Status.INTERNAL_ERROR,
+        protocol=Protocol.HTTP,
     )
     try:
         response.raise_for_status()
     except:
         return
-    
+
     raise Error("raise_for_status did not raise on 500")
 
 

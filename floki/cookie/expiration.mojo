@@ -1,5 +1,5 @@
-from mojo_datetime import DateTime, TimeZone, TimeDelta, SITimeUnit, TZ_UTC
 from floki._time import from_utc_timestamp
+from mojo_datetime import TZ_UTC, DateTime, SITimeUnit, TimeDelta, TimeZone
 
 
 comptime HTTP_DATE_FORMAT = "ddd, DD MMM YYYY HH:mm:ss ZZZ"

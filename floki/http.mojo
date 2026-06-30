@@ -1,6 +1,7 @@
 @fieldwise_init
 struct Protocol(Equatable, ImplicitlyCopyable, Writable):
     """Represents the protocol used in an HTTP request or response."""
+
     var value: UInt8
     """Internal enum value."""
     comptime HTTP = Self(0)
@@ -23,7 +24,7 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
             return Self.HTTPS
         else:
             raise Error(t"Invalid protocol: {s}")
-    
+
     def __eq__(self, other: Self) -> Bool:
         """Compares two Protocol instances for equality.
 
@@ -34,7 +35,7 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
             True if both instances represent the same protocol.
         """
         return self.value == other.value
-    
+
     def write_to(self, mut writer: Some[Writer]):
         """Writes the protocol name to a writer.
 
@@ -44,12 +45,13 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
         if self == Self.HTTP:
             writer.write("http")
         else:
-            writer.write("https")   
+            writer.write("https")
 
 
 @fieldwise_init
-struct Status(Copyable, Equatable, Writable, TrivialRegisterPassable):
+struct Status(Copyable, Equatable, TrivialRegisterPassable, Writable):
     """Represents the status of an HTTP response, including the status code and a corresponding message."""
+
     var code: UInt16
     """Represents the status code of an HTTP response. The status code indicates the result of the HTTP request and provides information about the success or failure of the request."""
     var message: StaticString
@@ -185,7 +187,7 @@ struct Status(Copyable, Equatable, Writable, TrivialRegisterPassable):
 
         Returns:
             A Status instance corresponding to the provided integer.
-        
+
         Raises:
             Error: If the integer does not correspond to a known status code.
         """
@@ -337,6 +339,7 @@ struct Status(Copyable, Equatable, Writable, TrivialRegisterPassable):
 @fieldwise_init
 struct RequestMethod(Equatable, ImplicitlyCopyable, Writable):
     """Represents the HTTP method used in an HTTP request, such as GET, POST, PUT, DELETE, etc."""
+
     var value: UInt8
     """Internal enum value."""
 

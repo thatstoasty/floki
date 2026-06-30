@@ -1,6 +1,7 @@
 @fieldwise_init
 struct Duration(ImplicitlyCopyable, TrivialRegisterPassable):
     """Represents a duration of time, stored internally as total seconds."""
+
     var total_seconds: Int
     """The total duration in seconds."""
 

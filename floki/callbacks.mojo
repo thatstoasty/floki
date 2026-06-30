@@ -1,7 +1,7 @@
-from std.memory import memcpy
+from mojo_curl.c.types import CURL_READFUNC_ABORT, ImmutExternalPointer, MutExternalPointer
 from std.ffi import c_char, c_size_t, get_errno
+from std.memory import memcpy
 from std.sys import stderr
-from mojo_curl.c.types import ImmutExternalPointer, MutExternalPointer, CURL_READFUNC_ABORT
 
 
 # To read HTTP response data into a list of bytes.
@@ -28,6 +28,7 @@ def write_callback(
 @fieldwise_init
 struct DataToRead:
     """Struct to hold data that will be read by the `read_callback` function for libcurl."""
+
     var data: ImmutExternalPointer[Byte]
     """The pointer to the data that will be read by the `read_callback` function for libcurl."""
     var bytes_remaining: UInt

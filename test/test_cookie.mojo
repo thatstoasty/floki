@@ -1,7 +1,8 @@
-from std.testing import TestSuite, assert_equal, assert_true
-from mojo_datetime import DateTime
 from floki._time import now
 from floki.cookie.expiration import Expiration
+from mojo_datetime import DateTime
+from std.testing import TestSuite, assert_equal, assert_true
+
 from floki.cookie.cookie import Cookie
 
 
@@ -37,6 +38,7 @@ def test_cookie_parsing_with_expiration() raises -> None:
 
 
 # === Additional Expiration Tests ===
+
 
 def test_expiration_default_is_session() raises -> None:
     var exp = Expiration()
@@ -94,6 +96,7 @@ def test_expiration_http_date_timestamp_none_for_session() raises -> None:
 
 
 # === Additional Cookie Tests ===
+
 
 def test_cookie_basic_construction() raises -> None:
     var cookie = Cookie("session_id", "abc123")

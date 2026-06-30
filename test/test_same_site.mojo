@@ -1,5 +1,5 @@
-from std.testing import TestSuite, assert_equal, assert_true
 from floki.cookie.same_site import SameSite
+from std.testing import TestSuite, assert_equal, assert_true
 
 
 def test_same_site_none_has_value_zero() raises -> None:

@@ -17,7 +17,7 @@ def main() raises -> None:
     # print(r.url()) # TODO: Implement URL method to get the final URL with query parameters
     for header in r.headers.items():
         print(String(header.key, ": ", header.value))
-    
+
     # Response Content
     r = floki.get("https://api.github.com/events")
     # print(r.body.as_text())
@@ -45,9 +45,7 @@ def main() raises -> None:
 
     ## Send json data
     r = floki.post(
-        "https://api.github.com/some/endpoint",
-        headers={"Content-Type": "application/json"},
-        data={"some": "data"}
+        "https://api.github.com/some/endpoint", headers={"Content-Type": "application/json"}, data={"some": "data"}
     )
 
     # Response Status Codes
@@ -55,5 +53,3 @@ def main() raises -> None:
     print(r.status.code)
     print(Status.OK == r.status)
     # r.raise_for_status() # To raise if the response was an HTTP error
-
-    
