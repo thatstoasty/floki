@@ -1,7 +1,6 @@
-from floki._time import now
-from mojo_curl.list import CurlList
 from std.collections.dict import Hasher
-
+from mojo_curl.list import CurlList
+from mojo_datetime import DateTime
 from floki.cookie.cookie import Cookie
 
 
@@ -211,7 +210,7 @@ struct CookieJar(Copyable, Defaultable, Sized, Writable):
             writer.write("set-cookie", ": ", cookie.build_header_value())
 
     def clear_expired_cookies(mut self) raises:
-        var now = now()
+        var now = DateTime.now()
         var keys_to_remove = List[CookieKey]()
         for kv in self._inner.items():
             if kv.value.is_expired(now):

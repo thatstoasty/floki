@@ -8,8 +8,11 @@ from floki.forms import FormData
 from floki.handlers import _handle_delete, _handle_head, _handle_options, _handle_patch, _handle_post, _handle_put
 from floki.http import RequestMethod
 from floki.response import Response
+from floki.retry import Retry
+from floki.timeout import Timeout
 from mojo_curl.easy import Easy, Result
 from mojo_curl.list import CurlList
+from std.time import sleep
 from std.utils import Variant
 
 
@@ -24,6 +27,10 @@ struct Session(Movable):
     """Default headers to include in every request made with this session."""
     var verbose: Bool
     """Indicates whether libcurl's verbose logging mode is enabled for this session."""
+    var timeout: Timeout
+    """Timeout configuration applied to every request made with this session."""
+    var retry: Retry
+    """Retry policy applied to every request made with this session."""
 
     comptime DEFAULT_HEADERS = {
         "User-Agent": "floki/0.3.2",
@@ -35,6 +42,8 @@ struct Session(Movable):
         allow_redirects: Bool = True,
         var headers: Dict[String, String] = {},
         verbose: Bool = False,
+        var timeout: Timeout = Timeout(),
+        var retry: Retry = Retry(),
     ) raises:
         """Initialize a new Session.
 
@@ -42,6 +51,8 @@ struct Session(Movable):
             allow_redirects: Whether to follow HTTP redirects automatically.
             headers: Default headers to include in requests.
             verbose: If True, enables libcurl's verbose logging mode for debugging.
+            timeout: Timeout configuration applied to every request made with this session.
+            retry: Retry policy applied to every request made with this session.
 
         Raises:
             Error: If there is a failure in initializing the libcurl easy handle or setting options.
@@ -51,6 +62,8 @@ struct Session(Movable):
         self.headers = materialize[Self.DEFAULT_HEADERS]()
         self.headers.update(headers)
         self.verbose = verbose
+        self.timeout = timeout^
+        self.retry = retry^
         if self.allow_redirects:
             self.raise_if_error(self.easy.follow_location(), "Failed to set follow location to enable redirects: ")
         if self.verbose:
@@ -76,11 +89,12 @@ struct Session(Movable):
         mut url: String,
         mut headers: Dict[String, String],
         data: RequestData[origin],
-        timeout: Optional[Int] = None,
         query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
     ) raises -> Response:
         """Sends an HTTP request and returns the corresponding response.
+
+        The session's `timeout` and `retry` configuration is applied to the request.
 
         Parameters:
             origin: The origin of the request data.
@@ -91,7 +105,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             headers: A dictionary of HTTP headers to include in the request.
             data: An optional `RequestData` variant representing the request body.
-            timeout: An optional timeout in seconds for the request.
             query_parameters: An optional dictionary of query parameters to include in the URL. GET requests only.
             auth: An optional authentication scheme to apply to the request.
 
@@ -151,8 +164,17 @@ struct Session(Movable):
             elif method == RequestMethod.OPTIONS:
                 _handle_options(self.easy)
 
-            if timeout:
-                self.raise_if_error(self.easy.timeout(timeout.value()), "Failed to set timeout: ")
+            # Apply the session's timeout configuration. libcurl expects milliseconds.
+            if self.timeout.connect:
+                self.raise_if_error(
+                    self.easy.connect_timeout(Int(self.timeout.connect.value() * 1000)),
+                    "Failed to set connect timeout: ",
+                )
+            if self.timeout.total:
+                self.raise_if_error(
+                    self.easy.timeout(Int(self.timeout.total.value() * 1000)),
+                    "Failed to set timeout: ",
+                )
 
             # Apply the authentication scheme, if one was provided. Headers already
             # present on the request take precedence over auth-supplied headers.
@@ -173,8 +195,20 @@ struct Session(Movable):
                 # Enable the cookie engine
                 self.raise_if_error(self.easy.cookie_file(), "Failed to enable cookie engine: ")
 
-                # Perform the transfer
-                self.raise_if_error(self.easy.perform(), "Failed to perform the request: ")
+                # Perform the transfer, retrying per the session's retry policy on
+                # transfer errors or retryable status codes.
+                var attempt = 0
+                while True:
+                    response_body.clear()  # Discard any partial body from a previous attempt.
+                    var perform_result = self.easy.perform()
+                    var status_code = Int(self.easy.response_code()) if perform_result == Result.OK else 0
+                    var should_retry = perform_result != Result.OK or self.retry.should_retry(status_code)
+                    if should_retry and attempt < self.retry.max_retries:
+                        attempt += 1
+                        sleep(self.retry.backoff_time(attempt))
+                        continue
+                    self.raise_if_error(perform_result, "Failed to perform the request: ")
+                    break
             finally:
                 header_list^.free()  # Free headers after performing the request.
 
@@ -199,7 +233,6 @@ struct Session(Movable):
         var url: String,
         var headers: Dict[String, String] = {},
         query_parameters: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
         auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a GET request to the specified URL.
@@ -211,7 +244,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request.
-            timeout: An optional timeout in seconds for the request.
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
@@ -233,7 +265,6 @@ struct Session(Movable):
         return self.send[RequestMethod.GET](
             url=url,
             headers=headers,
-            timeout=timeout,
             data=RequestData(List[Byte]()),
             query_parameters=query_parameters,
             auth=auth,
@@ -246,7 +277,6 @@ struct Session(Movable):
         var url: String,
         var headers: Dict[String, String] = {},
         var data: emberjson.Object = {},
-        timeout: Optional[Int] = None,
         auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a POST request to the specified URL.
@@ -258,7 +288,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             data: The data to include in the body of the POST request.
-            timeout: An optional timeout in seconds for the request.
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
@@ -281,7 +310,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(json_data),
-            timeout=timeout,
             auth=auth,
         )
 
@@ -292,7 +320,6 @@ struct Session(Movable):
         var url: String,
         data: FormData,
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
         auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a POST request with `application/x-www-form-urlencoded` data to the specified URL.
@@ -304,7 +331,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The form fields to include in the body of the POST request.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
@@ -330,7 +356,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(encoded.as_bytes()),
-            timeout=timeout,
             auth=auth,
         )
 
@@ -341,7 +366,6 @@ struct Session(Movable):
         var url: String,
         data: T,
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
     ) raises -> Response:
         """Sends a POST request to the specified URL.
 
@@ -349,7 +373,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the POST request.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
 
         Returns:
             The received response as a `Response` object.
@@ -380,7 +403,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=json_data.as_bytes(),
-            timeout=timeout,
         )
 
     def post[
@@ -390,7 +412,6 @@ struct Session(Movable):
         var url: String,
         data: Span[Byte, origin],
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
     ) raises -> Response:
         """Sends a POST request to the specified URL.
 
@@ -401,7 +422,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the POST request.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
 
         Returns:
             The received response as a `Response` object.
@@ -422,7 +442,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(data),
-            timeout=timeout,
         )
 
     def post(
@@ -430,7 +449,6 @@ struct Session(Movable):
         var url: String,
         data: FileHandle,
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
     ) raises -> Response:
         """Sends a POST request to the specified URL.
 
@@ -438,7 +456,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the POST request.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
 
         Returns:
             The received response as a `Response` object.
@@ -460,7 +477,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(Pointer(to=data)),
-            timeout=timeout,
         )
 
     def put[
@@ -470,7 +486,6 @@ struct Session(Movable):
         var url: String,
         var headers: Dict[String, String] = {},
         var data: emberjson.Object = {},
-        timeout: Optional[Int] = None,
         auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a PUT request to the specified URL.
@@ -482,7 +497,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             data: The data to include in the body of the PUT request.
-            timeout: An optional timeout in seconds for the request.
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
@@ -505,7 +519,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=json_data,
-            timeout=timeout,
             auth=auth,
         )
 
@@ -516,7 +529,6 @@ struct Session(Movable):
         var url: String,
         data: T,
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
     ) raises -> Response:
         """Sends a PUT request to the specified URL.
 
@@ -524,7 +536,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the PUT request.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
 
         Returns:
             The received response as a `Response` object.
@@ -551,7 +562,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=json_data.as_bytes(),
-            timeout=timeout,
         )
 
     def put[
@@ -561,7 +571,6 @@ struct Session(Movable):
         var url: String,
         data: Span[Byte, origin],
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
     ) raises -> Response:
         """Sends a PUT request to the specified URL.
 
@@ -572,7 +581,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the PUT request.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
 
         Returns:
             The received response as a `Response` object.
@@ -593,7 +601,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=data,
-            timeout=timeout,
         )
 
     def put(
@@ -601,7 +608,6 @@ struct Session(Movable):
         var url: String,
         data: FileHandle,
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
     ) raises -> Response:
         """Sends a PUT request to the specified URL.
 
@@ -609,7 +615,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the PUT request.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
 
         Returns:
             The received response as a `Response` object.
@@ -631,7 +636,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=Pointer(to=data),
-            timeout=timeout,
         )
 
     def delete[
@@ -640,7 +644,6 @@ struct Session(Movable):
         self,
         var url: String,
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
         auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a DELETE request to the specified URL.
@@ -651,7 +654,6 @@ struct Session(Movable):
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
@@ -673,7 +675,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(List[Byte]()),
-            timeout=timeout,
             auth=auth,
         )
 
@@ -684,7 +685,6 @@ struct Session(Movable):
         var url: String,
         var headers: Dict[String, String] = {},
         var data: emberjson.Object = {},
-        timeout: Optional[Int] = None,
         auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a PATCH request to the specified URL.
@@ -696,7 +696,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             data: The data to include in the body of the PATCH request.
-            timeout: An optional timeout in seconds for the request.
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
@@ -719,7 +718,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=json_data,
-            timeout=timeout,
             auth=auth,
         )
 
@@ -730,7 +728,6 @@ struct Session(Movable):
         var url: String,
         data: T,
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
     ) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
@@ -738,7 +735,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the PATCH request.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
 
         Returns:
             The received response as a `Response` object.
@@ -765,7 +761,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=json_data.as_bytes(),
-            timeout=timeout,
         )
 
     def patch[
@@ -775,7 +770,6 @@ struct Session(Movable):
         var url: String,
         data: Span[Byte, origin],
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
     ) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
@@ -786,7 +780,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the PATCH request.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
 
         Returns:
             The received response as a `Response` object.
@@ -807,7 +800,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=data,
-            timeout=timeout,
         )
 
     def patch(
@@ -815,7 +807,6 @@ struct Session(Movable):
         var url: String,
         data: FileHandle,
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
     ) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
@@ -823,7 +814,6 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the PATCH request.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
 
         Returns:
             The received response as a `Response` object.
@@ -845,7 +835,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=Pointer(to=data),
-            timeout=timeout,
         )
 
     def head[
@@ -854,7 +843,6 @@ struct Session(Movable):
         self,
         var url: String,
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
         auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a HEAD request to the specified URL.
@@ -865,7 +853,6 @@ struct Session(Movable):
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
@@ -887,7 +874,6 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(List[Byte]()),
-            timeout=timeout,
             auth=auth,
         )
 
@@ -897,7 +883,6 @@ struct Session(Movable):
         self,
         var url: String,
         var headers: Dict[String, String] = {},
-        timeout: Optional[Int] = None,
         auth: Optional[A] = None,
     ) raises -> Response:
         """Sends an OPTIONS request to the specified URL.
@@ -908,7 +893,6 @@ struct Session(Movable):
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
-            timeout: An optional timeout in seconds for the request.
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
@@ -930,6 +914,5 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(List[Byte]()),
-            timeout=timeout,
             auth=auth,
         )

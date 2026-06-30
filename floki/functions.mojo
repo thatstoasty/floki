@@ -4,6 +4,8 @@ from floki.http import RequestMethod
 from floki.body import Body
 from floki.auth import Auth, NoAuth
 from floki.forms import FormData
+from floki.retry import Retry
+from floki.timeout import Timeout
 import emberjson
 
 
@@ -13,7 +15,7 @@ def get[
     var url: String,
     var headers: Dict[String, String] = {},
     query_parameters: Dict[String, String] = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a GET request to the specified URL.
@@ -43,10 +45,9 @@ def get[
         var r = floki.get("https://httpbin.org/get", auth=BasicAuth("user", "pass"))
     ```
     """
-    return Session().send[RequestMethod.GET](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.GET](
         url=url,
         headers=headers,
-        timeout=timeout,
         query_parameters=query_parameters,
         data=RequestData(List[Byte]()),
         auth=auth,
@@ -59,7 +60,7 @@ def post[
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a POST request to the specified URL.
@@ -89,11 +90,10 @@ def post[
     ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
-    return Session().send[RequestMethod.POST](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.POST](
         url=url,
         headers=headers,
         data=json_data,
-        timeout=timeout,
         auth=auth,
     )
 
@@ -104,7 +104,7 @@ def post[
     var url: String,
     data: FormData,
     var headers: Dict[String, String] = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a POST request with `application/x-www-form-urlencoded` data to the specified URL.
@@ -137,18 +137,17 @@ def post[
     if "Content-Type" not in headers:
         headers["Content-Type"] = "application/x-www-form-urlencoded"
     var encoded = data.encode()
-    return Session().send[RequestMethod.POST](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.POST](
         url=url,
         headers=headers,
         data=RequestData(encoded.as_bytes()),
-        timeout=timeout,
         auth=auth,
     )
 
 
 def post[
     T: AnyType & ImplicitlyDestructible & Defaultable, //
-](var url: String, data: T, var headers: Dict[String, String] = {}, timeout: Optional[Int] = None,) raises -> Response:
+](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(),) raises -> Response:
     """Sends a POST request to the specified URL.
 
     Args:
@@ -178,11 +177,10 @@ def post[
     ```
     """
     var json_data = emberjson.serialize(data)
-    return Session().send[RequestMethod.POST](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.POST](
         url=url,
         headers=headers,
         data=json_data.as_bytes(),
-        timeout=timeout,
     )
 
 
@@ -192,7 +190,7 @@ def post[
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
 ) raises -> Response:
     """Sends a POST request to the specified URL.
 
@@ -219,11 +217,10 @@ def post[
         var r = floki.post("https://httpbin.org/post", data="hello".as_bytes())
     ```
     """
-    return Session().send[RequestMethod.POST](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.POST](
         url=url,
         headers=headers,
         data=data,
-        timeout=timeout,
     )
 
 
@@ -231,7 +228,7 @@ def post(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
 ) raises -> Response:
     """Sends a POST request to the specified URL.
 
@@ -256,11 +253,10 @@ def post(
             var r = floki.post("https://httpbin.org/post", data=file)
     ```
     """
-    return Session().send[RequestMethod.POST](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.POST](
         url=url,
         headers=headers,
         data=Pointer(to=data),
-        timeout=timeout,
     )
 
 
@@ -270,7 +266,7 @@ def put[
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
@@ -300,18 +296,17 @@ def put[
     ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
-    return Session().send[RequestMethod.PUT](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PUT](
         url=url,
         headers=headers,
         data=json_data,
-        timeout=timeout,
         auth=auth,
     )
 
 
 def put[
     T: AnyType & ImplicitlyDestructible, //
-](var url: String, data: T, var headers: Dict[String, String] = {}, timeout: Optional[Int] = None,) raises -> Response:
+](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(),) raises -> Response:
     """Sends a PUT request to the specified URL.
 
     Args:
@@ -341,11 +336,10 @@ def put[
     ```
     """
     var json_data = emberjson.serialize(data)
-    return Session().send[RequestMethod.PUT](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PUT](
         url=url,
         headers=headers,
         data=json_data.as_bytes(),
-        timeout=timeout,
     )
 
 
@@ -355,7 +349,7 @@ def put[
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
 
@@ -382,11 +376,10 @@ def put[
         var r = floki.put("https://httpbin.org/put", data="hello".as_bytes())
     ```
     """
-    return Session().send[RequestMethod.PUT](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PUT](
         url=url,
         headers=headers,
         data=data,
-        timeout=timeout,
     )
 
 
@@ -394,7 +387,7 @@ def put(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
 
@@ -419,11 +412,10 @@ def put(
             var r = floki.put("https://httpbin.org/put", data=file)
     ```
     """
-    return Session().send[RequestMethod.PUT](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PUT](
         url=url,
         headers=headers,
         data=Pointer(to=data),
-        timeout=timeout,
     )
 
 
@@ -432,7 +424,7 @@ def delete[
 ](
     var url: String,
     var headers: Dict[String, String] = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a DELETE request to the specified URL.
@@ -460,10 +452,9 @@ def delete[
         var r = floki.delete("https://httpbin.org/delete")
     ```
     """
-    return Session().send[RequestMethod.DELETE](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.DELETE](
         url=url,
         headers=headers,
-        timeout=timeout,
         data=RequestData(List[Byte]()),
         auth=auth,
     )
@@ -475,7 +466,7 @@ def patch[
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a PATCH request to the specified URL.
@@ -505,18 +496,17 @@ def patch[
     ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
-    return Session().send[RequestMethod.PATCH](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PATCH](
         url=url,
         headers=headers,
         data=json_data,
-        timeout=timeout,
         auth=auth,
     )
 
 
 def patch[
     T: AnyType & ImplicitlyDestructible, //
-](var url: String, data: T, var headers: Dict[String, String] = {}, timeout: Optional[Int] = None,) raises -> Response:
+](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(),) raises -> Response:
     """Sends a GET request to the specified URL.
 
     Args:
@@ -546,11 +536,10 @@ def patch[
     ```
     """
     var json_data = emberjson.serialize(data)
-    return Session().send[RequestMethod.PATCH](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PATCH](
         url=url,
         headers=headers,
         data=json_data.as_bytes(),
-        timeout=timeout,
     )
 
 
@@ -560,7 +549,7 @@ def patch[
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
 ) raises -> Response:
     """Sends a GET request to the specified URL.
 
@@ -587,11 +576,10 @@ def patch[
         var r = floki.patch("https://httpbin.org/patch", data="hello".as_bytes())
     ```
     """
-    return Session().send[RequestMethod.PATCH](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PATCH](
         url=url,
         headers=headers,
         data=data,
-        timeout=timeout,
     )
 
 
@@ -599,7 +587,7 @@ def patch(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
 ) raises -> Response:
     """Sends a GET request to the specified URL.
 
@@ -624,11 +612,10 @@ def patch(
             var r = floki.patch("https://httpbin.org/patch", data=file)
     ```
     """
-    return Session().send[RequestMethod.PATCH](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PATCH](
         url=url,
         headers=headers,
         data=Pointer(to=data),
-        timeout=timeout,
     )
 
 
@@ -637,7 +624,7 @@ def head[
 ](
     var url: String,
     var headers: Dict[String, String] = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a HEAD request to the specified URL.
@@ -665,10 +652,9 @@ def head[
         var r = floki.head("https://httpbin.org/get")
     ```
     """
-    return Session().send[RequestMethod.HEAD](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.HEAD](
         url=url,
         headers=headers,
-        timeout=timeout,
         data=RequestData(List[Byte]()),
         auth=auth,
     )
@@ -679,7 +665,7 @@ def options[
 ](
     var url: String,
     var headers: Dict[String, String] = {},
-    timeout: Optional[Int] = None,
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends an OPTIONS request to the specified URL.
@@ -707,10 +693,9 @@ def options[
         var r = floki.options("https://httpbin.org/get")
     ```
     """
-    return Session().send[RequestMethod.OPTIONS](
+    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.OPTIONS](
         url=url,
         headers=headers,
-        timeout=timeout,
         data=RequestData(List[Byte]()),
         auth=auth,
     )

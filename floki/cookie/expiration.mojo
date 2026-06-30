@@ -1,5 +1,6 @@
 from floki._time import from_utc_timestamp
 from mojo_datetime import TZ_UTC, DateTime, SITimeUnit, TimeDelta, TimeZone
+from mojo_datetime.calendar import UTCFastCal
 
 
 comptime HTTP_DATE_FORMAT = "ddd, DD MMM YYYY HH:mm:ss ZZZ"
@@ -13,7 +14,7 @@ struct Expiration(Copyable, Defaultable, Equatable):
 
     var variant: UInt8
     """An internal variant discriminator to determine if this is a session expiration (variant 0) or a datetime expiration (variant 1)."""
-    var datetime: Optional[DateTime[TZ_UTC]]
+    var datetime: Optional[DateTime[TZ_UTC, UTCFastCal]]
     """The specific expiration datetime if variant is 1, or None if this is a session expiration (variant 0)."""
 
     def __init__(out self):
@@ -21,7 +22,7 @@ struct Expiration(Copyable, Defaultable, Equatable):
         self.variant = 0
         self.datetime = None
 
-    def __init__(out self, time: DateTime[TZ_UTC]):
+    def __init__(out self, time: DateTime[TZ_UTC, UTCFastCal]):
         """Constructs an Expiration with a specific datetime.
 
         Args:
@@ -43,7 +44,7 @@ struct Expiration(Copyable, Defaultable, Equatable):
             self.variant = 0
             self.datetime = None
         else:
-            self = Self(time=DateTime.parse[fmt_str=HTTP_DATE_FORMAT](text))
+            self = Self(time=DateTime[TZ_UTC, UTCFastCal].parse[fmt_str=HTTP_DATE_FORMAT](text))
 
     @staticmethod
     def from_libcurl_expires(text: StringSlice) raises -> Self:
@@ -62,8 +63,7 @@ struct Expiration(Copyable, Defaultable, Equatable):
         var expires_timestamp = atol(text)
         if expires_timestamp == 0:
             return Self()
-        return Self(from_utc_timestamp(expires_timestamp))
-        # return Self(DateTime.from_unix_epoch(TimeDelta(expires_timestamp)))
+        return Self(DateTime.from_unix_epoch(TimeDelta(expires_timestamp)))
 
     @staticmethod
     def invalidate() -> Self:
@@ -72,7 +72,7 @@ struct Expiration(Copyable, Defaultable, Equatable):
         Returns:
             An Expiration representing January 1, 1970.
         """
-        return Self(variant=1, datetime=DateTime(1970, 1, 1, 0, 0, 0, 0))
+        return Self(variant=1, datetime=DateTime[TZ_UTC, UTCFastCal](1970, 1, 1, 0, 0, 0, 0))
 
     def is_session(self) -> Bool:
         """Checks if this is a session-scoped expiration (no explicit expiry).
