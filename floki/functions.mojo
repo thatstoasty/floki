@@ -4,8 +4,10 @@ from floki.http import RequestMethod
 from floki.body import Body
 from floki.auth import Auth, NoAuth
 from floki.forms import FormData
+from floki.proxy import Proxy
 from floki.retry import Retry
 from floki.timeout import Timeout
+from floki.tls import TLS
 import emberjson
 
 
@@ -15,7 +17,7 @@ def get[
     var url: String,
     var headers: Dict[String, String] = {},
     query_parameters: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a GET request to the specified URL.
@@ -45,7 +47,7 @@ def get[
         var r = floki.get("https://httpbin.org/get", auth=BasicAuth("user", "pass"))
     ```
     """
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.GET](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.GET](
         url=url,
         headers=headers,
         query_parameters=query_parameters,
@@ -60,7 +62,7 @@ def post[
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a POST request to the specified URL.
@@ -90,7 +92,7 @@ def post[
     ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.POST](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.POST](
         url=url,
         headers=headers,
         data=json_data,
@@ -104,7 +106,7 @@ def post[
     var url: String,
     data: FormData,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a POST request with `application/x-www-form-urlencoded` data to the specified URL.
@@ -137,7 +139,7 @@ def post[
     if "Content-Type" not in headers:
         headers["Content-Type"] = "application/x-www-form-urlencoded"
     var encoded = data.encode()
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.POST](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.POST](
         url=url,
         headers=headers,
         data=RequestData(encoded.as_bytes()),
@@ -147,7 +149,7 @@ def post[
 
 def post[
     T: AnyType & ImplicitlyDestructible & Defaultable, //
-](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(),) raises -> Response:
+](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),) raises -> Response:
     """Sends a POST request to the specified URL.
 
     Args:
@@ -177,7 +179,7 @@ def post[
     ```
     """
     var json_data = emberjson.serialize(data)
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.POST](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.POST](
         url=url,
         headers=headers,
         data=json_data.as_bytes(),
@@ -190,7 +192,7 @@ def post[
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a POST request to the specified URL.
 
@@ -217,7 +219,7 @@ def post[
         var r = floki.post("https://httpbin.org/post", data="hello".as_bytes())
     ```
     """
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.POST](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.POST](
         url=url,
         headers=headers,
         data=data,
@@ -228,7 +230,7 @@ def post(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a POST request to the specified URL.
 
@@ -253,7 +255,7 @@ def post(
             var r = floki.post("https://httpbin.org/post", data=file)
     ```
     """
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.POST](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.POST](
         url=url,
         headers=headers,
         data=Pointer(to=data),
@@ -266,7 +268,7 @@ def put[
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
@@ -296,7 +298,7 @@ def put[
     ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PUT](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PUT](
         url=url,
         headers=headers,
         data=json_data,
@@ -306,7 +308,7 @@ def put[
 
 def put[
     T: AnyType & ImplicitlyDestructible, //
-](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(),) raises -> Response:
+](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),) raises -> Response:
     """Sends a PUT request to the specified URL.
 
     Args:
@@ -336,7 +338,7 @@ def put[
     ```
     """
     var json_data = emberjson.serialize(data)
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PUT](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PUT](
         url=url,
         headers=headers,
         data=json_data.as_bytes(),
@@ -349,7 +351,7 @@ def put[
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
 
@@ -376,7 +378,7 @@ def put[
         var r = floki.put("https://httpbin.org/put", data="hello".as_bytes())
     ```
     """
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PUT](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PUT](
         url=url,
         headers=headers,
         data=data,
@@ -387,7 +389,7 @@ def put(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
 
@@ -412,7 +414,7 @@ def put(
             var r = floki.put("https://httpbin.org/put", data=file)
     ```
     """
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PUT](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PUT](
         url=url,
         headers=headers,
         data=Pointer(to=data),
@@ -424,7 +426,7 @@ def delete[
 ](
     var url: String,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a DELETE request to the specified URL.
@@ -452,7 +454,7 @@ def delete[
         var r = floki.delete("https://httpbin.org/delete")
     ```
     """
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.DELETE](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.DELETE](
         url=url,
         headers=headers,
         data=RequestData(List[Byte]()),
@@ -466,7 +468,7 @@ def patch[
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a PATCH request to the specified URL.
@@ -496,7 +498,7 @@ def patch[
     ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PATCH](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PATCH](
         url=url,
         headers=headers,
         data=json_data,
@@ -506,7 +508,7 @@ def patch[
 
 def patch[
     T: AnyType & ImplicitlyDestructible, //
-](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(),) raises -> Response:
+](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),) raises -> Response:
     """Sends a GET request to the specified URL.
 
     Args:
@@ -536,7 +538,7 @@ def patch[
     ```
     """
     var json_data = emberjson.serialize(data)
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PATCH](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PATCH](
         url=url,
         headers=headers,
         data=json_data.as_bytes(),
@@ -549,7 +551,7 @@ def patch[
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a GET request to the specified URL.
 
@@ -576,7 +578,7 @@ def patch[
         var r = floki.patch("https://httpbin.org/patch", data="hello".as_bytes())
     ```
     """
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PATCH](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PATCH](
         url=url,
         headers=headers,
         data=data,
@@ -587,7 +589,7 @@ def patch(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a GET request to the specified URL.
 
@@ -612,7 +614,7 @@ def patch(
             var r = floki.patch("https://httpbin.org/patch", data=file)
     ```
     """
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.PATCH](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PATCH](
         url=url,
         headers=headers,
         data=Pointer(to=data),
@@ -624,7 +626,7 @@ def head[
 ](
     var url: String,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a HEAD request to the specified URL.
@@ -652,7 +654,7 @@ def head[
         var r = floki.head("https://httpbin.org/get")
     ```
     """
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.HEAD](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.HEAD](
         url=url,
         headers=headers,
         data=RequestData(List[Byte]()),
@@ -665,7 +667,7 @@ def options[
 ](
     var url: String,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(),
+    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends an OPTIONS request to the specified URL.
@@ -693,7 +695,7 @@ def options[
         var r = floki.options("https://httpbin.org/get")
     ```
     """
-    return Session(timeout=timeout^, retry=retry^).send[RequestMethod.OPTIONS](
+    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.OPTIONS](
         url=url,
         headers=headers,
         data=RequestData(List[Byte]()),

@@ -7,11 +7,14 @@ from floki.data import RequestData
 from floki.forms import FormData
 from floki.handlers import _handle_delete, _handle_head, _handle_options, _handle_patch, _handle_post, _handle_put
 from floki.http import RequestMethod
+from floki.proxy import Proxy
 from floki.response import Response
 from floki.retry import Retry
 from floki.timeout import Timeout
+from floki.tls import TLS
 from mojo_curl.easy import Easy, Result
 from mojo_curl.list import CurlList
+from std.pathlib import Path
 from std.time import sleep
 from std.utils import Variant
 
@@ -31,6 +34,10 @@ struct Session(Movable):
     """Timeout configuration applied to every request made with this session."""
     var retry: Retry
     """Retry policy applied to every request made with this session."""
+    var proxy: Proxy
+    """Proxy configuration applied to every request made with this session."""
+    var tls: TLS
+    """TLS/SSL verification settings applied to every request made with this session."""
 
     comptime DEFAULT_HEADERS = {
         "User-Agent": "floki/0.3.2",
@@ -44,6 +51,8 @@ struct Session(Movable):
         verbose: Bool = False,
         var timeout: Timeout = Timeout(),
         var retry: Retry = Retry(),
+        var proxy: Proxy = Proxy(),
+        var tls: TLS = TLS(),
     ) raises:
         """Initialize a new Session.
 
@@ -53,6 +62,8 @@ struct Session(Movable):
             verbose: If True, enables libcurl's verbose logging mode for debugging.
             timeout: Timeout configuration applied to every request made with this session.
             retry: Retry policy applied to every request made with this session.
+            proxy: Proxy configuration applied to every request made with this session.
+            tls: TLS/SSL verification settings applied to every request made with this session.
 
         Raises:
             Error: If there is a failure in initializing the libcurl easy handle or setting options.
@@ -64,6 +75,8 @@ struct Session(Movable):
         self.verbose = verbose
         self.timeout = timeout^
         self.retry = retry^
+        self.proxy = proxy^
+        self.tls = tls^
         if self.allow_redirects:
             self.raise_if_error(self.easy.follow_location(), "Failed to set follow location to enable redirects: ")
         if self.verbose:
@@ -174,6 +187,43 @@ struct Session(Movable):
                 self.raise_if_error(
                     self.easy.timeout(Int(self.timeout.total.value() * 1000)),
                     "Failed to set timeout: ",
+                )
+
+            # Apply the session's proxy configuration.
+            if self.proxy:
+                self.raise_if_error(self.easy.proxy(self.proxy.url.copy()), "Failed to set proxy: ")
+                if self.proxy.username:
+                    self.raise_if_error(
+                        self.easy.proxy_username(self.proxy.username.value().copy()),
+                        "Failed to set proxy username: ",
+                    )
+                if self.proxy.password:
+                    self.raise_if_error(
+                        self.easy.proxy_password(self.proxy.password.value().copy()),
+                        "Failed to set proxy password: ",
+                    )
+                if self.proxy.no_proxy:
+                    self.raise_if_error(
+                        self.easy.no_proxy(self.proxy.no_proxy.value().copy()),
+                        "Failed to set no_proxy: ",
+                    )
+
+            # Apply the session's TLS verification settings. Disabling verification
+            # is dangerous and should only be used for testing or trusted networks.
+            if not self.tls.verify:
+                self.raise_if_error(
+                    self.easy.ssl_verify_peer(verify=False), "Failed to disable TLS peer verification: "
+                )
+                self.raise_if_error(
+                    self.easy.ssl_verify_host(verify=False), "Failed to disable TLS host verification: "
+                )
+            if self.tls.ca_bundle:
+                self.raise_if_error(
+                    self.easy.cainfo(Path(self.tls.ca_bundle.value())), "Failed to set TLS CA bundle: "
+                )
+            if self.tls.ca_path:
+                self.raise_if_error(
+                    self.easy.capath(Path(self.tls.ca_path.value())), "Failed to set TLS CA path: "
                 )
 
             # Apply the authentication scheme, if one was provided. Headers already
