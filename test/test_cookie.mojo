@@ -1,6 +1,6 @@
-from floki._time import now
 from floki.cookie.expiration import Expiration
-from mojo_datetime import DateTime
+from mojo_datetime import DateTime, TZ_UTC
+from mojo_datetime.calendar import UTCFastCal
 from std.testing import TestSuite, assert_equal, assert_true
 
 from floki.cookie.cookie import Cookie
@@ -47,7 +47,7 @@ def test_expiration_default_is_session() raises -> None:
 
 
 def test_expiration_from_datetime() raises -> None:
-    var exp = Expiration(DateTime(2040, 6, 15, 12, 0, 0, 0))
+    var exp = Expiration(DateTime[TZ_UTC, UTCFastCal](2040, 6, 15, 12, 0, 0, 0))
     assert_true(exp.is_datetime())
     assert_true(not exp.is_session())
     var dt = exp.datetime.value()
@@ -72,20 +72,20 @@ def test_expiration_equality_session() raises -> None:
 
 
 def test_expiration_equality_datetime() raises -> None:
-    var exp1 = Expiration(DateTime(2030, 1, 1, 0, 0, 0, 0))
-    var exp2 = Expiration(DateTime(2030, 1, 1, 0, 0, 0, 0))
+    var exp1 = Expiration(DateTime[TZ_UTC, UTCFastCal](2030, 1, 1, 0, 0, 0, 0))
+    var exp2 = Expiration(DateTime[TZ_UTC, UTCFastCal](2030, 1, 1, 0, 0, 0, 0))
     assert_true(exp1 == exp2)
 
 
 def test_expiration_inequality_different_dates() raises -> None:
-    var exp1 = Expiration(DateTime(2030, 1, 1, 0, 0, 0, 0))
-    var exp2 = Expiration(DateTime(2031, 6, 15, 0, 0, 0, 0))
+    var exp1 = Expiration(DateTime[TZ_UTC, UTCFastCal](2030, 1, 1, 0, 0, 0, 0))
+    var exp2 = Expiration(DateTime[TZ_UTC, UTCFastCal](2031, 6, 15, 0, 0, 0, 0))
     assert_true(not (exp1 == exp2))
 
 
 def test_expiration_inequality_session_vs_datetime() raises -> None:
     var session = Expiration()
-    var datetime_exp = Expiration(DateTime(2030, 1, 1, 0, 0, 0, 0))
+    var datetime_exp = Expiration(DateTime[TZ_UTC, UTCFastCal](2030, 1, 1, 0, 0, 0, 0))
     assert_true(not (session == datetime_exp))
 
 
@@ -199,25 +199,25 @@ def test_cookie_build_header_value_all_attrs() raises -> None:
 def test_cookie_is_expired_epoch() raises -> None:
     var cookie = Cookie("old", "value")
     cookie.clear_cookie()  # Sets expiration to epoch (1970)
-    var current_time = now()
+    var current_time = DateTime.now()
     assert_true(cookie.is_expired(current_time))
 
 
 def test_cookie_is_not_expired_future_date() raises -> None:
-    var future_expiry = Expiration(DateTime(2099, 12, 31, 0, 0, 0, 0))
+    var future_expiry = Expiration(DateTime[TZ_UTC, UTCFastCal](2099, 12, 31, 0, 0, 0, 0))
     var cookie = Cookie("valid", "value", expires=future_expiry^)
-    var current_time = now()
+    var current_time = DateTime.now()
     assert_true(not cookie.is_expired(current_time))
 
 
 def test_cookie_session_never_expired() raises -> None:
     var cookie = Cookie("session", "value")
-    var current_time = now()
+    var current_time = DateTime.now()
     assert_true(not cookie.is_expired(current_time))
 
 
 def test_cookie_clear_cookie() raises -> None:
-    var cookie = Cookie("token", "value", expires=Expiration(DateTime(2030, 1, 1, 0, 0, 0, 0)))
+    var cookie = Cookie("token", "value", expires=Expiration(DateTime[TZ_UTC, UTCFastCal](2030, 1, 1, 0, 0, 0, 0)))
     assert_true(cookie.expires.is_datetime())
     cookie.clear_cookie()
     assert_true(cookie.expires.is_datetime())

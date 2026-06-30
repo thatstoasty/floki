@@ -1,9 +1,7 @@
-from floki._time import now
 from floki.cookie.cookie_jar import CookieJar, CookieKey
 from floki.cookie.expiration import Expiration
 from mojo_datetime import DateTime
 from std.testing import TestSuite, assert_equal, assert_true
-
 from floki.cookie.cookie import Cookie
 
 
