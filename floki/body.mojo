@@ -54,16 +54,36 @@ struct Body(Copyable, Equatable, Sized, Writable):
         """
         return StringSlice(from_utf8=Span(self.body))
 
-    def as_json[T: Movable & ImplicitlyDestructible & Defaultable](mut self, out result: T) raises:
-        """Converts the response body to a JSON object.
+    def as_json[T: Movable & ImplicitlyDestructible & Defaultable](self, out result: T) raises:
+        """Deserializes the body into a value of the given type.
+
+        Use this when you have a struct (or other deserializable type) to parse
+        the body into. For ad-hoc, untyped access, use `json()` instead.
+
+        Parameters:
+            T: The type to deserialize the body into.
 
         Returns:
-            The body content parsed as a JSON value.
+            The body content deserialized into a value of type `T`.
 
         Raises:
             Error: if the body is empty or cannot be parsed as JSON.
         """
         return emberjson.deserialize[T](emberjson.Parser(self.as_text()))
+
+    def json(self) raises -> emberjson.Value:
+        """Parses the body as a dynamic JSON document for ad-hoc access.
+
+        Use this to inspect a response without declaring a target type, e.g.
+        `body.json()["data"]`. To deserialize into a struct, use `as_json[T]()`.
+
+        Returns:
+            The body content parsed as an `emberjson.JSON` value.
+
+        Raises:
+            Error: if the body is empty or cannot be parsed as JSON.
+        """
+        return emberjson.parse(self.as_text())
 
     def write_to(self, mut writer: Some[Writer]) raises:
         """Writes the body to a writer.

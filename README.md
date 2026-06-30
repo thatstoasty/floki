@@ -54,7 +54,7 @@ def main() raises -> None:
     var response = floki.get("https://example.com")
     for pair in response.headers.items():
         print(pair.key, ": ", pair.value)
-    print(response.body.as_string_slice())
+    print(response.text())
 ```
 
 ## Features
@@ -67,6 +67,7 @@ Floki aims to provide a `requests`-like experience on top of `libcurl`.
 - Authentication helpers (Basic, Bearer) plus a pluggable `Auth` trait for custom schemes.
 - Query parameters, custom headers, and automatic redirect handling.
 - Cookie parsing and a cookie jar.
+- Ergonomic responses: status-class checks, body as text/bytes/typed or dynamic JSON, and case-insensitive headers.
 - Session-level timeout, retry-with-backoff, proxy, and TLS verification controls.
 
 ### Methods
@@ -102,6 +103,55 @@ def main() raises -> None:
 ```
 
 Raw bytes, file handles, and arbitrary `Writable` structs can also be sent as the body.
+
+### Working with responses
+
+A `Response` exposes the status, headers, and body, with convenience accessors for
+the common cases:
+
+```mojo
+import floki
+
+def main() raises -> None:
+    var r = floki.get("https://httpbin.org/get")
+
+    # Status checks by class (1xx-5xx), plus the exact `is_ok` (200 only).
+    if r.is_success():        # any 2xx
+        print(r.status.code, r.reason())
+    if r.is_client_error() or r.is_server_error():
+        r.raise_for_status()  # raises HTTPError on a non-2xx response
+
+    # Body as text, raw bytes, or JSON.
+    print(r.text())                    # StringSlice over the body
+    var data = r.json()                # dynamic JSON, e.g. data["url"]
+
+    # Headers are looked up case-insensitively.
+    print(r.content_type())            # value of the Content-Type header
+    print(r.header("x-request-id", "<none>"))
+```
+
+For typed JSON, deserialize straight into a struct with `r.as_json[T]()`:
+
+```mojo
+import floki
+
+@fieldwise_init
+struct Todo(Defaultable, ImplicitlyDestructible, Movable):
+    var id: Int
+    var title: String
+
+    def __init__(out self):
+        self.id = 0
+        self.title = ""
+
+def main() raises -> None:
+    var r = floki.get("https://jsonplaceholder.typicode.com/todos/1")
+    var todo = r.as_json[Todo]()
+    print(todo.id, todo.title)
+```
+
+`raise_for_status()` treats any 2xx as success, so `201 Created` and `204 No Content`
+do not raise.
 
 ### Authentication
 

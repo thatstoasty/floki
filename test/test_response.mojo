@@ -268,5 +268,91 @@ def test_http_response_raise_for_status_raises_on_500() raises -> None:
     raise Error("raise_for_status did not raise on 500")
 
 
+# === Response ergonomics ===
+
+
+def _response(
+    var body: List[Byte], status: Status, var headers: Dict[String, String] = {}
+) raises -> Response:
+    return Response(
+        body=body^, cookies=CookieJar(), status=status, protocol=Protocol.HTTPS, headers=headers^
+    )
+
+
+def test_is_success_for_2xx() raises -> None:
+    assert_true(_response(List[Byte](), Status.OK).is_success())
+    assert_true(_response(List[Byte](), Status.CREATED).is_success())
+    assert_true(_response(List[Byte](), Status.NO_CONTENT).is_success())
+
+
+def test_is_success_false_for_non_2xx() raises -> None:
+    assert_true(not _response(List[Byte](), Status.MOVED_PERMANENTLY).is_success())
+    assert_true(not _response(List[Byte](), Status.NOT_FOUND).is_success())
+    assert_true(not _response(List[Byte](), Status.INTERNAL_ERROR).is_success())
+
+
+def test_is_client_error() raises -> None:
+    assert_true(_response(List[Byte](), Status.NOT_FOUND).is_client_error())
+    assert_true(not _response(List[Byte](), Status.OK).is_client_error())
+    assert_true(not _response(List[Byte](), Status.INTERNAL_ERROR).is_client_error())
+
+
+def test_is_server_error() raises -> None:
+    assert_true(_response(List[Byte](), Status.INTERNAL_ERROR).is_server_error())
+    assert_true(not _response(List[Byte](), Status.NOT_FOUND).is_server_error())
+
+
+def test_is_informational() raises -> None:
+    assert_true(_response(List[Byte](), Status.CONTINUE).is_informational())
+    assert_true(not _response(List[Byte](), Status.OK).is_informational())
+
+
+def test_raise_for_status_passes_on_201() raises -> None:
+    # 201 Created is a success and must not raise (regression test for the old 200-only bug).
+    _response(List[Byte](), Status.CREATED).raise_for_status()
+
+
+def test_raise_for_status_passes_on_204() raises -> None:
+    _response(List[Byte](), Status.NO_CONTENT).raise_for_status()
+
+
+def test_response_bool() raises -> None:
+    assert_true(Bool(_response(List[Byte](), Status.OK)))
+    assert_true(not Bool(_response(List[Byte](), Status.NOT_FOUND)))
+
+
+def test_response_reason() raises -> None:
+    assert_equal(_response(List[Byte](), Status.NOT_FOUND).reason(), String("Not Found"))
+
+
+def test_response_text() raises -> None:
+    var response = _response(List[Byte](String("hello world").as_bytes()), Status.OK)
+    assert_equal(String(response.text()), "hello world")
+
+
+def test_response_bytes() raises -> None:
+    var response = _response(List[Byte](String("hello").as_bytes()), Status.OK)
+    assert_equal(len(response.bytes()), 5)
+
+
+def test_response_json_dynamic() raises -> None:
+    var response = _response(List[Byte](String('{"name": "floki", "n": 7}').as_bytes()), Status.OK)
+    var j = response.json()
+    assert_true("name" in j)
+    assert_equal(String(j["name"].string()), "floki")
+
+
+def test_response_as_json_typed() raises -> None:
+    var response = _response(List[Byte](String('{"name": "floki"}').as_bytes()), Status.OK)
+    assert_equal(response.as_json[TestJSON]().name, "floki")
+
+
+def test_response_header_case_insensitive() raises -> None:
+    var response = _response(List[Byte](), Status.OK, headers={"content-type": "application/json"})
+    assert_equal(response.header("Content-Type"), String("application/json"))
+    assert_equal(response.content_type(), String("application/json"))
+    assert_equal(response.header("X-Missing", "fallback"), String("fallback"))
+
+
 def main() raises -> None:
     TestSuite.discover_tests[__functions_in_module()]().run()
