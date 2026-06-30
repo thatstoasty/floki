@@ -1,3 +1,4 @@
+import emberjson
 from floki.body import Body
 from floki.cookie.cookie_jar import CookieJar
 from floki.http import Protocol, Status
@@ -18,7 +19,7 @@ struct HTTPError(Movable, Writable):
 
 
 @fieldwise_init
-struct Response(Movable, Writable):
+struct Response(Boolable, Movable, Writable):
     """Represents an HTTP response received from the server."""
 
     var headers: Dict[String, String]
@@ -77,35 +78,75 @@ struct Response(Movable, Writable):
         )
 
     @always_inline
-    def is_redirect(self) -> Bool:
-        """Checks if the response status code indicates a redirect (i.e., 3xx status codes).
+    def is_informational(self) -> Bool:
+        """Checks if the response status code is informational (1xx).
 
         Returns:
-            True if the status code is a redirect, False otherwise.
+            True if the status code is in the range 100-199, False otherwise.
         """
-        return self.status in [
-            Status.MOVED_PERMANENTLY,
-            Status.FOUND,
-            Status.TEMPORARY_REDIRECT,
-            Status.PERMANENT_REDIRECT,
-        ]
+        return self.status.code >= 100 and self.status.code < 200
+
+    @always_inline
+    def is_success(self) -> Bool:
+        """Checks if the response status code indicates success (2xx).
+
+        Unlike `is_ok`, this is True for any 2xx status, including 201 Created
+        and 204 No Content.
+
+        Returns:
+            True if the status code is in the range 200-299, False otherwise.
+        """
+        return self.status.code >= 200 and self.status.code < 300
+
+    @always_inline
+    def is_redirect(self) -> Bool:
+        """Checks if the response status code indicates a redirect (3xx).
+
+        Returns:
+            True if the status code is in the range 300-399, False otherwise.
+        """
+        return self.status.code >= 300 and self.status.code < 400
+
+    @always_inline
+    def is_client_error(self) -> Bool:
+        """Checks if the response status code indicates a client error (4xx).
+
+        Returns:
+            True if the status code is in the range 400-499, False otherwise.
+        """
+        return self.status.code >= 400 and self.status.code < 500
+
+    @always_inline
+    def is_server_error(self) -> Bool:
+        """Checks if the response status code indicates a server error (5xx).
+
+        Returns:
+            True if the status code is in the range 500-599, False otherwise.
+        """
+        return self.status.code >= 500 and self.status.code < 600
 
     @always_inline
     def is_ok(self) -> Bool:
-        """Checks if the response status code indicates success (i.e., a 2xx status code).
+        """Checks if the response status code is exactly 200 OK.
+
+        For a broader "was this successful" check that accepts any 2xx status,
+        prefer `is_success`.
 
         Returns:
-            True if the status code indicates success, False otherwise.
+            True if the status code is 200, False otherwise.
         """
         return self.status == Status.OK
 
     def raise_for_status(self) raises HTTPError:
-        """Raises an HTTPError if the response status code indicates a failure (i.e., a non-2xx status code).
+        """Raises an `HTTPError` if the response was not successful (i.e., not a 2xx status).
+
+        2xx codes other than 200 (e.g., 201 Created, 204 No Content) are treated
+        as successful and do not raise.
 
         Raises:
-            HTTPError: If the response status code indicates a failure.
+            HTTPError: If the response status code is not in the 2xx range.
         """
-        if not self.is_ok():
+        if not self.is_success():
             raise HTTPError(self.status)
 
     def content_length(self) -> Int:
@@ -118,3 +159,96 @@ struct Response(Movable, Writable):
             The number of bytes in the response body.
         """
         return len(self.body)
+
+    def __bool__(self) -> Bool:
+        """Reports whether the response was successful (a 2xx status code).
+
+        Returns:
+            True if the status code is in the 2xx range, False otherwise.
+        """
+        return self.is_success()
+
+    def reason(self) -> StaticString:
+        """Returns the reason phrase associated with the status code.
+
+        Returns:
+            The status message, e.g. "OK" or "Not Found".
+        """
+        return self.status.message
+
+    def text(self) raises -> StringSlice[origin_of(self.body.body)]:
+        """Returns the response body decoded as text.
+
+        Convenience for `response.body.as_text()`.
+
+        Returns:
+            The body content as a string slice.
+        """
+        return self.body.as_text()
+
+    def bytes(self) -> Span[Byte, origin_of(self.body.body)]:
+        """Returns a view of the raw response body bytes.
+
+        Convenience for `response.body.as_bytes()`.
+
+        Returns:
+            A `Span[Byte]` referencing the body's underlying data.
+        """
+        return self.body.as_bytes()
+
+    def json(self) raises -> emberjson.Value:
+        """Parses the response body as a dynamic JSON document for ad-hoc access.
+
+        Convenience for `response.body.json()`, e.g. `response.json()["data"]`.
+        To deserialize into a struct, use `as_json[T]()`.
+
+        Returns:
+            The body content parsed as an `emberjson.JSON` value.
+
+        Raises:
+            Error: if the body is empty or cannot be parsed as JSON.
+        """
+        return self.body.json()
+
+    def as_json[T: Movable & ImplicitlyDestructible & Defaultable](self, out result: T) raises:
+        """Deserializes the response body into a value of the given type.
+
+        Convenience for `response.body.as_json[T]()`.
+
+        Parameters:
+            T: The type to deserialize the body into.
+
+        Returns:
+            The body content deserialized into a value of type `T`.
+
+        Raises:
+            Error: if the body is empty or cannot be parsed as JSON.
+        """
+        return self.body.as_json[T]()
+
+    def header(self, name: StringSlice, default: String = "") -> String:
+        """Looks up a response header by name, case-insensitively.
+
+        HTTP header names are case-insensitive, so this matches regardless of the
+        casing the server used.
+
+        Args:
+            name: The header name to look up.
+            default: The value to return if the header is not present.
+
+        Returns:
+            The header value, or `default` if the header is not present.
+        """
+        var target = name.lower()
+        for entry in self.headers.items():
+            if entry.key.lower() == target:
+                return entry.value
+        return default
+
+    def content_type(self) -> String:
+        """Returns the value of the `Content-Type` header, or an empty string if absent.
+
+        Returns:
+            The `Content-Type` header value, e.g. "application/json".
+        """
+        return self.header("Content-Type")
