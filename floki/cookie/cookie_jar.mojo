@@ -1,12 +1,14 @@
-from std.collections.dict import Hasher
-from mojo_curl.list import CurlList
 from floki._time import now
+from mojo_curl.list import CurlList
+from std.collections.dict import Hasher
+
 from floki.cookie.cookie import Cookie
 
 
 @fieldwise_init
-struct CookieKey(KeyElement, Copyable):
+struct CookieKey(Copyable, KeyElement):
     """A key for identifying cookies in the CookieJar, based on name, domain, and path."""
+
     var name: String
     """The cookie name."""
     var domain: String
@@ -56,8 +58,9 @@ struct CookieKey(KeyElement, Copyable):
 
 
 @fieldwise_init
-struct CookieJar(Copyable, Sized, Writable, Defaultable):
+struct CookieJar(Copyable, Defaultable, Sized, Writable):
     """A collection of cookies, indexed by CookieKey (name, domain, path)."""
+
     var _inner: Dict[CookieKey, Cookie]
     """Internal dictionary storing cookies by their keys."""
 
@@ -67,10 +70,10 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
 
     def __init__(out self, *cookies: Cookie) raises:
         """Constructs a CookieJar pre-populated with the given cookies.
-        
+
         Args:
             cookies: A variable number of Cookie instances to add to the jar.
-        
+
         Raises:
             Error: If any of the provided cookies are invalid.
         """
@@ -104,7 +107,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
         """
         self._inner[key^] = value^
 
-    def __getitem__(ref self, var key: CookieKey) raises -> ref [self._inner] Cookie:
+    def __getitem__(ref self, var key: CookieKey) raises -> ref[self._inner] Cookie:
         """Retrieves a cookie from the jar by key.
 
         Args:
@@ -195,7 +198,7 @@ struct CookieJar(Copyable, Sized, Writable, Defaultable):
                 cookie = Cookie(header)
             except:
                 raise Error("Failed to parse cookie header string: ", header)
-            
+
             self.set_cookie(cookie^)
 
     def write_to(self, mut writer: Some[Writer]):

@@ -1,6 +1,8 @@
 @fieldwise_init
-struct SameSite(Copyable, Writable, Equatable, TrivialRegisterPassable):
-    """Represents the SameSite attribute of an HTTP cookie, which controls when cookies are sent with cross-site requests."""
+struct SameSite(Copyable, Equatable, TrivialRegisterPassable, Writable):
+    """Represents the SameSite attribute of an HTTP cookie, which controls when cookies are sent with cross-site requests.
+    """
+
     var value: UInt8
     """Internal enum value."""
 
@@ -38,7 +40,7 @@ struct SameSite(Copyable, Writable, Equatable, TrivialRegisterPassable):
             True if both instances represent the same SameSite policy.
         """
         return self.value == other.value
-    
+
     def write_to(self, mut writer: Some[Writer]):
         """Writes the SameSite policy name to a writer.
 

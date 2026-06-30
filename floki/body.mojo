@@ -1,9 +1,8 @@
+import emberjson
 from std.collections.string._utf8 import _is_valid_utf8
 
-import emberjson
 
-
-struct Body(Copyable, Sized, Writable, Equatable):
+struct Body(Copyable, Equatable, Sized, Writable):
     """Represents the body of an HTTP request or response.
 
     At the moment, this only supports JSON serialization and deserialization.
@@ -54,13 +53,13 @@ struct Body(Copyable, Sized, Writable, Equatable):
             The body content as a string slice.
         """
         return StringSlice(from_utf8=Span(self.body))
-    
+
     def as_json[T: Movable & ImplicitlyDestructible & Defaultable](mut self, out result: T) raises:
         """Converts the response body to a JSON object.
-        
+
         Returns:
             The body content parsed as a JSON value.
-        
+
         Raises:
             Error: if the body is empty or cannot be parsed as JSON.
         """
@@ -76,7 +75,7 @@ struct Body(Copyable, Sized, Writable, Equatable):
 
     def take_bytes(deinit self) -> List[Byte]:
         """Consumes the body and returns it as List[Byte].
-        
+
         Returns:
             The body content as a list of bytes.
         """

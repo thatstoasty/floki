@@ -1,7 +1,8 @@
-from std.ffi import c_char, c_int, c_long, external_call, CStringSlice
+from mojo_datetime import TZ_UTC, DateTime, TimeZone
 from std import time
+from std.ffi import CStringSlice, c_char, c_int, c_long, external_call
 from std.time.time import _realtime_nanoseconds
-from mojo_datetime import DateTime, TimeZone, TZ_UTC
+
 
 comptime time_t = Int64
 """C `time_t` type, representing time in seconds since the Epoch (1970-01-01 00:00:00 UTC)."""

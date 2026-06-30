@@ -1,12 +1,14 @@
-from std.testing import TestSuite, assert_equal, assert_true
-from mojo_datetime import DateTime
 from floki._time import now
-from floki.cookie.expiration import Expiration
-from floki.cookie.cookie import Cookie
 from floki.cookie.cookie_jar import CookieJar, CookieKey
+from floki.cookie.expiration import Expiration
+from mojo_datetime import DateTime
+from std.testing import TestSuite, assert_equal, assert_true
+
+from floki.cookie.cookie import Cookie
 
 
 # === CookieKey Tests ===
+
 
 def test_cookie_key_default_domain_and_path() raises -> None:
     var key = CookieKey("session_id")
@@ -53,6 +55,7 @@ def test_cookie_key_inequality_by_path() raises -> None:
 
 
 # === CookieJar Tests ===
+
 
 def test_cookie_jar_empty_construction() raises -> None:
     var jar = CookieJar()
@@ -166,10 +169,12 @@ def test_cookie_jar_add_headers_to_jar() raises -> None:
 
 def test_cookie_jar_add_headers_to_jar_multiple() raises -> None:
     var jar = CookieJar()
-    jar.add_headers_to_jar([
-        "httpbin.org\tFALSE\t/\tFALSE\t0\tcookie1\tval1",
-        "httpbin.org\tFALSE\t/\tFALSE\t0\tcookie2\tval2",
-    ])
+    jar.add_headers_to_jar(
+        [
+            "httpbin.org\tFALSE\t/\tFALSE\t0\tcookie1\tval1",
+            "httpbin.org\tFALSE\t/\tFALSE\t0\tcookie2\tval2",
+        ]
+    )
     assert_equal(len(jar), 2)
 
 

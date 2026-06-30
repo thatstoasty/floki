@@ -1,8 +1,8 @@
 # from floki.header import HeaderKey, Header
-from mojo_datetime import DateTime
-from floki.cookie.same_site import SameSite
-from floki.cookie.expiration import Expiration
 from floki.cookie.duration import Duration
+from floki.cookie.expiration import Expiration
+from floki.cookie.same_site import SameSite
+from mojo_datetime import DateTime
 
 
 @fieldwise_init

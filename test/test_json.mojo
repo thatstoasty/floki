@@ -1,11 +1,11 @@
-from std.utils import Variant
-from std.testing import TestSuite, assert_equal, assert_true
 import emberjson
 from floki.session import Session
+from std.testing import TestSuite, assert_equal, assert_true
+from std.utils import Variant
 
 
 @fieldwise_init
-struct Todo(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct Todo(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var userId: Int
     var id: Int
     var title: String

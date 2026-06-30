@@ -1,5 +1,5 @@
-from std.testing import TestSuite, assert_equal, assert_true
 from floki.cookie.duration import Duration
+from std.testing import TestSuite, assert_equal, assert_true
 
 
 def test_duration_default_is_zero() raises -> None:

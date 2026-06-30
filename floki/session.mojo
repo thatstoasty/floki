@@ -1,18 +1,21 @@
-from std.utils import Variant
-from mojo_curl.easy import Easy, Result
-from mojo_curl.list import CurlList
-from floki.callbacks import read_callback, write_callback
-from floki.response import Response
-from floki.http import RequestMethod
+import emberjson
+from floki.auth import Auth, NoAuth, apply_auth
 from floki.body import Body
+from floki.callbacks import read_callback, write_callback
 from floki.cookie.cookie_jar import CookieJar
 from floki.data import RequestData
-from floki.handlers import _handle_post, _handle_put, _handle_delete, _handle_patch, _handle_head, _handle_options
-import emberjson
+from floki.forms import FormData
+from floki.handlers import _handle_delete, _handle_head, _handle_options, _handle_patch, _handle_post, _handle_put
+from floki.http import RequestMethod
+from floki.response import Response
+from mojo_curl.easy import Easy, Result
+from mojo_curl.list import CurlList
+from std.utils import Variant
 
 
 struct Session(Movable):
     """A Session object to manage and persist settings across multiple HTTP requests."""
+
     var easy: Easy
     """Wraps a libcurl easy handle, which is used to configure and perform HTTP requests."""
     var allow_redirects: Bool
@@ -34,12 +37,12 @@ struct Session(Movable):
         verbose: Bool = False,
     ) raises:
         """Initialize a new Session.
-        
+
         Args:
             allow_redirects: Whether to follow HTTP redirects automatically.
             headers: Default headers to include in requests.
             verbose: If True, enables libcurl's verbose logging mode for debugging.
-        
+
         Raises:
             Error: If there is a failure in initializing the libcurl easy handle or setting options.
         """
@@ -59,25 +62,29 @@ struct Session(Movable):
         Args:
             code: The libcurl result code to check.
             message: The error message prefix to use if the code indicates failure.
-        
+
         Raises:
             Error: If the code does not indicate success, with a message describing the error.
         """
         if code != Result.OK:
             raise Error(message, self.easy.describe_error(code))
 
-    def send[origin: ImmutOrigin, //, method: RequestMethod](
+    def send[
+        origin: ImmutOrigin, //, method: RequestMethod, A: Auth = NoAuth
+    ](
         self,
         mut url: String,
-        headers: Dict[String, String],
+        mut headers: Dict[String, String],
         data: RequestData[origin],
         timeout: Optional[Int] = None,
         query_parameters: Dict[String, String] = {},
+        auth: Optional[A] = None,
     ) raises -> Response:
         """Sends an HTTP request and returns the corresponding response.
 
         Parameters:
             origin: The origin of the request data.
+            A: The concrete `Auth` scheme type, inferred from `auth`.
             method: The HTTP method to use for the request.
 
         Args:
@@ -86,9 +93,10 @@ struct Session(Movable):
             data: An optional `RequestData` variant representing the request body.
             timeout: An optional timeout in seconds for the request.
             query_parameters: An optional dictionary of query parameters to include in the URL. GET requests only.
+            auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as an `Response` object.
+            The received response as a `Response` object.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -103,7 +111,7 @@ struct Session(Movable):
                     String(t"{self.easy.escape(pair.key)}={self.easy.escape(pair.value)}")
                     for pair in query_parameters.items()
                 ]
-   
+
                 # Append the query parameters to the URL.
                 var full_url = String(t"{url}?{'&'.join(params)}")
                 self.raise_if_error(self.easy.url(full_url), "Failed to set URL with query parameters: ")
@@ -146,6 +154,11 @@ struct Session(Movable):
             if timeout:
                 self.raise_if_error(self.easy.timeout(timeout.value()), "Failed to set timeout: ")
 
+            # Apply the authentication scheme, if one was provided. Headers already
+            # present on the request take precedence over auth-supplied headers.
+            if auth:
+                apply_auth(auth.value(), headers)
+
             var header_list = CurlList(headers)
             try:
                 # If there's any headers set on the session, add them too.
@@ -153,7 +166,7 @@ struct Session(Movable):
                 for header in self.headers.items():
                     if header.key not in headers:
                         header_list.append(String(t"{header.key}: {header.value}"))
-        
+
                 # Set headers
                 self.raise_if_error(self.easy.http_headers(header_list), "Failed to set HTTP headers: ")
 
@@ -163,8 +176,8 @@ struct Session(Movable):
                 # Perform the transfer
                 self.raise_if_error(self.easy.perform(), "Failed to perform the request: ")
             finally:
-                header_list^.free() # Free headers after performing the request.
-            
+                header_list^.free()  # Free headers after performing the request.
+
             return Response(
                 body=response_body^,
                 headers=self.easy.headers(),
@@ -173,71 +186,87 @@ struct Session(Movable):
                 cookies=CookieJar(self.easy.cookies()),
             )
         finally:
-            self.easy.reset() # Reset the easy handle to clear any state for the next request.
+            self.easy.reset()  # Reset the easy handle to clear any state for the next request.
             if self.allow_redirects:
                 _ = self.easy.follow_location()
             if self.verbose:
                 _ = self.easy.verbose()
 
-    def get(
+    def get[
+        A: Auth = NoAuth, //
+    ](
         self,
         var url: String,
         var headers: Dict[String, String] = {},
         query_parameters: Dict[String, String] = {},
         timeout: Optional[Int] = None,
+        auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a GET request to the specified URL.
+
+        Parameters:
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request.
             timeout: An optional timeout in seconds for the request.
+            auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
+        from floki.auth import BasicAuth
 
         def main() raises:
             var session = Session()
-            var r = session.get("https://httpbin.org/get")
+            var r = session.get("https://httpbin.org/get", auth=BasicAuth("user", "pass"))
         ```
         """
         return self.send[RequestMethod.GET](
             url=url,
-            headers=headers^,
+            headers=headers,
             timeout=timeout,
             data=RequestData(List[Byte]()),
             query_parameters=query_parameters,
+            auth=auth,
         )
 
-    def post(
+    def post[
+        A: Auth = NoAuth, //
+    ](
         self,
         var url: String,
         var headers: Dict[String, String] = {},
         var data: emberjson.Object = {},
         timeout: Optional[Int] = None,
+        auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a POST request to the specified URL.
+
+        Parameters:
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             data: The data to include in the body of the POST request.
             timeout: An optional timeout in seconds for the request.
+            auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -250,12 +279,64 @@ struct Session(Movable):
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.POST](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=RequestData(json_data),
             timeout=timeout,
+            auth=auth,
         )
-    
-    def post[T: AnyType & ImplicitlyDestructible, //](
+
+    def post[
+        A: Auth, //
+    ](
+        self,
+        var url: String,
+        data: FormData,
+        var headers: Dict[String, String] = {},
+        timeout: Optional[Int] = None,
+        auth: Optional[A] = None,
+    ) raises -> Response:
+        """Sends a POST request with `application/x-www-form-urlencoded` data to the specified URL.
+
+        Parameters:
+            A: The concrete `Auth` scheme type, inferred from `auth`.
+
+        Args:
+            url: The URL to which the request is sent.
+            data: The form fields to include in the body of the POST request.
+            headers: HTTP headers to include in the request.
+            timeout: An optional timeout in seconds for the request.
+            auth: An optional authentication scheme to apply to the request.
+
+        Returns:
+            The received response as a `Response` object.
+
+        Raises:
+            Error: If there is a failure in sending or receiving the message.
+
+        #### Examples:
+        ```mojo
+        from floki.session import Session
+        from floki.forms import FormData
+
+        def main() raises:
+            var session = Session()
+            var r = session.post("https://httpbin.org/post", data=FormData({"key": "value"}))
+        ```
+        """
+        if "Content-Type" not in headers:
+            headers["Content-Type"] = "application/x-www-form-urlencoded"
+        var encoded = data.encode()
+        return self.send[RequestMethod.POST](
+            url=url,
+            headers=headers,
+            data=RequestData(encoded.as_bytes()),
+            timeout=timeout,
+            auth=auth,
+        )
+
+    def post[
+        T: AnyType & ImplicitlyDestructible & Defaultable, //
+    ](
         self,
         var url: String,
         data: T,
@@ -271,19 +352,23 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
 
         @fieldwise_init
-        struct Point:
+        struct Point(ImplicitlyDestructible, Defaultable):
             var x: Int
             var y: Int
+
+            def __init__(out self):
+                self.x = 0
+                self.y = 0
 
         def main() raises:
             var session = Session()
@@ -293,12 +378,14 @@ struct Session(Movable):
         var json_data = emberjson.serialize(data)
         return self.send[RequestMethod.POST](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=json_data.as_bytes(),
             timeout=timeout,
         )
 
-    def post[origin: ImmutOrigin, //](
+    def post[
+        origin: ImmutOrigin, //
+    ](
         self,
         var url: String,
         data: Span[Byte, origin],
@@ -317,11 +404,11 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -333,7 +420,7 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.POST](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=RequestData(data),
             timeout=timeout,
         )
@@ -354,11 +441,11 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -371,32 +458,39 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.POST](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=RequestData(Pointer(to=data)),
             timeout=timeout,
         )
 
-    def put(
+    def put[
+        A: Auth = NoAuth, //
+    ](
         self,
         var url: String,
         var headers: Dict[String, String] = {},
         var data: emberjson.Object = {},
         timeout: Optional[Int] = None,
+        auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a PUT request to the specified URL.
+
+        Parameters:
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             data: The data to include in the body of the PUT request.
             timeout: An optional timeout in seconds for the request.
+            auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -409,12 +503,15 @@ struct Session(Movable):
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.PUT](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=json_data,
             timeout=timeout,
+            auth=auth,
         )
 
-    def put[T: AnyType & ImplicitlyDestructible, //](
+    def put[
+        T: AnyType & ImplicitlyDestructible, //
+    ](
         self,
         var url: String,
         data: T,
@@ -430,11 +527,11 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -452,12 +549,14 @@ struct Session(Movable):
         var json_data = emberjson.serialize(data)
         return self.send[RequestMethod.PUT](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=json_data.as_bytes(),
             timeout=timeout,
         )
 
-    def put[origin: ImmutOrigin, //](
+    def put[
+        origin: ImmutOrigin, //
+    ](
         self,
         var url: String,
         data: Span[Byte, origin],
@@ -476,11 +575,11 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -492,7 +591,7 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.PUT](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=data,
             timeout=timeout,
         )
@@ -513,11 +612,11 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -530,30 +629,37 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.PUT](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=Pointer(to=data),
             timeout=timeout,
         )
 
-    def delete(
+    def delete[
+        A: Auth = NoAuth, //
+    ](
         self,
         var url: String,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
+        auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a DELETE request to the specified URL.
+
+        Parameters:
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             timeout: An optional timeout in seconds for the request.
+            auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -565,32 +671,40 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.DELETE](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=RequestData(List[Byte]()),
             timeout=timeout,
+            auth=auth,
         )
 
-    def patch(
+    def patch[
+        A: Auth = NoAuth, //
+    ](
         self,
         var url: String,
         var headers: Dict[String, String] = {},
         var data: emberjson.Object = {},
         timeout: Optional[Int] = None,
+        auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a PATCH request to the specified URL.
+
+        Parameters:
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             data: The data to include in the body of the PATCH request.
             timeout: An optional timeout in seconds for the request.
+            auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -603,12 +717,15 @@ struct Session(Movable):
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.PATCH](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=json_data,
             timeout=timeout,
+            auth=auth,
         )
-    
-    def patch[T: AnyType & ImplicitlyDestructible, //](
+
+    def patch[
+        T: AnyType & ImplicitlyDestructible, //
+    ](
         self,
         var url: String,
         data: T,
@@ -624,11 +741,11 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -646,12 +763,14 @@ struct Session(Movable):
         var json_data = emberjson.serialize(data)
         return self.send[RequestMethod.PATCH](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=json_data.as_bytes(),
             timeout=timeout,
         )
 
-    def patch[origin: ImmutOrigin, //](
+    def patch[
+        origin: ImmutOrigin, //
+    ](
         self,
         var url: String,
         data: Span[Byte, origin],
@@ -670,11 +789,11 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -686,7 +805,7 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.PATCH](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=data,
             timeout=timeout,
         )
@@ -707,11 +826,11 @@ struct Session(Movable):
             timeout: An optional timeout in seconds for the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -724,30 +843,37 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.PATCH](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=Pointer(to=data),
             timeout=timeout,
         )
 
-    def head(
+    def head[
+        A: Auth = NoAuth, //
+    ](
         self,
         var url: String,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
+        auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a HEAD request to the specified URL.
+
+        Parameters:
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             timeout: An optional timeout in seconds for the request.
+            auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -759,30 +885,38 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.HEAD](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=RequestData(List[Byte]()),
             timeout=timeout,
+            auth=auth,
         )
 
-    def options(
+    def options[
+        A: Auth = NoAuth, //
+    ](
         self,
         var url: String,
         var headers: Dict[String, String] = {},
         timeout: Optional[Int] = None,
+        auth: Optional[A] = None,
     ) raises -> Response:
         """Sends an OPTIONS request to the specified URL.
+
+        Parameters:
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             timeout: An optional timeout in seconds for the request.
+            auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as an `Response` object.
-        
+            The received response as a `Response` object.
+
         Raises:
             Error: If there is a failure in sending or receiving the message.
-        
+
         #### Examples:
         ```mojo
         from floki.session import Session
@@ -794,7 +928,8 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.OPTIONS](
             url=url,
-            headers=headers^,
+            headers=headers,
             data=RequestData(List[Byte]()),
             timeout=timeout,
+            auth=auth,
         )

@@ -1,10 +1,11 @@
-from std.utils import Variant
-from std.testing import TestSuite, assert_equal, assert_true
 import emberjson
-from floki.session import Session
-from floki.http import Status, Protocol
-from floki.cookie.cookie import Cookie
 from floki.cookie.cookie_jar import CookieKey
+from floki.http import Protocol, Status
+from floki.session import Session
+from std.testing import TestSuite, assert_equal, assert_true
+from std.utils import Variant
+
+from floki.cookie.cookie import Cookie
 
 
 def assert_variant_equal(expected: Variant[Int, String, Bool], actual: emberjson.Value) raises -> None:
@@ -24,7 +25,7 @@ def assert_variant_equal2(expected: Variant[Int, String], actual: emberjson.Valu
 
 
 @fieldwise_init
-struct Todo(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct Todo(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var userId: Int
     var id: Int
     var title: String
@@ -35,7 +36,7 @@ struct Todo(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
         self.id = 0
         self.title = ""
         self.completed = False
-    
+
 
 def test_get() raises -> None:
     var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
@@ -49,7 +50,7 @@ def test_get() raises -> None:
 
 
 @fieldwise_init
-struct Record(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct Record(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var userId: Int
     var body: String
     var title: String
@@ -63,7 +64,7 @@ struct Record(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable)
 
 
 @fieldwise_init
-struct ServerPostResponse(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct ServerPostResponse(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var args: Dict[String, String]
     var headers: Dict[String, emberjson.Value]
     var method: String
@@ -97,7 +98,7 @@ def test_post() raises -> None:
         data={"title": "booggg", "body": "bar", "userId": 1, "active": True},
     )
 
-    assert_equal(response.status, Status.OK) # Should be 201, but httpbingo returns 200?
+    assert_equal(response.status, Status.OK)  # Should be 201, but httpbingo returns 200?
 
     var post_response = response.body.as_json[ServerPostResponse]()
     assert_equal(post_response.json.userId, 1)
@@ -106,14 +107,14 @@ def test_post() raises -> None:
     assert_equal(post_response.json.active, True)
 
 
-struct Content(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct Content(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var recently_edited: List[String]
 
     def __init__(out self):
         self.recently_edited = List[String]()
 
 
-struct FileContent(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct FileContent(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var id: Int
     var name: String
     var content: Content
@@ -141,7 +142,7 @@ def test_post_file() raises -> None:
         assert_equal(file_content.content.recently_edited, ["floki/session.mojo"])
 
 
-struct PutResponse(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct PutResponse(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var id: Int
     var key1: String
     var key2: String
@@ -169,7 +170,7 @@ def test_put() raises -> None:
     assert_equal(put_response.key2, "updated_value2")
 
 
-struct PutFileResponse(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct PutFileResponse(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var id: Int
     var key1: String
 
@@ -196,7 +197,7 @@ def test_put_file() raises -> None:
 
 
 @fieldwise_init
-struct PatchedTodo(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct PatchedTodo(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var userId: Int
     var id: Int
     var title: String
@@ -226,7 +227,13 @@ def test_patch() raises -> None:
     assert_equal(patched_todo.userId, 1)
     assert_equal(patched_todo.id, 1)
     assert_equal(patched_todo.title, "sunt aut facere repellat provident occaecati excepturi optio reprehenderit")
-    assert_equal(patched_todo.body, "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto")
+    assert_equal(
+        patched_todo.body,
+        (
+            "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas"
+            " totam\nnostrum rerum est autem sunt rem eveniet architecto"
+        ),
+    )
     assert_equal(patched_todo.key1, "patched_value")
 
 
@@ -246,11 +253,17 @@ def test_patch_file() raises -> None:
         assert_equal(patched_todo.userId, 1)
         assert_equal(patched_todo.id, 1)
         assert_equal(patched_todo.title, "sunt aut facere repellat provident occaecati excepturi optio reprehenderit")
-        assert_equal(patched_todo.body, "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto")
+        assert_equal(
+            patched_todo.body,
+            (
+                "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas"
+                " totam\nnostrum rerum est autem sunt rem eveniet architecto"
+            ),
+        )
         assert_equal(patched_todo.key1, "patched_value")
 
 
-def test_delete() raises -> None:    
+def test_delete() raises -> None:
     var response = Session().delete("https://jsonplaceholder.typicode.com/posts/1")
     assert_equal(response.status, Status.OK)
 
@@ -266,7 +279,7 @@ def test_options() raises -> None:
     assert_equal(response.headers["access-control-allow-methods"], "GET,HEAD,PUT,PATCH,POST,DELETE")
 
 
-def test_cookie_parsing() raises -> None:    
+def test_cookie_parsing() raises -> None:
     var response = Session().get(
         "https://httpbin.org/cookies/set",
         query_parameters={"freeform": "my_val"},
@@ -284,7 +297,7 @@ def test_session_reuse() raises -> None:
 
 
 @fieldwise_init
-struct ServerGetResponse(Movable, Defaultable, ImplicitlyDestructible):
+struct ServerGetResponse(Defaultable, ImplicitlyDestructible, Movable):
     var args: Dict[String, String]
     var headers: Dict[String, String]
     var origin: String
@@ -309,9 +322,7 @@ def test_session_level_headers() raises -> None:
 
 
 def test_session_no_redirects() raises -> None:
-    var response = Session(allow_redirects=False).get(
-        "https://httpbin.org/redirect/1"
-    )
+    var response = Session(allow_redirects=False).get("https://httpbin.org/redirect/1")
     assert_true(response.is_redirect())
 
 
@@ -336,7 +347,7 @@ def test_response_raise_for_status_passes_on_200() raises -> None:
         response.raise_for_status()  # must not raise
     except e:
         raise Error(t"raise_for_status raised unexpectedly on 200 OK: {e}")
-    
+
 
 def test_response_raise_for_status_raises_on_4xx() raises -> None:
     var raised = False
@@ -366,7 +377,7 @@ def test_post_struct() raises -> None:
 
 
 @fieldwise_init
-struct PutStructData(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct PutStructData(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var key1: String
     var key2: String
 
@@ -392,7 +403,7 @@ def test_put_struct() raises -> None:
 
 
 @fieldwise_init
-struct PatchStructData(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct PatchStructData(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var key1: String
 
     def __init__(out self):

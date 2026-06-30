@@ -1,6 +1,8 @@
-from std.testing import TestSuite, assert_equal, assert_true
 from floki.http import Status
+from std.testing import TestSuite, assert_equal, assert_true
+
 import floki
+
 
 def test_get() raises -> None:
     var response = floki.get("https://httpbingo.org/get")
@@ -60,7 +62,7 @@ def test_options() raises -> None:
 
 
 @fieldwise_init
-struct QueryParameters(Movable, Defaultable, ImplicitlyDestructible):
+struct QueryParameters(Defaultable, ImplicitlyDestructible, Movable):
     var foo: String
 
     def __init__(out self):
@@ -68,7 +70,7 @@ struct QueryParameters(Movable, Defaultable, ImplicitlyDestructible):
 
 
 @fieldwise_init
-struct ArgResponse(Movable, Defaultable, ImplicitlyDestructible):
+struct ArgResponse(Defaultable, ImplicitlyDestructible, Movable):
     var args: QueryParameters
     var headers: Dict[String, String]
     var origin: String
@@ -91,7 +93,7 @@ def test_get_with_query_parameters() raises -> None:
 
 
 @fieldwise_init
-struct CustomHeaderResponse(Movable, Defaultable, ImplicitlyDestructible):
+struct CustomHeaderResponse(Defaultable, ImplicitlyDestructible, Movable):
     var args: Dict[String, String]
     var headers: Dict[String, String]
     var origin: String
@@ -147,7 +149,7 @@ def test_patch_raw_bytes() raises -> None:
 
 
 @fieldwise_init
-struct PostPayload(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct PostPayload(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var title: String
     var body: String
     var userId: Int
@@ -168,7 +170,7 @@ def test_post_struct() raises -> None:
 
 
 @fieldwise_init
-struct UpdatePayload(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct UpdatePayload(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var key1: String
     var key2: String
 
@@ -187,7 +189,7 @@ def test_put_struct() raises -> None:
 
 
 @fieldwise_init
-struct PatchPayload(Movable, Defaultable, ImplicitlyDestructible, Equatable, Writable):
+struct PatchPayload(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
     var key1: String
 
     def __init__(out self):

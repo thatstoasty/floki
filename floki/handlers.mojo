@@ -1,5 +1,5 @@
+from floki.callbacks import fd_read_callback, read_callback
 from mojo_curl.easy import Easy, Result
-from floki.callbacks import read_callback, fd_read_callback
 
 
 comptime SIZE_LIMIT = 2_147_483_648
