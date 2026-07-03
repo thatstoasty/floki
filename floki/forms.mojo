@@ -1,3 +1,4 @@
+"""The `FormData` type used to represent `application/x-www-form-urlencoded` request bodies."""
 from floki.encoding import urlencode
 
 

@@ -1,3 +1,5 @@
+"""URL percent-encoding and decoding helpers for `application/x-www-form-urlencoded` data."""
+
 comptime _HEX: StaticString = "0123456789ABCDEF"
 
 

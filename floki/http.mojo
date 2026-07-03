@@ -1,3 +1,6 @@
+"""Core HTTP types: protocol version, request methods, and status codes."""
+
+
 @fieldwise_init
 struct Protocol(Equatable, ImplicitlyCopyable, Writable):
     """Represents the protocol used in an HTTP request or response."""

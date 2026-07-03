@@ -1,3 +1,6 @@
+"""The `Duration` type used to express cookie lifetimes such as `Max-Age`."""
+
+
 @fieldwise_init
 struct Duration(ImplicitlyCopyable, TrivialRegisterPassable):
     """Represents a duration of time, stored internally as total seconds."""

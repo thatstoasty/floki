@@ -1,12 +1,14 @@
-from std.testing import TestSuite, assert_equal, assert_true, assert_false, assert_raises
-from floki.proxy import Proxy
-from floki.tls import TLS
 from floki.http import Status
+from floki.proxy import Proxy
 from floki.session import Session
+from floki.tls import TLS
+from std.testing import TestSuite, assert_equal, assert_false, assert_raises, assert_true
+
 import floki
 
 
 # --- Proxy unit tests (no network) ---
+
 
 def test_proxy_default_is_empty() raises -> None:
     var p = Proxy()
@@ -35,6 +37,7 @@ def test_proxy_with_credentials_and_bypass() raises -> None:
 
 # --- TLS unit tests (no network) ---
 
+
 def test_tls_defaults_to_verify() raises -> None:
     var t = TLS()
     assert_true(t.verify)
@@ -55,6 +58,7 @@ def test_tls_custom_ca_bundle() raises -> None:
 
 # --- Integration tests (network) ---
 
+
 def test_tls_verification_enabled_succeeds() raises -> None:
     var response = Session().get("https://httpbingo.org/get")
     assert_equal(response.status, Status.OK)
@@ -67,9 +71,7 @@ def test_tls_verification_disabled_succeeds() raises -> None:
 
 def test_proxy_is_bypassed_for_no_proxy_host() raises -> None:
     # The bogus proxy is never contacted because the target host is in no_proxy.
-    var response = Session(
-        proxy=Proxy("http://127.0.0.1:9", no_proxy="httpbingo.org")
-    ).get("https://httpbingo.org/get")
+    var response = Session(proxy=Proxy("http://127.0.0.1:9", no_proxy="httpbingo.org")).get("https://httpbingo.org/get")
     assert_equal(response.status, Status.OK)
 
 

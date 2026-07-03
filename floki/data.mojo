@@ -1,3 +1,4 @@
+"""The `RequestData` variant used to represent request bodies as either bytes or a file."""
 from std.utils import Variant
 
 

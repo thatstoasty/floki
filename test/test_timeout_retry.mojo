@@ -1,12 +1,14 @@
-from std.testing import TestSuite, assert_equal, assert_true, assert_false
-from floki.timeout import Timeout
-from floki.retry import Retry
 from floki.http import Status
+from floki.retry import Retry
 from floki.session import Session
+from floki.timeout import Timeout
+from std.testing import TestSuite, assert_equal, assert_false, assert_true
+
 import floki
 
 
 # --- Timeout unit tests (no network) ---
+
 
 def test_timeout_defaults_to_no_limits() raises -> None:
     var t = Timeout()
@@ -28,6 +30,7 @@ def test_timeout_connect_and_total() raises -> None:
 
 
 # --- Retry unit tests (no network) ---
+
 
 def test_retry_default_is_disabled() raises -> None:
     var r = Retry()
@@ -51,6 +54,7 @@ def test_retry_should_retry_matches_forcelist() raises -> None:
 
 
 # --- Integration tests (network) ---
+
 
 def test_session_timeout_request_succeeds() raises -> None:
     var s = Session(timeout=Timeout(connect=5.0, total=30.0))

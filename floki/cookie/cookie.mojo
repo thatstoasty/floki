@@ -1,3 +1,4 @@
+"""The `Cookie` type representing a single HTTP cookie."""
 # from floki.header import HeaderKey, Header
 from floki.cookie.duration import Duration
 from floki.cookie.expiration import Expiration
@@ -170,6 +171,17 @@ struct Cookie(Copyable, Writable):
         return header_value^
 
     def is_expired(self, now: DateTime) -> Bool:
+        """Checks whether the cookie has expired relative to the given time.
+
+        Session-scoped cookies (those without a specific expiration datetime)
+        are never considered expired by this check.
+
+        Args:
+            now: The point in time to compare the cookie's expiration against.
+
+        Returns:
+            True if the cookie has a datetime expiration that is at or before `now`, False otherwise.
+        """
         if self.expires.is_datetime():
             return self.expires.datetime.value() <= now
         return False

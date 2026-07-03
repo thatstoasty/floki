@@ -1,6 +1,8 @@
-from std.collections.dict import Hasher
+"""The `CookieJar` type for storing and managing a collection of cookies."""
 from mojo_curl.list import CurlList
 from mojo_datetime import DateTime
+from std.collections.dict import Hasher
+
 from floki.cookie.cookie import Cookie
 
 
@@ -210,6 +212,11 @@ struct CookieJar(Copyable, Defaultable, Sized, Writable):
             writer.write("set-cookie", ": ", cookie.build_header_value())
 
     def clear_expired_cookies(mut self) raises:
+        """Removes all cookies in the jar that have expired.
+
+        Raises:
+            Error: If retrieving the current time fails.
+        """
         var now = DateTime.now()
         var keys_to_remove = List[CookieKey]()
         for kv in self._inner.items():

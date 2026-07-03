@@ -1,3 +1,6 @@
+"""The `Retry` type used to configure retry behavior for requests made by a `Session`."""
+
+
 @fieldwise_init
 struct Retry(Copyable, Movable):
     """A retry policy with exponential backoff for failed requests.
@@ -9,6 +12,7 @@ struct Retry(Copyable, Movable):
 
     A default-constructed `Retry()` performs no retries.
     """
+
     var max_retries: Int
     """Maximum number of retries to attempt after the initial request. `0` disables retries."""
     var backoff_factor: Float64

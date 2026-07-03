@@ -1,3 +1,4 @@
+"""The `Body` type used to represent HTTP request and response payloads."""
 import emberjson
 from std.collections.string._utf8 import _is_valid_utf8
 
@@ -51,6 +52,9 @@ struct Body(Copyable, Equatable, Sized, Writable):
 
         Returns:
             The body content as a string slice.
+
+        Raises:
+            Error: If the body content is not valid UTF-8.
         """
         return StringSlice(from_utf8=Span(self.body))
 
@@ -90,6 +94,9 @@ struct Body(Copyable, Equatable, Sized, Writable):
 
         Args:
             writer: The writer to which the body will be written.
+
+        Raises:
+            Error: If the body content is not valid UTF-8.
         """
         writer.write(self.as_text())
 
