@@ -1,4 +1,4 @@
-"""Floki: A HTTP client library for Mojo!"""
+"""Floki: An HTTP client library for Mojo!"""
 from floki.auth import Auth, BasicAuth, BearerAuth, NoAuth
 from floki.forms import FormData
 from floki.functions import delete, get, head, options, patch, post, put
