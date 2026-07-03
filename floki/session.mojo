@@ -147,7 +147,7 @@ struct Session(Movable):
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -248,7 +248,7 @@ struct Session(Movable):
             try:
                 # If there's any headers set on the session, add them too.
                 # but only if they aren't already set in the request-specific headers, since those should take precedence.
-                for header in self.headers._inner.items():
+                for header in self.headers.items():
                     if header.key not in headers:
                         header_list.append(String(t"{header.key}: {header.value}"))
 
@@ -310,7 +310,7 @@ struct Session(Movable):
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -354,7 +354,7 @@ struct Session(Movable):
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -397,7 +397,7 @@ struct Session(Movable):
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -433,7 +433,7 @@ struct Session(Movable):
             headers: HTTP headers to include in the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -473,7 +473,7 @@ struct Session(Movable):
             headers: HTTP headers to include in the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -507,7 +507,7 @@ struct Session(Movable):
             headers: HTTP headers to include in the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -549,7 +549,7 @@ struct Session(Movable):
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -582,7 +582,7 @@ struct Session(Movable):
             headers: HTTP headers to include in the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -622,7 +622,7 @@ struct Session(Movable):
             headers: HTTP headers to include in the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -656,7 +656,7 @@ struct Session(Movable):
             headers: HTTP headers to include in the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -691,7 +691,7 @@ struct Session(Movable):
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -733,7 +733,7 @@ struct Session(Movable):
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -766,7 +766,7 @@ struct Session(Movable):
             headers: HTTP headers to include in the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -806,7 +806,7 @@ struct Session(Movable):
             headers: HTTP headers to include in the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -840,7 +840,7 @@ struct Session(Movable):
             headers: HTTP headers to include in the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -875,7 +875,7 @@ struct Session(Movable):
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.
@@ -910,7 +910,7 @@ struct Session(Movable):
             auth: An optional authentication scheme to apply to the request.
 
         Returns:
-            The received response as a `Response` object.
+            The received response.
 
         Raises:
             Error: If there is a failure in sending or receiving the message.

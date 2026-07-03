@@ -113,6 +113,17 @@ struct Headers(Boolable, Copyable, Defaultable, Movable, Sized, Writable):
         """
         self._inner.update(other._inner^)
 
+    def items(ref self) -> type_of(self._inner.items()):
+        """Iterates over the header entries as normalized `(key, value)` pairs.
+
+        Each yielded entry exposes `.key` (the lowercased header name) and
+        `.value` (the header value).
+
+        Returns:
+            An iterator over the underlying header entries.
+        """
+        return self._inner.items()
+
     def __len__(self) -> Int:
         """Returns the number of headers in the collection.
 
