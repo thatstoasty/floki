@@ -1,5 +1,5 @@
 from floki.cookie.expiration import Expiration
-from mojo_datetime import DateTime, TZ_UTC
+from mojo_datetime import TZ_UTC, DateTime
 from mojo_datetime.calendar import UTCFastCal
 from std.testing import TestSuite, assert_equal, assert_true
 

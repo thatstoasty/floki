@@ -1,3 +1,4 @@
+"""Libcurl read/write callbacks used to stream request and response bodies."""
 from mojo_curl.c.types import CURL_READFUNC_ABORT, ImmutExternalPointer, MutExternalPointer
 from std.ffi import c_char, c_size_t, get_errno
 from std.memory import memcpy

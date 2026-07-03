@@ -1,3 +1,6 @@
+"""The `SameSite` type representing the `SameSite` attribute of a cookie."""
+
+
 @fieldwise_init
 struct SameSite(Copyable, Equatable, TrivialRegisterPassable, Writable):
     """Represents the SameSite attribute of an HTTP cookie, which controls when cookies are sent with cross-site requests.

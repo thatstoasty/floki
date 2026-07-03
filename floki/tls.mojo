@@ -1,3 +1,6 @@
+"""The `TLS` type used to configure TLS/SSL verification for requests made by a `Session`."""
+
+
 struct TLS(Copyable, Movable):
     """TLS/SSL verification settings for requests made by a `Session`.
 
@@ -7,6 +10,7 @@ struct TLS(Copyable, Movable):
     custom certificate authority bundle or directory can be supplied for cases
     such as self-signed certificates or private PKIs.
     """
+
     var verify: Bool
     """Whether to verify the server's TLS certificate and hostname. Defaults to True."""
     var ca_bundle: Optional[String]

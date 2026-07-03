@@ -1,3 +1,4 @@
+"""HTTP Client."""
 import emberjson
 from floki.auth import Auth, NoAuth, apply_auth
 from floki.body import Body
@@ -40,7 +41,7 @@ struct Session(Movable):
     """TLS/SSL verification settings applied to every request made with this session."""
 
     comptime DEFAULT_HEADERS = {
-        "User-Agent": "floki/0.3.2",
+        "User-Agent": "floki/0.3.3",
     }
     """Default headers that are included in every request made with this session, unless overridden by request-specific headers."""
 
@@ -111,8 +112,8 @@ struct Session(Movable):
 
         Parameters:
             origin: The origin of the request data.
-            A: The concrete `Auth` scheme type, inferred from `auth`.
             method: The HTTP method to use for the request.
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
@@ -218,13 +219,9 @@ struct Session(Movable):
                     self.easy.ssl_verify_host(verify=False), "Failed to disable TLS host verification: "
                 )
             if self.tls.ca_bundle:
-                self.raise_if_error(
-                    self.easy.cainfo(Path(self.tls.ca_bundle.value())), "Failed to set TLS CA bundle: "
-                )
+                self.raise_if_error(self.easy.cainfo(Path(self.tls.ca_bundle.value())), "Failed to set TLS CA bundle: ")
             if self.tls.ca_path:
-                self.raise_if_error(
-                    self.easy.capath(Path(self.tls.ca_path.value())), "Failed to set TLS CA path: "
-                )
+                self.raise_if_error(self.easy.capath(Path(self.tls.ca_path.value())), "Failed to set TLS CA path: ")
 
             # Apply the authentication scheme, if one was provided. Headers already
             # present on the request take precedence over auth-supplied headers.
@@ -411,12 +408,7 @@ struct Session(Movable):
 
     def post[
         T: AnyType & ImplicitlyDestructible & Defaultable, //
-    ](
-        self,
-        var url: String,
-        data: T,
-        var headers: Dict[String, String] = {},
-    ) raises -> Response:
+    ](self, var url: String, data: T, var headers: Dict[String, String] = {},) raises -> Response:
         """Sends a POST request to the specified URL.
 
         Args:
@@ -457,12 +449,7 @@ struct Session(Movable):
 
     def post[
         origin: ImmutOrigin, //
-    ](
-        self,
-        var url: String,
-        data: Span[Byte, origin],
-        var headers: Dict[String, String] = {},
-    ) raises -> Response:
+    ](self, var url: String, data: Span[Byte, origin], var headers: Dict[String, String] = {},) raises -> Response:
         """Sends a POST request to the specified URL.
 
         Parameters:
@@ -574,12 +561,7 @@ struct Session(Movable):
 
     def put[
         T: AnyType & ImplicitlyDestructible, //
-    ](
-        self,
-        var url: String,
-        data: T,
-        var headers: Dict[String, String] = {},
-    ) raises -> Response:
+    ](self, var url: String, data: T, var headers: Dict[String, String] = {},) raises -> Response:
         """Sends a PUT request to the specified URL.
 
         Args:
@@ -616,12 +598,7 @@ struct Session(Movable):
 
     def put[
         origin: ImmutOrigin, //
-    ](
-        self,
-        var url: String,
-        data: Span[Byte, origin],
-        var headers: Dict[String, String] = {},
-    ) raises -> Response:
+    ](self, var url: String, data: Span[Byte, origin], var headers: Dict[String, String] = {},) raises -> Response:
         """Sends a PUT request to the specified URL.
 
         Parameters:
@@ -690,12 +667,7 @@ struct Session(Movable):
 
     def delete[
         A: Auth = NoAuth, //
-    ](
-        self,
-        var url: String,
-        var headers: Dict[String, String] = {},
-        auth: Optional[A] = None,
-    ) raises -> Response:
+    ](self, var url: String, var headers: Dict[String, String] = {}, auth: Optional[A] = None,) raises -> Response:
         """Sends a DELETE request to the specified URL.
 
         Parameters:
@@ -773,12 +745,7 @@ struct Session(Movable):
 
     def patch[
         T: AnyType & ImplicitlyDestructible, //
-    ](
-        self,
-        var url: String,
-        data: T,
-        var headers: Dict[String, String] = {},
-    ) raises -> Response:
+    ](self, var url: String, data: T, var headers: Dict[String, String] = {},) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
         Args:
@@ -815,12 +782,7 @@ struct Session(Movable):
 
     def patch[
         origin: ImmutOrigin, //
-    ](
-        self,
-        var url: String,
-        data: Span[Byte, origin],
-        var headers: Dict[String, String] = {},
-    ) raises -> Response:
+    ](self, var url: String, data: Span[Byte, origin], var headers: Dict[String, String] = {},) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
         Parameters:
@@ -889,12 +851,7 @@ struct Session(Movable):
 
     def head[
         A: Auth = NoAuth, //
-    ](
-        self,
-        var url: String,
-        var headers: Dict[String, String] = {},
-        auth: Optional[A] = None,
-    ) raises -> Response:
+    ](self, var url: String, var headers: Dict[String, String] = {}, auth: Optional[A] = None,) raises -> Response:
         """Sends a HEAD request to the specified URL.
 
         Parameters:
@@ -929,12 +886,7 @@ struct Session(Movable):
 
     def options[
         A: Auth = NoAuth, //
-    ](
-        self,
-        var url: String,
-        var headers: Dict[String, String] = {},
-        auth: Optional[A] = None,
-    ) raises -> Response:
+    ](self, var url: String, var headers: Dict[String, String] = {}, auth: Optional[A] = None,) raises -> Response:
         """Sends an OPTIONS request to the specified URL.
 
         Parameters:

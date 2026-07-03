@@ -1,3 +1,4 @@
+"""Helpers for constructing HTTP header values."""
 from floki.auth import BasicAuth
 
 

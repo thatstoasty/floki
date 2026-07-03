@@ -1,3 +1,6 @@
+"""The `Proxy` type used to configure proxying for requests made by a `Session`."""
+
+
 struct Proxy(Boolable, Copyable, Movable):
     """Proxy configuration for requests made by a `Session`.
 
@@ -9,6 +12,7 @@ struct Proxy(Boolable, Copyable, Movable):
     (e.g. `proxy="http://proxy.example:8080"`). A default-constructed `Proxy()`
     means "no proxy".
     """
+
     var url: String
     """The proxy URL, including optional scheme and port. Empty means no proxy."""
     var username: Optional[String]

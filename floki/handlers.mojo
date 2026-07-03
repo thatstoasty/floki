@@ -1,3 +1,4 @@
+"""Helpers for configuring a libcurl easy handle to send request bodies."""
 from floki.callbacks import fd_read_callback, read_callback
 from mojo_curl.easy import Easy, Result
 

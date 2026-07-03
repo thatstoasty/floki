@@ -1,14 +1,15 @@
-from floki.session import Session, RequestData
-from floki.response import Response
-from floki.http import RequestMethod
-from floki.body import Body
+"""Module-level convenience functions for sending requests without a `Session`."""
+import emberjson
 from floki.auth import Auth, NoAuth
+from floki.body import Body
 from floki.forms import FormData
+from floki.http import RequestMethod
 from floki.proxy import Proxy
+from floki.response import Response
 from floki.retry import Retry
+from floki.session import RequestData, Session
 from floki.timeout import Timeout
 from floki.tls import TLS
-import emberjson
 
 
 def get[
@@ -17,7 +18,10 @@ def get[
     var url: String,
     var headers: Dict[String, String] = {},
     query_parameters: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a GET request to the specified URL.
@@ -30,6 +34,9 @@ def get[
         headers: HTTP headers to include in the request.
         query_parameters: Query parameters to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -62,7 +69,10 @@ def post[
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a POST request to the specified URL.
@@ -75,6 +85,9 @@ def post[
         headers: HTTP headers to include in the request.
         data: The data to include in the body of the POST request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -106,7 +119,10 @@ def post[
     var url: String,
     data: FormData,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a POST request with `application/x-www-form-urlencoded` data to the specified URL.
@@ -119,6 +135,9 @@ def post[
         data: The form fields to include in the body of the POST request.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -149,7 +168,15 @@ def post[
 
 def post[
     T: AnyType & ImplicitlyDestructible & Defaultable, //
-](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),) raises -> Response:
+](
+    var url: String,
+    data: T,
+    var headers: Dict[String, String] = {},
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
+) raises -> Response:
     """Sends a POST request to the specified URL.
 
     Args:
@@ -157,6 +184,9 @@ def post[
         data: The data to include in the body of the POST request.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
 
     Returns:
         The received response as an `Response` object.
@@ -192,7 +222,10 @@ def post[
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a POST request to the specified URL.
 
@@ -204,6 +237,9 @@ def post[
         data: The data to include in the body of the POST request.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
 
     Returns:
         The received response as an `Response` object.
@@ -230,7 +266,10 @@ def post(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a POST request to the specified URL.
 
@@ -239,6 +278,9 @@ def post(
         data: The data to include in the body of the POST request.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
 
     Returns:
         The received response as an `Response` object.
@@ -268,7 +310,10 @@ def put[
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
@@ -281,6 +326,9 @@ def put[
         headers: HTTP headers to include in the request.
         data: The data to include in the body of the PUT request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -308,7 +356,15 @@ def put[
 
 def put[
     T: AnyType & ImplicitlyDestructible, //
-](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),) raises -> Response:
+](
+    var url: String,
+    data: T,
+    var headers: Dict[String, String] = {},
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
+) raises -> Response:
     """Sends a PUT request to the specified URL.
 
     Args:
@@ -316,6 +372,9 @@ def put[
         data: The data to include in the body of the PUT request.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
 
     Returns:
         The received response as an `Response` object.
@@ -351,7 +410,10 @@ def put[
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
 
@@ -363,6 +425,9 @@ def put[
         data: The data to include in the body of the PUT request.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
 
     Returns:
         The received response as an `Response` object.
@@ -389,7 +454,10 @@ def put(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
 
@@ -398,6 +466,9 @@ def put(
         data: The data to include in the body of the PUT request.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
 
     Returns:
         The received response as an `Response` object.
@@ -426,7 +497,10 @@ def delete[
 ](
     var url: String,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a DELETE request to the specified URL.
@@ -438,6 +512,9 @@ def delete[
         url: The URL to which the request is sent.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -468,7 +545,10 @@ def patch[
     var url: String,
     var headers: Dict[String, String] = {},
     var data: emberjson.Object = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a PATCH request to the specified URL.
@@ -481,6 +561,9 @@ def patch[
         headers: HTTP headers to include in the request.
         data: The data to include in the body of the PATCH request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -508,7 +591,15 @@ def patch[
 
 def patch[
     T: AnyType & ImplicitlyDestructible, //
-](var url: String, data: T, var headers: Dict[String, String] = {}, var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),) raises -> Response:
+](
+    var url: String,
+    data: T,
+    var headers: Dict[String, String] = {},
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
+) raises -> Response:
     """Sends a GET request to the specified URL.
 
     Args:
@@ -516,6 +607,9 @@ def patch[
         data: The data to include in the body of the PATCH request.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
 
     Returns:
         The received response as an `Response` object.
@@ -551,7 +645,10 @@ def patch[
     var url: String,
     data: Span[Byte, origin],
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a GET request to the specified URL.
 
@@ -563,6 +660,9 @@ def patch[
         data: The data to include in the body of the PATCH request.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
 
     Returns:
         The received response as an `Response` object.
@@ -589,7 +689,10 @@ def patch(
     var url: String,
     data: FileHandle,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
 ) raises -> Response:
     """Sends a GET request to the specified URL.
 
@@ -598,6 +701,9 @@ def patch(
         data: The data to include in the body of the PATCH request.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
 
     Returns:
         The received response as an `Response` object.
@@ -626,7 +732,10 @@ def head[
 ](
     var url: String,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a HEAD request to the specified URL.
@@ -638,6 +747,9 @@ def head[
         url: The URL to which the request is sent.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -667,7 +779,10 @@ def options[
 ](
     var url: String,
     var headers: Dict[String, String] = {},
-    var timeout: Timeout = Timeout(), var retry: Retry = Retry(), var proxy: Proxy = Proxy(), var tls: TLS = TLS(),
+    var timeout: Timeout = Timeout(),
+    var retry: Retry = Retry(),
+    var proxy: Proxy = Proxy(),
+    var tls: TLS = TLS(),
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends an OPTIONS request to the specified URL.
@@ -679,6 +794,9 @@ def options[
         url: The URL to which the request is sent.
         headers: HTTP headers to include in the request.
         timeout: An optional timeout in seconds for the request.
+        retry: An optional retry policy for the request.
+        proxy: An optional proxy configuration for the request.
+        tls: An optional TLS configuration for the request.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:

@@ -34,7 +34,7 @@ version = "0.3.3"
 backend = { name = "pixi-build-mojo", version = "0.*" }
 
 [dependencies]
-mojo = ">=1.0.0b2,<2"
+mojo = ">=1.0.0b2,<1.0.0b3"
 emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.3" }
 mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.3.1" }
 curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.3.1"  }

@@ -271,12 +271,8 @@ def test_http_response_raise_for_status_raises_on_500() raises -> None:
 # === Response ergonomics ===
 
 
-def _response(
-    var body: List[Byte], status: Status, var headers: Dict[String, String] = {}
-) raises -> Response:
-    return Response(
-        body=body^, cookies=CookieJar(), status=status, protocol=Protocol.HTTPS, headers=headers^
-    )
+def _response(var body: List[Byte], status: Status, var headers: Dict[String, String] = {}) raises -> Response:
+    return Response(body=body^, cookies=CookieJar(), status=status, protocol=Protocol.HTTPS, headers=headers^)
 
 
 def test_is_success_for_2xx() raises -> None:
@@ -325,9 +321,9 @@ def test_response_reason() raises -> None:
     assert_equal(_response(List[Byte](), Status.NOT_FOUND).reason(), String("Not Found"))
 
 
-def test_response_text() raises -> None:
+def test_response_as_text() raises -> None:
     var response = _response(List[Byte](String("hello world").as_bytes()), Status.OK)
-    assert_equal(String(response.text()), "hello world")
+    assert_equal(String(response.as_text()), "hello world")
 
 
 def test_response_bytes() raises -> None:

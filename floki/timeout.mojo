@@ -1,3 +1,6 @@
+"""The `Timeout` type used to configure timeouts for requests made by a `Session`."""
+
+
 struct Timeout(Copyable, Movable):
     """Granular timeout configuration for a request, expressed in seconds.
 
@@ -7,6 +10,7 @@ struct Timeout(Copyable, Movable):
     A bare number can be passed wherever a `Timeout` is expected; it is treated
     as the total request timeout in seconds (e.g. `timeout=30`).
     """
+
     var connect: Optional[Float64]
     """Maximum time (seconds) allowed for the connection phase, or `None` for no limit."""
     var total: Optional[Float64]

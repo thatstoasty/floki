@@ -1,3 +1,4 @@
+"""The `Response` type used to represent HTTP responses received from a server."""
 import emberjson
 from floki.body import Body
 from floki.cookie.cookie_jar import CookieJar
@@ -64,6 +65,9 @@ struct Response(Boolable, Movable, Writable):
 
         Args:
             writer: The writer to which the HTTP response will be written.
+
+        Raises:
+            Error: If the response body is not valid UTF-8.
         """
         writer.write(
             self.protocol,
@@ -176,13 +180,16 @@ struct Response(Boolable, Movable, Writable):
         """
         return self.status.message
 
-    def text(self) raises -> StringSlice[origin_of(self.body.body)]:
+    def as_text(self) raises -> StringSlice[origin_of(self.body.body)]:
         """Returns the response body decoded as text.
 
         Convenience for `response.body.as_text()`.
 
         Returns:
             The body content as a string slice.
+
+        Raises:
+            Error: If the response body is not valid UTF-8.
         """
         return self.body.as_text()
 

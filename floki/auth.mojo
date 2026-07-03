@@ -1,3 +1,4 @@
+"""Authentication schemes that can be applied to outgoing HTTP requests."""
 from std import base64
 
 

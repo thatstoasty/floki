@@ -1,4 +1,4 @@
-from floki._time import from_utc_timestamp
+"""The `Expiration` type used to represent a cookie's session or datetime expiry."""
 from mojo_datetime import TZ_UTC, DateTime, SITimeUnit, TimeDelta, TimeZone
 from mojo_datetime.calendar import UTCFastCal
 
