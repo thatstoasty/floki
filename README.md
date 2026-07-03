@@ -7,23 +7,25 @@ A `requests` like HTTP client for Mojo, leveraging `libcurl` under the hood.
 ![Test Status](https://github.com/thatstoasty/floki/actions/workflows/test.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+```mojo
+import floki
+
+def main() raises -> None:
+    var response = floki.get("https://example.com")
+    for pair in response.headers.items():
+        print(pair.key, ": ", pair.value)
+    print(response.as_text())
+```
+
 ## Adding the `floki` package to your project
 
-### Installing it from the `mojo-community` Conda channel
+### Pre-requisites
 
-First, you'll need to install the `curl_wrapper` library, which provides a thin wrapper around libcurl to avoid issues with variadic arguments. You'll need to enable the `pixi-build` preview by adding this to the workspace section of your `pixi.toml` file.
+You'll need to enable the `pixi-build` preview by adding this to the workspace section of your `pixi.toml` file.
 
 ```bash
 preview = ["pixi-build"]
 ```
-
-Next, you can add `curl_wrapper` by running:
-
-```bash
-pixi add curl_wrapper -g "https://github.com/thatstoasty/mojo-curl.git" --subdir shim --tag v0.3.1
-```
-
-> Note: Mojo cannot currently support calling C functions with variadic arguments, and the libcurl client interface makes heavy use of them. The `curl_wrapper` library provides a thin wrapper around libcurl to avoid this issue. Remember to always validate the code you're pulling from third-party sources!
 
 ### Building it from source
 
@@ -34,7 +36,7 @@ There's two ways to build `floki` from source: directly from the Git repository 
 Run the following commands in your terminal:
 
 ```bash
-pixi add -g "https://github.com/thatstoasty/floki.git" --tag v0.3.4 && pixi install
+pixi add floki --git "https://github.com/thatstoasty/floki.git" --tag v0.3.4 && pixi install
 ```
 
 #### Building from source: Local
@@ -47,15 +49,46 @@ git clone https://github.com/thatstoasty/floki.git
 pixi add -s ./path/to/floki && pixi install
 ```
 
-```mojo
-import floki
+## Configuring library paths
 
-def main() raises -> None:
-    var response = floki.get("https://example.com")
-    for pair in response.headers.items():
-        print(pair.key, ": ", pair.value)
-    print(response.text())
+> Note: Mojo cannot currently support calling C functions with variadic arguments, and the libcurl client interface makes heavy use of them. Floki uses my small shim C library `curl_wrapper`, which provides a thin wrapper around libcurl to avoid this issue.
+
+Floki leverages `mojo-curl` as an FFI interface to `libcurl`, and it needs to locate two dynamic libraries at runtime: `libcurl` and `libcurl_wrapper` (the thin C shim that wraps libcurl's variadic functions).
+
+### Default behavior
+
+By default, the library looks for both in your project's Pixi environment:
+
+| Library | macOS | Linux |
+| --- | --- | --- |
+| libcurl | `.pixi/envs/default/lib/libcurl.dylib` | `.pixi/envs/default/lib/libcurl.so` |
+| curl_wrapper | `.pixi/envs/default/lib/libcurl_wrapper.dylib` | `.pixi/envs/default/lib/libcurl_wrapper.so` |
+
+If you're working in a Pixi environment, the libraries will already be in the expected location and no additional configuration is needed.
+
+### Custom library paths
+
+If your libraries are in a different location, you can override the paths using either **environment variables** or **compile-time defines**.
+
+#### Environment variables
+
+Set `LIBCURL_LIB_PATH` and `CURL_WRAPPER_LIB_PATH` before running your program:
+
+```bash
+export LIBCURL_LIB_PATH="/usr/lib/libcurl.so"
+export CURL_WRAPPER_LIB_PATH="/opt/mylibs/libcurl_wrapper.so"
+mojo run my_program.mojo
 ```
+
+#### Compile-time defines
+
+Pass the paths as `-D` flags when compiling or running:
+
+```bash
+mojo run -D LIBCURL_LIB_PATH="/usr/lib/libcurl.so" -D CURL_WRAPPER_LIB_PATH="/opt/mylibs/libcurl_wrapper.so" my_program.mojo
+```
+
+Compile-time defines take priority over environment variables. If neither is set, the default Pixi environment paths are used.
 
 ## Features
 

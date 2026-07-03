@@ -1,0 +1,14 @@
+[workspace]
+authors = ["Mikhail Tavarez <miktavarez@gmail.com>"]
+channels = ["https://conda.modular.com/max", "conda-forge"]
+name = "server_client"
+platforms = ["osx-arm64", "linux-64", "linux-aarch64"]
+version = "0.1.0"
+preview = ["pixi-build"]
+
+[tasks]
+
+[dependencies]
+mojo = "==1.0.0b2"
+prism = { git = "https://github.com/thatstoasty/prism.git", tag = "v0.3.1" }
+floki = { path = "../.." }

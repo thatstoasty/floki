@@ -1,0 +1,16 @@
+[workspace]
+authors = ["Mikhail Tavarez <miktavarez@gmail.com>"]
+channels = ["https://conda.modular.com/max", "conda-forge"]
+name = "todo"
+platforms = ["osx-arm64", "linux-64", "linux-aarch64"]
+version = "0.1.0"
+preview = ["pixi-build"]
+
+[tasks]
+example = "bash -c 'mojo server.mojo & pid=$! && sleep 3 && mojo client.mojo && kill $pid'"
+
+[dependencies]
+mojo = "==1.0.0b2"
+flare = { git = "https://github.com/ehsanmok/flare.git", tag = "v0.8.1" }
+floki = { path = "../.." }
+slight = { git = "https://github.com/thatstoasty/slight.git", tag = "v0.2.1" }
