@@ -16,19 +16,19 @@ def main() raises -> None:
     r = floki.get("https://httpbin.org/get", query_parameters=payload)
     # print(r.url()) # TODO: Implement URL method to get the final URL with query parameters
     for header in r.headers.items():
-        print(String(header.key, ": ", header.value))
+        print(t"{header.key}: {header.value}")
 
     # Response Content
     r = floki.get("https://api.github.com/events")
     # print(r.body.as_text())
 
     ## Get the raw bytes of the response body
-    var bytes = r.body.as_bytes()
+    var bytes = r.as_bytes()
     # print(bytes)
 
     # JSON Response Content
     r = floki.get("https://api.github.com/events")
-    print(r.body.as_json())
+    print(r.as_json())
 
     # Custom Headers
     var url = "https://api.github.com/some/endpoint"
@@ -41,7 +41,7 @@ def main() raises -> None:
     # so you have to do it manually for now. This should be added as a feature in the future.
     # r = floki.post("https://httpbin.org/post", data={"key1": "value1", "key2": "value2"})
     r = floki.post("https://httpbin.org/post", data="key1=value1&key2=value2".as_bytes())
-    print(r.body.as_text())
+    print(r.as_text())
 
     ## Send json data
     r = floki.post(

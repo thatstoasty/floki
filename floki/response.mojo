@@ -193,7 +193,7 @@ struct Response(Boolable, Movable, Writable):
         """
         return self.body.as_text()
 
-    def bytes(self) -> Span[Byte, origin_of(self.body.body)]:
+    def as_bytes(self) -> Span[Byte, origin_of(self.body.body)]:
         """Returns a view of the raw response body bytes.
 
         Convenience for `response.body.as_bytes()`.
@@ -203,11 +203,11 @@ struct Response(Boolable, Movable, Writable):
         """
         return self.body.as_bytes()
 
-    def json(self) raises -> emberjson.Value:
+    def as_json(self) raises -> emberjson.Value:
         """Parses the response body as a dynamic JSON document for ad-hoc access.
 
-        Convenience for `response.body.json()`, e.g. `response.json()["data"]`.
-        To deserialize into a struct, use `as_json[T]()`.
+        Convenience for `response.body.as_json()`, e.g. `response.as_json()["data"]`.
+        To deserialize into a struct, use `as[T]()`.
 
         Returns:
             The body content parsed as an `emberjson.JSON` value.
@@ -215,12 +215,12 @@ struct Response(Boolable, Movable, Writable):
         Raises:
             Error: if the body is empty or cannot be parsed as JSON.
         """
-        return self.body.json()
+        return self.body.as_json()
 
-    def as_json[T: Movable & ImplicitlyDestructible & Defaultable](self, out result: T) raises:
+    def as[T: Movable & ImplicitlyDestructible & Defaultable](self, out result: T) raises:
         """Deserializes the response body into a value of the given type.
 
-        Convenience for `response.body.as_json[T]()`.
+        Convenience for `response.body.as[T]()`.
 
         Parameters:
             T: The type to deserialize the body into.
@@ -231,7 +231,7 @@ struct Response(Boolable, Movable, Writable):
         Raises:
             Error: if the body is empty or cannot be parsed as JSON.
         """
-        return self.body.as_json[T]()
+        return self.body.as[T]()
 
     def header(self, name: StringSlice, default: String = "") -> String:
         """Looks up a response header by name, case-insensitively.

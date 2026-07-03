@@ -245,6 +245,7 @@ TLS certificate and hostname verification is enabled by default. It can be disab
 (use with great caution) or pointed at a custom certificate authority bundle:
 
 ```mojo
+from std.pathlib import Path
 from floki.session import Session
 from floki.tls import TLS
 
@@ -253,7 +254,7 @@ def main() raises -> None:
     var insecure = Session(tls=TLS(verify=False))
 
     # Use a custom CA bundle (e.g. a private PKI or self-signed cert).
-    var custom = Session(tls=TLS(ca_bundle="/path/to/ca-bundle.pem"))
+    var custom = Session(tls=TLS(ca_bundle=Path("/path/to/ca-bundle.pem")))
     var r = custom.get("https://internal.example.com")
 ```
 

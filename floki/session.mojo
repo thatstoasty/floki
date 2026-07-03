@@ -1,6 +1,6 @@
 """HTTP Client."""
 import emberjson
-from floki.auth import Auth, NoAuth, apply_auth
+from floki.auth import Auth, NoAuth
 from floki.body import Body
 from floki.callbacks import read_callback, write_callback
 from floki.cookie.cookie_jar import CookieJar
@@ -19,6 +19,28 @@ from std.pathlib import Path
 from std.time import sleep
 from std.utils import Variant
 
+def _build_url_with_query(url: String, query_parameters: Dict[String, String], easy: Easy) raises -> String:
+    """Builds a URL with query parameters appended.
+
+    Args:
+        url: The base URL to which query parameters will be appended.
+        query_parameters: A dictionary of query parameters to append to the URL.
+        easy: An instance of `Easy` used for URL encoding.
+    
+    Returns:
+        The full URL with query parameters appended.
+    
+    Raises:
+        Error: If there is a failure in URL encoding or setting the URL.
+    """
+    var full_url = String(t"{url}?")
+    for i, pair in enumerate(query_parameters.items()):
+        full_url.write(t"{easy.escape(pair.key)}={easy.escape(pair.value)}")
+        if i != len(query_parameters) - 1:
+            full_url.write("&")
+    
+    return full_url^
+    
 
 struct Session(Movable):
     """A Session object to manage and persist settings across multiple HTTP requests."""
@@ -131,16 +153,8 @@ struct Session(Movable):
         try:
             # Set the url
             if query_parameters:
-                # URL-encode the parameter values
-                # TODO: This is inefficient w/ string copies, but it's ok for now. I'm not sure if we can get mutable
-                # references to the values in the dictionary as we iterate rn.
-                var params: List[String] = [
-                    String(t"{self.easy.escape(pair.key)}={self.easy.escape(pair.value)}")
-                    for pair in query_parameters.items()
-                ]
-
                 # Append the query parameters to the URL.
-                var full_url = String(t"{url}?{'&'.join(params)}")
+                var full_url = _build_url_with_query(url, query_parameters, self.easy)  
                 self.raise_if_error(self.easy.url(full_url), "Failed to set URL with query parameters: ")
             else:
                 self.raise_if_error(self.easy.url(url), "Failed to set URL: ")
@@ -219,14 +233,14 @@ struct Session(Movable):
                     self.easy.ssl_verify_host(verify=False), "Failed to disable TLS host verification: "
                 )
             if self.tls.ca_bundle:
-                self.raise_if_error(self.easy.cainfo(Path(self.tls.ca_bundle.value())), "Failed to set TLS CA bundle: ")
+                self.raise_if_error(self.easy.cainfo(self.tls.ca_bundle.value()), "Failed to set TLS CA bundle: ")
             if self.tls.ca_path:
-                self.raise_if_error(self.easy.capath(Path(self.tls.ca_path.value())), "Failed to set TLS CA path: ")
+                self.raise_if_error(self.easy.capath(self.tls.ca_path.value()), "Failed to set TLS CA path: ")
 
             # Apply the authentication scheme, if one was provided. Headers already
             # present on the request take precedence over auth-supplied headers.
             if auth:
-                apply_auth(auth.value(), headers)
+                auth.value().apply(headers)
 
             var header_list = CurlList(headers)
             try:
@@ -361,7 +375,7 @@ struct Session(Movable):
         )
 
     def post[
-        A: Auth, //
+        A: Auth = NoAuth, //
     ](
         self,
         var url: String,
@@ -407,7 +421,7 @@ struct Session(Movable):
         )
 
     def post[
-        T: AnyType & ImplicitlyDestructible & Defaultable, //
+        T: AnyType & ImplicitlyDestructible, //
     ](self, var url: String, data: T, var headers: Dict[String, String] = {},) raises -> Response:
         """Sends a POST request to the specified URL.
 
@@ -427,13 +441,9 @@ struct Session(Movable):
         from floki.session import Session
 
         @fieldwise_init
-        struct Point(ImplicitlyDestructible, Defaultable):
+        struct Point(ImplicitlyDestructible):
             var x: Int
             var y: Int
-
-            def __init__(out self):
-                self.x = 0
-                self.y = 0
 
         def main() raises:
             var session = Session()

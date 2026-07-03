@@ -58,7 +58,7 @@ struct Body(Copyable, Equatable, Sized, Writable):
         """
         return StringSlice(from_utf8=Span(self.body))
 
-    def as_json[T: Movable & ImplicitlyDestructible & Defaultable](self, out result: T) raises:
+    def as[T: Movable & ImplicitlyDestructible & Defaultable](self, out result: T) raises:
         """Deserializes the body into a value of the given type.
 
         Use this when you have a struct (or other deserializable type) to parse
@@ -75,7 +75,7 @@ struct Body(Copyable, Equatable, Sized, Writable):
         """
         return emberjson.deserialize[T](emberjson.Parser(self.as_text()))
 
-    def json(self) raises -> emberjson.Value:
+    def as_json(self) raises -> emberjson.Value:
         """Parses the body as a dynamic JSON document for ad-hoc access.
 
         Use this to inspect a response without declaring a target type, e.g.
