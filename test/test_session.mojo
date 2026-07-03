@@ -2,9 +2,9 @@ import emberjson
 from floki.cookie.cookie_jar import CookieKey
 from floki.http import Protocol, Status
 from floki.session import Session
-from std.testing import TestSuite, assert_equal, assert_true, assert_false
-from std.utils import Variant
 from std.pathlib import Path
+from std.testing import TestSuite, assert_equal, assert_false, assert_true
+from std.utils import Variant
 
 from floki.cookie.cookie import Cookie
 
@@ -43,7 +43,7 @@ def test_get() raises -> None:
     var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
     assert_equal(response.status, Status.OK)
 
-    var todo = response.body.as_json[Todo]()
+    var todo = response.body.as[Todo]()
     assert_equal(todo.userId, 1)
     assert_equal(todo.id, 1)
     assert_equal(todo.title, "delectus aut autem")
@@ -101,7 +101,7 @@ def test_post() raises -> None:
 
     assert_equal(response.status, Status.OK)  # Should be 201, but httpbingo returns 200?
 
-    var post_response = response.body.as_json[ServerPostResponse]()
+    var post_response = response.body.as[ServerPostResponse]()
     assert_equal(post_response.json.userId, 1)
     assert_equal(post_response.json.body, "bar")
     assert_equal(post_response.json.title, "booggg")
@@ -138,7 +138,7 @@ def test_post_file() raises -> None:
         )
         assert_equal(response.status, Status.CREATED)
 
-        file_content = response.body.as_json[FileContent]()
+        file_content = response.body.as[FileContent]()
         assert_equal(file_content.name, "file.json")
         assert_equal(file_content.content.recently_edited, ["floki/session.mojo"])
 
@@ -165,7 +165,7 @@ def test_put() raises -> None:
     )
     assert_equal(response.status, Status.OK)
 
-    var put_response = response.body.as_json[PutResponse]()
+    var put_response = response.body.as[PutResponse]()
     assert_equal(put_response.id, 1)
     assert_equal(put_response.key1, "updated_value1")
     assert_equal(put_response.key2, "updated_value2")
@@ -192,7 +192,7 @@ def test_put_file() raises -> None:
         )
         assert_equal(response.status, Status.OK)
 
-        var put_file_response = response.body.as_json[PutFileResponse]()
+        var put_file_response = response.body.as[PutFileResponse]()
         assert_equal(put_file_response.id, 1)
         assert_equal(put_file_response.key1, "patched_value")
 
@@ -224,7 +224,7 @@ def test_patch() raises -> None:
     )
     assert_equal(response.status, Status.OK)
 
-    var patched_todo = response.body.as_json[PatchedTodo]()
+    var patched_todo = response.body.as[PatchedTodo]()
     assert_equal(patched_todo.userId, 1)
     assert_equal(patched_todo.id, 1)
     assert_equal(patched_todo.title, "sunt aut facere repellat provident occaecati excepturi optio reprehenderit")
@@ -250,7 +250,7 @@ def test_patch_file() raises -> None:
         )
         assert_equal(response.status, Status.OK)
 
-        var patched_todo = response.body.as_json[PatchedTodo]()
+        var patched_todo = response.body.as[PatchedTodo]()
         assert_equal(patched_todo.userId, 1)
         assert_equal(patched_todo.id, 1)
         assert_equal(patched_todo.title, "sunt aut facere repellat provident occaecati excepturi optio reprehenderit")
@@ -317,7 +317,7 @@ def test_session_level_headers() raises -> None:
     )
     assert_equal(response.status, Status.OK)
     assert_equal(
-        response.body.as_json[ServerGetResponse]().headers["X-Floki-Test"],
+        response.body.as[ServerGetResponse]().headers["X-Floki-Test"],
         "session-headers",
     )
 
@@ -370,7 +370,7 @@ def test_post_struct() raises -> None:
         },
     )
     assert_equal(response.status, Status.OK)
-    var post_response = response.body.as_json[ServerPostResponse]()
+    var post_response = response.body.as[ServerPostResponse]()
     assert_equal(post_response.json.userId, 1)
     assert_equal(post_response.json.body, "bar")
     assert_equal(post_response.json.title, "booggg")
@@ -397,7 +397,7 @@ def test_put_struct() raises -> None:
         },
     )
     assert_equal(response.status, Status.OK)
-    var put_response = response.body.as_json[PutResponse]()
+    var put_response = response.body.as[PutResponse]()
     assert_equal(put_response.id, 1)
     assert_equal(put_response.key1, "updated_value1")
     assert_equal(put_response.key2, "updated_value2")
@@ -421,7 +421,7 @@ def test_patch_struct() raises -> None:
         },
     )
     assert_equal(response.status, Status.OK)
-    var patched_todo = response.body.as_json[PatchedTodo]()
+    var patched_todo = response.body.as[PatchedTodo]()
     assert_equal(patched_todo.userId, 1)
     assert_equal(patched_todo.id, 1)
     assert_equal(patched_todo.key1, "patched_value")
