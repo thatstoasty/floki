@@ -199,7 +199,7 @@ def post[
     from floki.session import Session
 
     @fieldwise_init
-    struct Point:
+    struct Point(ImplicitlyDestructible):
         var x: Int
         var y: Int
 

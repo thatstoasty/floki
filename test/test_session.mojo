@@ -2,8 +2,9 @@ import emberjson
 from floki.cookie.cookie_jar import CookieKey
 from floki.http import Protocol, Status
 from floki.session import Session
-from std.testing import TestSuite, assert_equal, assert_true
+from std.testing import TestSuite, assert_equal, assert_true, assert_false
 from std.utils import Variant
+from std.pathlib import Path
 
 from floki.cookie.cookie import Cookie
 
@@ -429,5 +430,5 @@ def test_patch_struct() raises -> None:
 def main() raises -> None:
     TestSuite.discover_tests[__functions_in_module()]().run()
     # var suite = TestSuite()
-    # suite.test[test_patch_file]()
+    # suite.test[test_tls_settings]()
     # suite^.run()

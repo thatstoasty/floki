@@ -3,6 +3,7 @@ from floki.proxy import Proxy
 from floki.session import Session
 from floki.tls import TLS
 from std.testing import TestSuite, assert_equal, assert_false, assert_raises, assert_true
+from std.pathlib import Path
 
 import floki
 
@@ -51,10 +52,9 @@ def test_tls_can_disable_verification() raises -> None:
 
 
 def test_tls_custom_ca_bundle() raises -> None:
-    var t = TLS(ca_bundle="/etc/ssl/cert.pem")
+    var t = TLS(ca_bundle=Path("/etc/ssl/cert.pem"))
     assert_true(t.verify)
-    assert_equal(t.ca_bundle.value(), "/etc/ssl/cert.pem")
-
+    assert_equal(t.ca_bundle.value(), Path("/etc/ssl/cert.pem"))
 
 # --- Integration tests (network) ---
 

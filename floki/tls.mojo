@@ -1,5 +1,6 @@
 """The `TLS` type used to configure TLS/SSL verification for requests made by a `Session`."""
 
+from std.pathlib import Path
 
 struct TLS(Copyable, Movable):
     """TLS/SSL verification settings for requests made by a `Session`.
@@ -13,17 +14,17 @@ struct TLS(Copyable, Movable):
 
     var verify: Bool
     """Whether to verify the server's TLS certificate and hostname. Defaults to True."""
-    var ca_bundle: Optional[String]
+    var ca_bundle: Optional[Path]
     """Path to a custom CA certificate bundle file (PEM), or `None` to use the default."""
-    var ca_path: Optional[String]
+    var ca_path: Optional[Path]
     """Path to a directory of CA certificates, or `None` to use the default."""
 
     def __init__(
         out self,
-        verify: Bool = True,
         *,
-        ca_bundle: Optional[String] = None,
-        ca_path: Optional[String] = None,
+        verify: Bool = True,
+        ca_bundle: Optional[Path] = None,
+        ca_path: Optional[Path] = None,
     ):
         """Constructs a `TLS` configuration.
 
@@ -33,5 +34,5 @@ struct TLS(Copyable, Movable):
             ca_path: Path to a directory of CA certificates, or `None`.
         """
         self.verify = verify
-        self.ca_bundle = ca_bundle
-        self.ca_path = ca_path
+        self.ca_bundle = ca_bundle.value() if ca_bundle else None
+        self.ca_path = ca_path.value() if ca_path else None
