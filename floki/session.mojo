@@ -7,6 +7,7 @@ from floki.cookie.cookie_jar import CookieJar
 from floki.data import RequestData
 from floki.forms import FormData
 from floki.handlers import _handle_delete, _handle_head, _handle_options, _handle_patch, _handle_post, _handle_put
+from floki.headers import Headers
 from floki.http import RequestMethod
 from floki.proxy import Proxy
 from floki.response import Response
@@ -19,6 +20,7 @@ from std.pathlib import Path
 from std.time import sleep
 from std.utils import Variant
 
+
 def _build_url_with_query(url: String, query_parameters: Dict[String, String], easy: Easy) raises -> String:
     """Builds a URL with query parameters appended.
 
@@ -26,10 +28,10 @@ def _build_url_with_query(url: String, query_parameters: Dict[String, String], e
         url: The base URL to which query parameters will be appended.
         query_parameters: A dictionary of query parameters to append to the URL.
         easy: An instance of `Easy` used for URL encoding.
-    
+
     Returns:
         The full URL with query parameters appended.
-    
+
     Raises:
         Error: If there is a failure in URL encoding or setting the URL.
     """
@@ -38,9 +40,9 @@ def _build_url_with_query(url: String, query_parameters: Dict[String, String], e
         full_url.write(t"{easy.escape(pair.key)}={easy.escape(pair.value)}")
         if i != len(query_parameters) - 1:
             full_url.write("&")
-    
+
     return full_url^
-    
+
 
 struct Session(Movable):
     """A Session object to manage and persist settings across multiple HTTP requests."""
@@ -49,7 +51,7 @@ struct Session(Movable):
     """Wraps a libcurl easy handle, which is used to configure and perform HTTP requests."""
     var allow_redirects: Bool
     """Indicates whether the session should automatically follow HTTP redirects."""
-    var headers: Dict[String, String]
+    var headers: Headers
     """Default headers to include in every request made with this session."""
     var verbose: Bool
     """Indicates whether libcurl's verbose logging mode is enabled for this session."""
@@ -70,7 +72,7 @@ struct Session(Movable):
     def __init__(
         out self,
         allow_redirects: Bool = True,
-        var headers: Dict[String, String] = {},
+        var headers: Headers = Headers(),
         verbose: Bool = False,
         var timeout: Timeout = Timeout(),
         var retry: Retry = Retry(),
@@ -93,8 +95,8 @@ struct Session(Movable):
         """
         self.easy = Easy()
         self.allow_redirects = allow_redirects
-        self.headers = materialize[Self.DEFAULT_HEADERS]()
-        self.headers.update(headers)
+        self.headers = Headers(materialize[Self.DEFAULT_HEADERS]())
+        self.headers.update(headers^)
         self.verbose = verbose
         self.timeout = timeout^
         self.retry = retry^
@@ -123,7 +125,7 @@ struct Session(Movable):
     ](
         self,
         mut url: String,
-        mut headers: Dict[String, String],
+        mut headers: Headers,
         data: RequestData[origin],
         query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
@@ -154,7 +156,7 @@ struct Session(Movable):
             # Set the url
             if query_parameters:
                 # Append the query parameters to the URL.
-                var full_url = _build_url_with_query(url, query_parameters, self.easy)  
+                var full_url = _build_url_with_query(url, query_parameters, self.easy)
                 self.raise_if_error(self.easy.url(full_url), "Failed to set URL with query parameters: ")
             else:
                 self.raise_if_error(self.easy.url(url), "Failed to set URL: ")
@@ -242,11 +244,11 @@ struct Session(Movable):
             if auth:
                 auth.value().apply(headers)
 
-            var header_list = CurlList(headers)
+            var header_list = CurlList(headers._inner)
             try:
                 # If there's any headers set on the session, add them too.
                 # but only if they aren't already set in the request-specific headers, since those should take precedence.
-                for header in self.headers.items():
+                for header in self.headers._inner.items():
                     if header.key not in headers:
                         header_list.append(String(t"{header.key}: {header.value}"))
 
@@ -292,7 +294,7 @@ struct Session(Movable):
     ](
         self,
         var url: String,
-        var headers: Dict[String, String] = {},
+        var headers: Headers = Headers(),
         query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
     ) raises -> Response:
@@ -336,7 +338,7 @@ struct Session(Movable):
     ](
         self,
         var url: String,
-        var headers: Dict[String, String] = {},
+        var headers: Headers = Headers(),
         var data: emberjson.Object = {},
         auth: Optional[A] = None,
     ) raises -> Response:
@@ -380,7 +382,7 @@ struct Session(Movable):
         self,
         var url: String,
         data: FormData,
-        var headers: Dict[String, String] = {},
+        var headers: Headers = Headers(),
         auth: Optional[A] = None,
     ) raises -> Response:
         """Sends a POST request with `application/x-www-form-urlencoded` data to the specified URL.
@@ -422,7 +424,7 @@ struct Session(Movable):
 
     def post[
         T: AnyType & ImplicitlyDestructible, //
-    ](self, var url: String, data: T, var headers: Dict[String, String] = {},) raises -> Response:
+    ](self, var url: String, data: T, var headers: Headers = Headers(),) raises -> Response:
         """Sends a POST request to the specified URL.
 
         Args:
@@ -459,7 +461,7 @@ struct Session(Movable):
 
     def post[
         origin: ImmutOrigin, //
-    ](self, var url: String, data: Span[Byte, origin], var headers: Dict[String, String] = {},) raises -> Response:
+    ](self, var url: String, data: Span[Byte, origin], var headers: Headers = Headers(),) raises -> Response:
         """Sends a POST request to the specified URL.
 
         Parameters:
@@ -495,7 +497,7 @@ struct Session(Movable):
         self,
         var url: String,
         data: FileHandle,
-        var headers: Dict[String, String] = {},
+        var headers: Headers = Headers(),
     ) raises -> Response:
         """Sends a POST request to the specified URL.
 
@@ -531,7 +533,7 @@ struct Session(Movable):
     ](
         self,
         var url: String,
-        var headers: Dict[String, String] = {},
+        var headers: Headers = Headers(),
         var data: emberjson.Object = {},
         auth: Optional[A] = None,
     ) raises -> Response:
@@ -571,7 +573,7 @@ struct Session(Movable):
 
     def put[
         T: AnyType & ImplicitlyDestructible, //
-    ](self, var url: String, data: T, var headers: Dict[String, String] = {},) raises -> Response:
+    ](self, var url: String, data: T, var headers: Headers = Headers(),) raises -> Response:
         """Sends a PUT request to the specified URL.
 
         Args:
@@ -608,7 +610,7 @@ struct Session(Movable):
 
     def put[
         origin: ImmutOrigin, //
-    ](self, var url: String, data: Span[Byte, origin], var headers: Dict[String, String] = {},) raises -> Response:
+    ](self, var url: String, data: Span[Byte, origin], var headers: Headers = Headers(),) raises -> Response:
         """Sends a PUT request to the specified URL.
 
         Parameters:
@@ -644,7 +646,7 @@ struct Session(Movable):
         self,
         var url: String,
         data: FileHandle,
-        var headers: Dict[String, String] = {},
+        var headers: Headers = Headers(),
     ) raises -> Response:
         """Sends a PUT request to the specified URL.
 
@@ -677,7 +679,7 @@ struct Session(Movable):
 
     def delete[
         A: Auth = NoAuth, //
-    ](self, var url: String, var headers: Dict[String, String] = {}, auth: Optional[A] = None,) raises -> Response:
+    ](self, var url: String, var headers: Headers = Headers(), auth: Optional[A] = None,) raises -> Response:
         """Sends a DELETE request to the specified URL.
 
         Parameters:
@@ -715,7 +717,7 @@ struct Session(Movable):
     ](
         self,
         var url: String,
-        var headers: Dict[String, String] = {},
+        var headers: Headers = Headers(),
         var data: emberjson.Object = {},
         auth: Optional[A] = None,
     ) raises -> Response:
@@ -755,7 +757,7 @@ struct Session(Movable):
 
     def patch[
         T: AnyType & ImplicitlyDestructible, //
-    ](self, var url: String, data: T, var headers: Dict[String, String] = {},) raises -> Response:
+    ](self, var url: String, data: T, var headers: Headers = Headers(),) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
         Args:
@@ -792,7 +794,7 @@ struct Session(Movable):
 
     def patch[
         origin: ImmutOrigin, //
-    ](self, var url: String, data: Span[Byte, origin], var headers: Dict[String, String] = {},) raises -> Response:
+    ](self, var url: String, data: Span[Byte, origin], var headers: Headers = Headers(),) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
         Parameters:
@@ -828,7 +830,7 @@ struct Session(Movable):
         self,
         var url: String,
         data: FileHandle,
-        var headers: Dict[String, String] = {},
+        var headers: Headers = Headers(),
     ) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
@@ -861,7 +863,7 @@ struct Session(Movable):
 
     def head[
         A: Auth = NoAuth, //
-    ](self, var url: String, var headers: Dict[String, String] = {}, auth: Optional[A] = None,) raises -> Response:
+    ](self, var url: String, var headers: Headers = Headers(), auth: Optional[A] = None,) raises -> Response:
         """Sends a HEAD request to the specified URL.
 
         Parameters:
@@ -896,7 +898,7 @@ struct Session(Movable):
 
     def options[
         A: Auth = NoAuth, //
-    ](self, var url: String, var headers: Dict[String, String] = {}, auth: Optional[A] = None,) raises -> Response:
+    ](self, var url: String, var headers: Headers = Headers(), auth: Optional[A] = None,) raises -> Response:
         """Sends an OPTIONS request to the specified URL.
 
         Parameters:

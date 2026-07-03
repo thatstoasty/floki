@@ -3,6 +3,7 @@ import emberjson
 from floki.auth import Auth, NoAuth
 from floki.body import Body
 from floki.forms import FormData
+from floki.headers import Headers
 from floki.http import RequestMethod
 from floki.proxy import Proxy
 from floki.response import Response
@@ -16,7 +17,7 @@ def get[
     A: Auth = NoAuth, //
 ](
     var url: String,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     query_parameters: Dict[String, String] = {},
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
@@ -67,7 +68,7 @@ def post[
     A: Auth = NoAuth, //
 ](
     var url: String,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var data: emberjson.Object = {},
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
@@ -118,7 +119,7 @@ def post[
 ](
     var url: String,
     data: FormData,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -171,7 +172,7 @@ def post[
 ](
     var url: String,
     data: T,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -221,7 +222,7 @@ def post[
 ](
     var url: String,
     data: Span[Byte, origin],
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -265,7 +266,7 @@ def post[
 def post(
     var url: String,
     data: FileHandle,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -308,7 +309,7 @@ def put[
     A: Auth = NoAuth, //
 ](
     var url: String,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var data: emberjson.Object = {},
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
@@ -359,7 +360,7 @@ def put[
 ](
     var url: String,
     data: T,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -409,7 +410,7 @@ def put[
 ](
     var url: String,
     data: Span[Byte, origin],
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -453,7 +454,7 @@ def put[
 def put(
     var url: String,
     data: FileHandle,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -496,7 +497,7 @@ def delete[
     A: Auth = NoAuth, //
 ](
     var url: String,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -543,7 +544,7 @@ def patch[
     A: Auth = NoAuth, //
 ](
     var url: String,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var data: emberjson.Object = {},
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
@@ -594,7 +595,7 @@ def patch[
 ](
     var url: String,
     data: T,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -644,7 +645,7 @@ def patch[
 ](
     var url: String,
     data: Span[Byte, origin],
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -688,7 +689,7 @@ def patch[
 def patch(
     var url: String,
     data: FileHandle,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -731,7 +732,7 @@ def head[
     A: Auth = NoAuth, //
 ](
     var url: String,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
@@ -778,7 +779,7 @@ def options[
     A: Auth = NoAuth, //
 ](
     var url: String,
-    var headers: Dict[String, String] = {},
+    var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),

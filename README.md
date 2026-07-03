@@ -11,7 +11,7 @@ A `requests` like HTTP client for Mojo, leveraging `libcurl` under the hood.
 
 ### Installing it from the `mojo-community` Conda channel
 
-First, you'll need to install the `curl_wrapper` library, which provides a thin wrapper around libcurl to avoid issues with variadic arguments. You'll need to enable the `pixi-build` preview by adding this to the `workspace section of your `pixi.toml` file.
+First, you'll need to install the `curl_wrapper` library, which provides a thin wrapper around libcurl to avoid issues with variadic arguments. You'll need to enable the `pixi-build` preview by adding this to the workspace section of your `pixi.toml` file.
 
 ```bash
 preview = ["pixi-build"]
@@ -34,7 +34,7 @@ There's two ways to build `floki` from source: directly from the Git repository 
 Run the following commands in your terminal:
 
 ```bash
-pixi add -g "https://github.com/thatstoasty/floki.git" --tag v0.3.3 && pixi install
+pixi add -g "https://github.com/thatstoasty/floki.git" --tag v0.3.4 && pixi install
 ```
 
 #### Building from source: Local
@@ -122,15 +122,15 @@ def main() raises -> None:
         r.raise_for_status()  # raises HTTPError on a non-2xx response
 
     # Body as text, raw bytes, or JSON.
-    print(r.text())                    # StringSlice over the body
-    var data = r.json()                # dynamic JSON, e.g. data["url"]
+    print(r.as_text())                    # StringSlice over the body
+    var data = r.as_json()                # dynamic JSON, e.g. data["url"]
 
     # Headers are looked up case-insensitively.
     print(r.content_type())            # value of the Content-Type header
     print(r.header("x-request-id", "<none>"))
 ```
 
-For typed JSON, deserialize straight into a struct with `r.as_json[T]()`:
+For typed JSON, deserialize straight into a struct with `r.as[T]()`:
 
 ```mojo
 import floki
@@ -146,7 +146,7 @@ struct Todo(Defaultable, ImplicitlyDestructible, Movable):
 
 def main() raises -> None:
     var r = floki.get("https://jsonplaceholder.typicode.com/todos/1")
-    var todo = r.as_json[Todo]()
+    var todo = r.as[Todo]()
     print(todo.id, todo.title)
 ```
 
@@ -160,6 +160,7 @@ can supply its own headers. Authentication is provided per request:
 
 ```mojo
 import floki
+from floki import Headers
 from floki.auth import Auth, BasicAuth, BearerAuth
 
 def main() raises -> None:
@@ -171,7 +172,7 @@ def main() raises -> None:
 struct ApiKeyAuth(Auth):
     var key: String
 
-    def apply(self, mut headers: Dict[String, String]):
+    def apply(self, mut headers: Headers):
         headers["X-Api-Key"] = self.key
 ```
 

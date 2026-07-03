@@ -1,5 +1,6 @@
 from floki.auth import Auth, BasicAuth, BearerAuth
 from floki.forms import FormData
+from floki.headers import Headers
 from floki.http import Status
 from floki.session import Session
 from std.testing import TestSuite, assert_equal, assert_true
@@ -13,7 +14,7 @@ struct ApiKeyAuth(Auth):
 
     var key: String
 
-    def apply(self, mut headers: Dict[String, String]):
+    def apply(self, mut headers: Headers):
         headers["X-Api-Key"] = self.key
 
 

@@ -89,7 +89,7 @@ def test_get_with_query_parameters() raises -> None:
         query_parameters={"foo": "bar"},
     )
     assert_equal(response.status, Status.OK)
-    assert_equal(response.body.as_json[ArgResponse]().args.foo, "bar")
+    assert_equal(response.body.as[ArgResponse]().args.foo, "bar")
 
 
 @fieldwise_init
@@ -113,7 +113,7 @@ def test_get_with_custom_headers() raises -> None:
     )
     assert_equal(response.status, Status.OK)
     assert_equal(
-        response.body.as_json[CustomHeaderResponse]().headers["X-Custom-Header"],
+        response.body.as[CustomHeaderResponse]().headers["X-Custom-Header"],
         "floki-test",
     )
 

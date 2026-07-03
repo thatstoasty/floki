@@ -2,6 +2,7 @@
 import emberjson
 from floki.body import Body
 from floki.cookie.cookie_jar import CookieJar
+from floki.headers import Headers
 from floki.http import Protocol, Status
 
 
@@ -23,7 +24,7 @@ struct HTTPError(Movable, Writable):
 struct Response(Boolable, Movable, Writable):
     """Represents an HTTP response received from the server."""
 
-    var headers: Dict[String, String]
+    var headers: Headers
     """The HTTP headers included in the response."""
     var cookies: CookieJar
     """The cookies included in the response."""
@@ -40,7 +41,7 @@ struct Response(Boolable, Movable, Writable):
         var cookies: CookieJar,
         status: Status,
         protocol: Protocol,
-        var headers: Dict[String, String] = {},
+        var headers: Headers = Headers(),
     ) raises:
         """Constructs an Response from its component parts.
 
@@ -246,11 +247,7 @@ struct Response(Boolable, Movable, Writable):
         Returns:
             The header value, or `default` if the header is not present.
         """
-        var target = name.lower()
-        for entry in self.headers.items():
-            if entry.key.lower() == target:
-                return entry.value
-        return default
+        return self.headers.get(name, default)
 
     def content_type(self) -> String:
         """Returns the value of the `Content-Type` header, or an empty string if absent.

@@ -2,6 +2,7 @@
 
 from std.pathlib import Path
 
+
 struct TLS(Copyable, Movable):
     """TLS/SSL verification settings for requests made by a `Session`.
 

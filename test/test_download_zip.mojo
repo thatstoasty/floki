@@ -1,4 +1,4 @@
-from floki.header import authorization_header
+from floki.auth import BasicAuth
 from floki.http import Status
 from std.testing import TestSuite, assert_equal, assert_true
 
@@ -28,7 +28,7 @@ def test_download_zip() raises -> None:
 def test_authorization_header() raises -> None:
     var response = floki.get(
         "https://httpbingo.org/basic-auth/user/password",
-        headers=authorization_header("user", "password"),
+        auth=BasicAuth("user", "password"),
     )
     assert_equal(response.status, Status.OK)
 
