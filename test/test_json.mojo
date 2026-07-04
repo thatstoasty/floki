@@ -21,7 +21,7 @@ struct Todo(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
 def test_todo_deserialization() raises -> None:
     var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
     var expected = Todo(userId=1, id=1, title="delectus aut autem", completed=False)
-    assert_equal(response.body.as_json[Todo](), expected)
+    assert_equal(response.body.as[Todo](), expected)
 
 
 def main() raises -> None:

@@ -122,14 +122,14 @@ struct TestJSON(Defaultable, ImplicitlyDestructible, Movable):
 
 def test_body_as_json_object() raises -> None:
     var body = Body('{"name": "floki"}'.as_bytes())
-    assert_equal(body.as_json[TestJSON]().name, "floki")
+    assert_equal(body.as[TestJSON]().name, "floki")
 
 
 def test_body_as_json_empty_raises() raises -> None:
     var raised = False
     var body = Body(List[Byte]())
     try:
-        var _ = body.as_json[TestJSON]()
+        var _ = body.as[TestJSON]()
     except:
         raised = True
     assert_true(raised)
@@ -328,19 +328,19 @@ def test_response_as_text() raises -> None:
 
 def test_response_bytes() raises -> None:
     var response = _response(List[Byte](String("hello").as_bytes()), Status.OK)
-    assert_equal(len(response.bytes()), 5)
+    assert_equal(len(response.as_bytes()), 5)
 
 
 def test_response_json_dynamic() raises -> None:
     var response = _response(List[Byte](String('{"name": "floki", "n": 7}').as_bytes()), Status.OK)
-    var j = response.json()
+    var j = response.as_json()
     assert_true("name" in j)
     assert_equal(String(j["name"].string()), "floki")
 
 
 def test_response_as_json_typed() raises -> None:
     var response = _response(List[Byte](String('{"name": "floki"}').as_bytes()), Status.OK)
-    assert_equal(response.as_json[TestJSON]().name, "floki")
+    assert_equal(response.as[TestJSON]().name, "floki")
 
 
 def test_response_header_case_insensitive() raises -> None:
