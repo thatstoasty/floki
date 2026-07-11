@@ -55,7 +55,8 @@ def get[
         var r = floki.get("https://httpbin.org/get", auth=BasicAuth("user", "pass"))
     ```
     """
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.GET](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.GET](
         url=url,
         headers=headers,
         query_parameters=query_parameters,
@@ -74,6 +75,7 @@ def post[
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a POST request to the specified URL.
@@ -89,6 +91,7 @@ def post[
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -106,9 +109,11 @@ def post[
     ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.POST](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.POST](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=json_data,
         auth=auth,
     )
@@ -124,6 +129,7 @@ def post[
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a POST request with `application/x-www-form-urlencoded` data to the specified URL.
@@ -139,6 +145,7 @@ def post[
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -159,9 +166,11 @@ def post[
     if "Content-Type" not in headers:
         headers["Content-Type"] = "application/x-www-form-urlencoded"
     var encoded = data.encode()
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.POST](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.POST](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=RequestData(encoded.as_bytes()),
         auth=auth,
     )
@@ -177,6 +186,7 @@ def post[
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
 ) raises -> Response:
     """Sends a POST request to the specified URL.
 
@@ -188,6 +198,7 @@ def post[
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
 
     Returns:
         The received response as an `Response` object.
@@ -210,9 +221,11 @@ def post[
     ```
     """
     var json_data = emberjson.serialize(data)
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.POST](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.POST](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=json_data.as_bytes(),
     )
 
@@ -227,6 +240,7 @@ def post[
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
 ) raises -> Response:
     """Sends a POST request to the specified URL.
 
@@ -241,6 +255,7 @@ def post[
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
 
     Returns:
         The received response as an `Response` object.
@@ -256,9 +271,11 @@ def post[
         var r = floki.post("https://httpbin.org/post", data="hello".as_bytes())
     ```
     """
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.POST](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.POST](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=data,
     )
 
@@ -271,6 +288,7 @@ def post(
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
 ) raises -> Response:
     """Sends a POST request to the specified URL.
 
@@ -282,6 +300,7 @@ def post(
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
 
     Returns:
         The received response as an `Response` object.
@@ -298,9 +317,11 @@ def post(
             var r = floki.post("https://httpbin.org/post", data=file)
     ```
     """
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.POST](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.POST](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=Pointer(to=data),
     )
 
@@ -315,6 +336,7 @@ def put[
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
@@ -330,6 +352,7 @@ def put[
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -347,9 +370,11 @@ def put[
     ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PUT](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.PUT](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=json_data,
         auth=auth,
     )
@@ -365,6 +390,7 @@ def put[
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
 
@@ -376,6 +402,7 @@ def put[
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
 
     Returns:
         The received response as an `Response` object.
@@ -398,9 +425,11 @@ def put[
     ```
     """
     var json_data = emberjson.serialize(data)
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PUT](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.PUT](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=json_data.as_bytes(),
     )
 
@@ -415,6 +444,7 @@ def put[
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
 
@@ -429,6 +459,7 @@ def put[
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
 
     Returns:
         The received response as an `Response` object.
@@ -444,9 +475,11 @@ def put[
         var r = floki.put("https://httpbin.org/put", data="hello".as_bytes())
     ```
     """
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PUT](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.PUT](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=data,
     )
 
@@ -459,6 +492,7 @@ def put(
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
 ) raises -> Response:
     """Sends a PUT request to the specified URL.
 
@@ -470,6 +504,7 @@ def put(
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
 
     Returns:
         The received response as an `Response` object.
@@ -486,9 +521,11 @@ def put(
             var r = floki.put("https://httpbin.org/put", data=file)
     ```
     """
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PUT](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.PUT](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=Pointer(to=data),
     )
 
@@ -502,6 +539,7 @@ def delete[
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a DELETE request to the specified URL.
@@ -516,6 +554,7 @@ def delete[
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -532,9 +571,11 @@ def delete[
         var r = floki.delete("https://httpbin.org/delete")
     ```
     """
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.DELETE](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.DELETE](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=RequestData(List[Byte]()),
         auth=auth,
     )
@@ -550,6 +591,7 @@ def patch[
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises -> Response:
     """Sends a PATCH request to the specified URL.
@@ -565,6 +607,7 @@ def patch[
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -582,9 +625,11 @@ def patch[
     ```
     """
     var json_data = emberjson.to_string(data^).as_bytes()
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PATCH](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.PATCH](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=json_data,
         auth=auth,
     )
@@ -600,6 +645,7 @@ def patch[
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
 ) raises -> Response:
     """Sends a GET request to the specified URL.
 
@@ -611,6 +657,7 @@ def patch[
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
 
     Returns:
         The received response as an `Response` object.
@@ -633,9 +680,11 @@ def patch[
     ```
     """
     var json_data = emberjson.serialize(data)
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PATCH](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.PATCH](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=json_data.as_bytes(),
     )
 
@@ -650,6 +699,7 @@ def patch[
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
 ) raises -> Response:
     """Sends a GET request to the specified URL.
 
@@ -664,6 +714,7 @@ def patch[
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
 
     Returns:
         The received response as an `Response` object.
@@ -679,9 +730,11 @@ def patch[
         var r = floki.patch("https://httpbin.org/patch", data="hello".as_bytes())
     ```
     """
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PATCH](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.PATCH](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=data,
     )
 
@@ -694,6 +747,7 @@ def patch(
     var retry: Retry = Retry(),
     var proxy: Proxy = Proxy(),
     var tls: TLS = TLS(),
+    query_parameters: Dict[String, String] = {},
 ) raises -> Response:
     """Sends a GET request to the specified URL.
 
@@ -705,6 +759,7 @@ def patch(
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
         tls: An optional TLS configuration for the request.
+        query_parameters: Query parameters to include in the request URL.
 
     Returns:
         The received response as an `Response` object.
@@ -721,9 +776,11 @@ def patch(
             var r = floki.patch("https://httpbin.org/patch", data=file)
     ```
     """
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.PATCH](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.PATCH](
         url=url,
         headers=headers,
+        query_parameters=query_parameters,
         data=Pointer(to=data),
     )
 
@@ -767,7 +824,8 @@ def head[
         var r = floki.head("https://httpbin.org/get")
     ```
     """
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.HEAD](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.HEAD](
         url=url,
         headers=headers,
         data=RequestData(List[Byte]()),
@@ -814,7 +872,8 @@ def options[
         var r = floki.options("https://httpbin.org/get")
     ```
     """
-    return Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^).send[RequestMethod.OPTIONS](
+    var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
+    return session.send[RequestMethod.OPTIONS](
         url=url,
         headers=headers,
         data=RequestData(List[Byte]()),

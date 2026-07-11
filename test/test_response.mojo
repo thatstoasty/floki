@@ -28,13 +28,12 @@ def test_status_from_int_500() raises -> None:
     assert_true(s == Status.INTERNAL_ERROR)
 
 
-def test_status_from_int_invalid_raises() raises -> None:
-    var raised = False
-    try:
-        var _ = Status(999)
-    except:
-        raised = True
-    assert_true(raised)
+def test_status_from_int_unknown_is_best_effort() raises -> None:
+    # Unrecognized codes must not raise; the raw code is preserved and the
+    # reason phrase falls back to "Unknown" so uncommon/vendor codes stay usable.
+    var s = Status(999)
+    assert_equal(s.code, 999)
+    assert_equal(String(s.message), "Unknown")
 
 
 def test_status_equality() raises -> None:

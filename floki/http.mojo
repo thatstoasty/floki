@@ -95,6 +95,12 @@ struct Status(Copyable, Equatable, TrivialRegisterPassable, Writable):
     """HTTP 301: The resource has been permanently moved to a new URL."""
     comptime FOUND = Self(302, "Found")
     """HTTP 302: The resource resides temporarily under a different URL."""
+    comptime SEE_OTHER = Self(303, "See Other")
+    """HTTP 303: The response to the request can be found under another URL using a GET method."""
+    comptime NOT_MODIFIED = Self(304, "Not Modified")
+    """HTTP 304: The resource has not been modified since the version specified by the request headers."""
+    comptime USE_PROXY = Self(305, "Use Proxy")
+    """HTTP 305: The requested resource must be accessed through the proxy given by the Location header."""
     comptime TEMPORARY_REDIRECT = Self(307, "Temporary Redirect")
     """HTTP 307: The request should be repeated with another URL, but future requests should still use the original URL."""
     comptime PERMANENT_REDIRECT = Self(308, "Permanent Redirect")
@@ -182,140 +188,157 @@ struct Status(Copyable, Equatable, TrivialRegisterPassable, Writable):
     comptime NETWORK_AUTHENTICATION_REQUIRED = Self(511, "Network Authentication Required")
     """HTTP 511: The client needs to authenticate to gain network access."""
 
-    def __init__(out self, code: Int) raises:
-        """Creates a Status instance from an integer representation.
+    def __init__(out self, code: Int):
+        """Creates a Status instance from an integer status code.
+
+        The code is stored as-is; the human-readable `message` is resolved on a
+        best-effort basis via `_message_for`. Known codes get their standard reason
+        phrase, and any unrecognized code gets "Unknown". This never raises, so
+        responses carrying uncommon or vendor-specific status codes remain
+        representable rather than failing the request.
 
         Args:
             code: The integer representation of the status code.
+        """
+        self.code = UInt16(code)
+        self.message = Self._message_for(self.code)
+
+    @staticmethod
+    def _message_for(code: UInt16) -> StaticString:
+        """Returns the standard reason phrase for a status code, or "Unknown".
+
+        Args:
+            code: The numeric status code to look up.
 
         Returns:
-            A Status instance corresponding to the provided integer.
-
-        Raises:
-            Error: If the integer does not correspond to a known status code.
+            The reason phrase for a known code, otherwise "Unknown".
         """
-        # For every comptime defined in Status, check if the integer matches
-        # the value of the alias.
-        if Self.OK == code:
-            self = Self.OK
-        elif Self.CREATED == code:
-            self = Self.CREATED
-        elif Self.ACCEPTED == code:
-            self = Self.ACCEPTED
-        elif Self.NON_AUTHORITATIVE_INFORMATION == code:
-            self = Self.NON_AUTHORITATIVE_INFORMATION
-        elif Self.NO_CONTENT == code:
-            self = Self.NO_CONTENT
-        elif Self.RESET_CONTENT == code:
-            self = Self.RESET_CONTENT
-        elif Self.PARTIAL_CONTENT == code:
-            self = Self.PARTIAL_CONTENT
-        elif Self.MULTI_STATUS == code:
-            self = Self.MULTI_STATUS
-        elif Self.ALREADY_REPORTED == code:
-            self = Self.ALREADY_REPORTED
-        elif Self.IM_USED == code:
-            self = Self.IM_USED
-        elif Self.MULTIPLE_CHOICES == code:
-            self = Self.MULTIPLE_CHOICES
-        elif Self.MOVED_PERMANENTLY == code:
-            self = Self.MOVED_PERMANENTLY
-        elif Self.FOUND == code:
-            self = Self.FOUND
-        elif Self.TEMPORARY_REDIRECT == code:
-            self = Self.TEMPORARY_REDIRECT
-        elif Self.PERMANENT_REDIRECT == code:
-            self = Self.PERMANENT_REDIRECT
-        elif Self.BAD_REQUEST == code:
-            self = Self.BAD_REQUEST
-        elif Self.UNAUTHORIZED == code:
-            self = Self.UNAUTHORIZED
-        elif Self.PAYMENT_REQUIRED == code:
-            self = Self.PAYMENT_REQUIRED
-        elif Self.FORBIDDEN == code:
-            self = Self.FORBIDDEN
-        elif Self.NOT_FOUND == code:
-            self = Self.NOT_FOUND
-        elif Self.METHOD_NOT_ALLOWED == code:
-            self = Self.METHOD_NOT_ALLOWED
-        elif Self.NOT_ACCEPTABLE == code:
-            self = Self.NOT_ACCEPTABLE
-        elif Self.PROXY_AUTHENTICATION_REQUIRED == code:
-            self = Self.PROXY_AUTHENTICATION_REQUIRED
-        elif Self.REQUEST_TIMEOUT == code:
-            self = Self.REQUEST_TIMEOUT
-        elif Self.CONFLICT == code:
-            self = Self.CONFLICT
-        elif Self.GONE == code:
-            self = Self.GONE
-        elif Self.LENGTH_REQUIRED == code:
-            self = Self.LENGTH_REQUIRED
-        elif Self.PRECONDITION_FAILED == code:
-            self = Self.PRECONDITION_FAILED
-        elif Self.PAYLOAD_TOO_LARGE == code:
-            self = Self.PAYLOAD_TOO_LARGE
-        elif Self.URI_TOO_LONG == code:
-            self = Self.URI_TOO_LONG
-        elif Self.UNSUPPORTED_MEDIA_TYPE == code:
-            self = Self.UNSUPPORTED_MEDIA_TYPE
-        elif Self.RANGE_NOT_SATISFIABLE == code:
-            self = Self.RANGE_NOT_SATISFIABLE
-        elif Self.EXPECTATION_FAILED == code:
-            self = Self.EXPECTATION_FAILED
-        elif Self.IM_A_TEAPOT == code:
-            self = Self.IM_A_TEAPOT
-        elif Self.MISDIRECTED_REQUEST == code:
-            self = Self.MISDIRECTED_REQUEST
-        elif Self.UNPROCESSABLE_ENTITY == code:
-            self = Self.UNPROCESSABLE_ENTITY
-        elif Self.LOCKED == code:
-            self = Self.LOCKED
-        elif Self.FAILED_DEPENDENCY == code:
-            self = Self.FAILED_DEPENDENCY
-        elif Self.TOO_EARLY == code:
-            self = Self.TOO_EARLY
-        elif Self.UPGRADE_REQUIRED == code:
-            self = Self.UPGRADE_REQUIRED
-        elif Self.PRECONDITION_REQUIRED == code:
-            self = Self.PRECONDITION_REQUIRED
-        elif Self.TOO_MANY_REQUESTS == code:
-            self = Self.TOO_MANY_REQUESTS
-        elif Self.REQUEST_HEADER_FIELDS_TOO_LARGE == code:
-            self = Self.REQUEST_HEADER_FIELDS_TOO_LARGE
-        elif Self.UNAVAILABLE_FOR_LEGAL_REASONS == code:
-            self = Self.UNAVAILABLE_FOR_LEGAL_REASONS
-        elif Self.INTERNAL_ERROR == code:
-            self = Self.INTERNAL_ERROR
-        elif Self.NOT_IMPLEMENTED == code:
-            self = Self.NOT_IMPLEMENTED
-        elif Self.BAD_GATEWAY == code:
-            self = Self.BAD_GATEWAY
-        elif Self.SERVICE_UNAVAILABLE == code:
-            self = Self.SERVICE_UNAVAILABLE
-        elif Self.GATEWAY_TIMEOUT == code:
-            self = Self.GATEWAY_TIMEOUT
-        elif Self.HTTP_VERSION_NOT_SUPPORTED == code:
-            self = Self.HTTP_VERSION_NOT_SUPPORTED
-        elif Self.VARIANT_ALSO_NEGOTIATES == code:
-            self = Self.VARIANT_ALSO_NEGOTIATES
-        elif Self.INSUFFICIENT_STORAGE == code:
-            self = Self.INSUFFICIENT_STORAGE
-        elif Self.LOOP_DETECTED == code:
-            self = Self.LOOP_DETECTED
-        elif Self.NOT_EXTENDED == code:
-            self = Self.NOT_EXTENDED
-        elif Self.NETWORK_AUTHENTICATION_REQUIRED == code:
-            self = Self.NETWORK_AUTHENTICATION_REQUIRED
-        elif Self.CONTINUE == code:
-            self = Self.CONTINUE
-        elif Self.SWITCHING_PROTOCOLS == code:
-            self = Self.SWITCHING_PROTOCOLS
-        elif Self.PROCESSING == code:
-            self = Self.PROCESSING
-        elif Self.EARLY_HINTS == code:
-            self = Self.EARLY_HINTS
+        if code == 100:
+            return "Continue"
+        elif code == 101:
+            return "Switching Protocols"
+        elif code == 102:
+            return "Processing"
+        elif code == 103:
+            return "Early Hints"
+        elif code == 200:
+            return "OK"
+        elif code == 201:
+            return "Created"
+        elif code == 202:
+            return "Accepted"
+        elif code == 203:
+            return "Non-Authoritative Information"
+        elif code == 204:
+            return "No Content"
+        elif code == 205:
+            return "Reset Content"
+        elif code == 206:
+            return "Partial Content"
+        elif code == 207:
+            return "Multi-Status"
+        elif code == 208:
+            return "Already Reported"
+        elif code == 226:
+            return "IM Used"
+        elif code == 300:
+            return "Multiple Choices"
+        elif code == 301:
+            return "Moved Permanently"
+        elif code == 302:
+            return "Found"
+        elif code == 303:
+            return "See Other"
+        elif code == 304:
+            return "Not Modified"
+        elif code == 305:
+            return "Use Proxy"
+        elif code == 307:
+            return "Temporary Redirect"
+        elif code == 308:
+            return "Permanent Redirect"
+        elif code == 400:
+            return "Bad Request"
+        elif code == 401:
+            return "Unauthorized"
+        elif code == 402:
+            return "Payment Required"
+        elif code == 403:
+            return "Forbidden"
+        elif code == 404:
+            return "Not Found"
+        elif code == 405:
+            return "Method Not Allowed"
+        elif code == 406:
+            return "Not Acceptable"
+        elif code == 407:
+            return "Proxy Authentication Required"
+        elif code == 408:
+            return "Request Timeout"
+        elif code == 409:
+            return "Conflict"
+        elif code == 410:
+            return "Gone"
+        elif code == 411:
+            return "Length Required"
+        elif code == 412:
+            return "Precondition Failed"
+        elif code == 413:
+            return "Payload Too Large"
+        elif code == 414:
+            return "URI Too Long"
+        elif code == 415:
+            return "Unsupported Media Type"
+        elif code == 416:
+            return "Range Not Satisfiable"
+        elif code == 417:
+            return "Expectation Failed"
+        elif code == 418:
+            return "I'm a teapot"
+        elif code == 421:
+            return "Misdirected Request"
+        elif code == 422:
+            return "Unprocessable Entity"
+        elif code == 423:
+            return "Locked"
+        elif code == 424:
+            return "Failed Dependency"
+        elif code == 425:
+            return "Too Early"
+        elif code == 426:
+            return "Upgrade Required"
+        elif code == 428:
+            return "Precondition Required"
+        elif code == 429:
+            return "Too Many Requests"
+        elif code == 431:
+            return "Request Header Fields Too Large"
+        elif code == 451:
+            return "Unavailable For Legal Reasons"
+        elif code == 500:
+            return "Internal Server Error"
+        elif code == 501:
+            return "Not Implemented"
+        elif code == 502:
+            return "Bad Gateway"
+        elif code == 503:
+            return "Service Unavailable"
+        elif code == 504:
+            return "Gateway Timeout"
+        elif code == 505:
+            return "HTTP Version Not Supported"
+        elif code == 506:
+            return "Variant Also Negotiates"
+        elif code == 507:
+            return "Insufficient Storage"
+        elif code == 508:
+            return "Loop Detected"
+        elif code == 510:
+            return "Not Extended"
+        elif code == 511:
+            return "Network Authentication Required"
         else:
-            raise Error("Unknown status code: ", code)
+            return "Unknown"
 
     def __eq__(self, other: Int) -> Bool:
         """Compares a Status instance with an integer for equality.

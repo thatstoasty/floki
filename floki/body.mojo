@@ -62,7 +62,7 @@ struct Body(Copyable, Equatable, Sized, Writable):
         """Deserializes the body into a value of the given type.
 
         Use this when you have a struct (or other deserializable type) to parse
-        the body into. For ad-hoc, untyped access, use `json()` instead.
+        the body into. For ad-hoc, untyped access, use `as_json()` instead.
 
         Parameters:
             T: The type to deserialize the body into.
@@ -79,10 +79,10 @@ struct Body(Copyable, Equatable, Sized, Writable):
         """Parses the body as a dynamic JSON document for ad-hoc access.
 
         Use this to inspect a response without declaring a target type, e.g.
-        `body.json()["data"]`. To deserialize into a struct, use `as_json[T]()`.
+        `body.as_json()["data"]`. To deserialize into a struct, use `as_json[T]()`.
 
         Returns:
-            The body content parsed as an `emberjson.JSON` value.
+            The body content parsed as an `emberjson.Value`.
 
         Raises:
             Error: if the body is empty or cannot be parsed as JSON.

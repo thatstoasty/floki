@@ -61,18 +61,21 @@ def test_tls_custom_ca_bundle() raises -> None:
 
 
 def test_tls_verification_enabled_succeeds() raises -> None:
-    var response = Session().get("https://httpbingo.org/get")
+    var session = Session()
+    var response = session.get("https://httpbingo.org/get")
     assert_equal(response.status, Status.OK)
 
 
 def test_tls_verification_disabled_succeeds() raises -> None:
-    var response = Session(tls=TLS(verify=False)).get("https://httpbingo.org/get")
+    var session = Session(tls=TLS(verify=False))
+    var response = session.get("https://httpbingo.org/get")
     assert_equal(response.status, Status.OK)
 
 
 def test_proxy_is_bypassed_for_no_proxy_host() raises -> None:
     # The bogus proxy is never contacted because the target host is in no_proxy.
-    var response = Session(proxy=Proxy("http://127.0.0.1:9", no_proxy="httpbingo.org")).get("https://httpbingo.org/get")
+    var session = Session(proxy=Proxy("http://127.0.0.1:9", no_proxy="httpbingo.org"))
+    var response = session.get("https://httpbingo.org/get")
     assert_equal(response.status, Status.OK)
 
 
@@ -80,7 +83,8 @@ def test_proxy_is_applied() raises -> None:
     # A bogus, non-bypassed proxy must cause the request to fail, proving the
     # proxy is actually routed through rather than ignored.
     with assert_raises():
-        _ = Session(proxy=Proxy("http://127.0.0.1:9")).get("https://httpbingo.org/get")
+        var session = Session(proxy=Proxy("http://127.0.0.1:9"))
+        _ = session.get("https://httpbingo.org/get")
 
 
 def test_free_function_forwards_tls() raises -> None:

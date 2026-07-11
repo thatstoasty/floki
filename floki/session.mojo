@@ -102,10 +102,19 @@ struct Session(Movable):
         self.retry = retry^
         self.proxy = proxy^
         self.tls = tls^
-        if self.allow_redirects:
-            self.raise_if_error(self.easy.follow_location(), "Failed to set follow location to enable redirects: ")
         if self.verbose:
             self.raise_if_error(self.easy.verbose(), "Failed to set libcurl verbose mode: ")
+
+    def __enter__(var self) -> Self:
+        """Context manager entry point.
+
+        Returns the Session by value for use in a `with` statement. The Session's
+        resources are automatically cleaned up when exiting the context block.
+
+        Returns:
+            The Session instance by value.
+        """
+        return self^
 
     def raise_if_error(self, code: Result, message: StringSlice) raises:
         """Raises an error if the libcurl result code indicates failure.
@@ -123,12 +132,13 @@ struct Session(Movable):
     def send[
         origin: ImmutOrigin, //, method: RequestMethod, A: Auth = NoAuth
     ](
-        self,
+        mut self,
         mut url: String,
         mut headers: Headers,
         data: RequestData[origin],
         query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
+        allow_redirects: Optional[Bool] = None,
     ) raises -> Response:
         """Sends an HTTP request and returns the corresponding response.
 
@@ -143,8 +153,9 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             headers: A dictionary of HTTP headers to include in the request.
             data: An optional `RequestData` variant representing the request body.
-            query_parameters: An optional dictionary of query parameters to include in the URL. GET requests only.
+            query_parameters: An optional dictionary of query parameters to include in the URL. Appended to the request URL regardless of HTTP method.
             auth: An optional authentication scheme to apply to the request.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -194,6 +205,11 @@ struct Session(Movable):
             elif method == RequestMethod.OPTIONS:
                 _handle_options(self.easy)
 
+            # Resolve whether to follow redirects: a per-request override takes
+            # precedence over the session default.
+            var follow_redirects = allow_redirects.value() if allow_redirects else self.allow_redirects
+            self.raise_if_error(self.easy.follow_location(enable=follow_redirects), "Failed to set follow location: ")
+
             # Apply the session's timeout configuration. libcurl expects milliseconds.
             if self.timeout.connect:
                 self.raise_if_error(
@@ -239,8 +255,9 @@ struct Session(Movable):
             if self.tls.ca_path:
                 self.raise_if_error(self.easy.capath(self.tls.ca_path.value()), "Failed to set TLS CA path: ")
 
-            # Apply the authentication scheme, if one was provided. Headers already
-            # present on the request take precedence over auth-supplied headers.
+            # Apply the authentication scheme. A per-request auth takes precedence
+            # over the session-level default. Headers already present on the
+            # request take precedence over auth-supplied headers.
             if auth:
                 auth.value().apply(headers)
 
@@ -275,28 +292,29 @@ struct Session(Movable):
             finally:
                 header_list^.free()  # Free headers after performing the request.
 
+            var effective = self.easy.effective_url()
             return Response(
                 body=response_body^,
                 headers=self.easy.headers(),
                 protocol=Protocol(self.easy.get_scheme()),
                 status=Status(Int(self.easy.response_code())),
                 cookies=CookieJar(self.easy.cookies()),
+                url=effective^,
             )
         finally:
             self.easy.reset()  # Reset the easy handle to clear any state for the next request.
-            if self.allow_redirects:
-                _ = self.easy.follow_location()
             if self.verbose:
                 _ = self.easy.verbose()
 
     def get[
         A: Auth = NoAuth, //
     ](
-        self,
+        mut self,
         var url: String,
         var headers: Headers = Headers(),
         query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
+        allow_redirects: Optional[Bool] = None,
     ) raises -> Response:
         """Sends a GET request to the specified URL.
 
@@ -308,6 +326,7 @@ struct Session(Movable):
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request.
             auth: An optional authentication scheme to apply to the request.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -331,16 +350,19 @@ struct Session(Movable):
             data=RequestData(List[Byte]()),
             query_parameters=query_parameters,
             auth=auth,
+            allow_redirects=allow_redirects,
         )
 
     def post[
         A: Auth = NoAuth, //
     ](
-        self,
+        mut self,
         var url: String,
         var headers: Headers = Headers(),
         var data: emberjson.Object = {},
+        query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
+        allow_redirects: Optional[Bool] = None,
     ) raises -> Response:
         """Sends a POST request to the specified URL.
 
@@ -351,7 +373,9 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             data: The data to include in the body of the POST request.
+            query_parameters: Query parameters to include in the request URL.
             auth: An optional authentication scheme to apply to the request.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -373,17 +397,21 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(json_data),
+            query_parameters=query_parameters,
             auth=auth,
+            allow_redirects=allow_redirects,
         )
 
     def post[
         A: Auth = NoAuth, //
     ](
-        self,
+        mut self,
         var url: String,
         data: FormData,
         var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
+        allow_redirects: Optional[Bool] = None,
     ) raises -> Response:
         """Sends a POST request with `application/x-www-form-urlencoded` data to the specified URL.
 
@@ -394,7 +422,9 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The form fields to include in the body of the POST request.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
             auth: An optional authentication scheme to apply to the request.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -419,18 +449,29 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(encoded.as_bytes()),
+            query_parameters=query_parameters,
             auth=auth,
+            allow_redirects=allow_redirects,
         )
 
     def post[
         T: AnyType & ImplicitlyDestructible, //
-    ](self, var url: String, data: T, var headers: Headers = Headers(),) raises -> Response:
+    ](
+        mut self,
+        var url: String,
+        data: T,
+        var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
+        allow_redirects: Optional[Bool] = None,
+    ) raises -> Response:
         """Sends a POST request to the specified URL.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the POST request.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -457,11 +498,20 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=json_data.as_bytes(),
+            query_parameters=query_parameters,
+            allow_redirects=allow_redirects,
         )
 
     def post[
         origin: ImmutOrigin, //
-    ](self, var url: String, data: Span[Byte, origin], var headers: Headers = Headers(),) raises -> Response:
+    ](
+        mut self,
+        var url: String,
+        data: Span[Byte, origin],
+        var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
+        allow_redirects: Optional[Bool] = None,
+    ) raises -> Response:
         """Sends a POST request to the specified URL.
 
         Parameters:
@@ -471,6 +521,8 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the POST request.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -491,13 +543,17 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(data),
+            query_parameters=query_parameters,
+            allow_redirects=allow_redirects,
         )
 
     def post(
-        self,
+        mut self,
         var url: String,
         data: FileHandle,
         var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
+        allow_redirects: Optional[Bool] = None,
     ) raises -> Response:
         """Sends a POST request to the specified URL.
 
@@ -505,6 +561,8 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the POST request.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -526,16 +584,20 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(Pointer(to=data)),
+            query_parameters=query_parameters,
+            allow_redirects=allow_redirects,
         )
 
     def put[
         A: Auth = NoAuth, //
     ](
-        self,
+        mut self,
         var url: String,
         var headers: Headers = Headers(),
         var data: emberjson.Object = {},
+        query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
+        allow_redirects: Optional[Bool] = None,
     ) raises -> Response:
         """Sends a PUT request to the specified URL.
 
@@ -546,7 +608,9 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             data: The data to include in the body of the PUT request.
+            query_parameters: Query parameters to include in the request URL.
             auth: An optional authentication scheme to apply to the request.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -568,18 +632,29 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=json_data,
+            query_parameters=query_parameters,
             auth=auth,
+            allow_redirects=allow_redirects,
         )
 
     def put[
         T: AnyType & ImplicitlyDestructible, //
-    ](self, var url: String, data: T, var headers: Headers = Headers(),) raises -> Response:
+    ](
+        mut self,
+        var url: String,
+        data: T,
+        var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
+        allow_redirects: Optional[Bool] = None,
+    ) raises -> Response:
         """Sends a PUT request to the specified URL.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the PUT request.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -606,11 +681,20 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=json_data.as_bytes(),
+            query_parameters=query_parameters,
+            allow_redirects=allow_redirects,
         )
 
     def put[
         origin: ImmutOrigin, //
-    ](self, var url: String, data: Span[Byte, origin], var headers: Headers = Headers(),) raises -> Response:
+    ](
+        mut self,
+        var url: String,
+        data: Span[Byte, origin],
+        var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
+        allow_redirects: Optional[Bool] = None,
+    ) raises -> Response:
         """Sends a PUT request to the specified URL.
 
         Parameters:
@@ -620,6 +704,8 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the PUT request.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -640,13 +726,17 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=data,
+            query_parameters=query_parameters,
+            allow_redirects=allow_redirects,
         )
 
     def put(
-        self,
+        mut self,
         var url: String,
         data: FileHandle,
         var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
+        allow_redirects: Optional[Bool] = None,
     ) raises -> Response:
         """Sends a PUT request to the specified URL.
 
@@ -654,6 +744,8 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the PUT request.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -675,11 +767,20 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=Pointer(to=data),
+            query_parameters=query_parameters,
+            allow_redirects=allow_redirects,
         )
 
     def delete[
         A: Auth = NoAuth, //
-    ](self, var url: String, var headers: Headers = Headers(), auth: Optional[A] = None,) raises -> Response:
+    ](
+        mut self,
+        var url: String,
+        var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
+        auth: Optional[A] = None,
+        allow_redirects: Optional[Bool] = None,
+    ) raises -> Response:
         """Sends a DELETE request to the specified URL.
 
         Parameters:
@@ -688,7 +789,9 @@ struct Session(Movable):
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
             auth: An optional authentication scheme to apply to the request.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -709,17 +812,21 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=RequestData(List[Byte]()),
+            query_parameters=query_parameters,
             auth=auth,
+            allow_redirects=allow_redirects,
         )
 
     def patch[
         A: Auth = NoAuth, //
     ](
-        self,
+        mut self,
         var url: String,
         var headers: Headers = Headers(),
         var data: emberjson.Object = {},
+        query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
+        allow_redirects: Optional[Bool] = None,
     ) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
@@ -730,7 +837,9 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             data: The data to include in the body of the PATCH request.
+            query_parameters: Query parameters to include in the request URL.
             auth: An optional authentication scheme to apply to the request.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -752,18 +861,29 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=json_data,
+            query_parameters=query_parameters,
             auth=auth,
+            allow_redirects=allow_redirects,
         )
 
     def patch[
         T: AnyType & ImplicitlyDestructible, //
-    ](self, var url: String, data: T, var headers: Headers = Headers(),) raises -> Response:
+    ](
+        mut self,
+        var url: String,
+        data: T,
+        var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
+        allow_redirects: Optional[Bool] = None,
+    ) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the PATCH request.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -790,11 +910,20 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=json_data.as_bytes(),
+            query_parameters=query_parameters,
+            allow_redirects=allow_redirects,
         )
 
     def patch[
         origin: ImmutOrigin, //
-    ](self, var url: String, data: Span[Byte, origin], var headers: Headers = Headers(),) raises -> Response:
+    ](
+        mut self,
+        var url: String,
+        data: Span[Byte, origin],
+        var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
+        allow_redirects: Optional[Bool] = None,
+    ) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
         Parameters:
@@ -804,6 +933,8 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the PATCH request.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -824,13 +955,17 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=data,
+            query_parameters=query_parameters,
+            allow_redirects=allow_redirects,
         )
 
     def patch(
-        self,
+        mut self,
         var url: String,
         data: FileHandle,
         var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
+        allow_redirects: Optional[Bool] = None,
     ) raises -> Response:
         """Sends a PATCH request to the specified URL.
 
@@ -838,6 +973,8 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             data: The data to include in the body of the PATCH request.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -859,11 +996,19 @@ struct Session(Movable):
             url=url,
             headers=headers,
             data=Pointer(to=data),
+            query_parameters=query_parameters,
+            allow_redirects=allow_redirects,
         )
 
     def head[
         A: Auth = NoAuth, //
-    ](self, var url: String, var headers: Headers = Headers(), auth: Optional[A] = None,) raises -> Response:
+    ](
+        mut self,
+        var url: String,
+        var headers: Headers = Headers(),
+        auth: Optional[A] = None,
+        allow_redirects: Optional[Bool] = None,
+    ) raises -> Response:
         """Sends a HEAD request to the specified URL.
 
         Parameters:
@@ -873,6 +1018,7 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             auth: An optional authentication scheme to apply to the request.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -894,11 +1040,18 @@ struct Session(Movable):
             headers=headers,
             data=RequestData(List[Byte]()),
             auth=auth,
+            allow_redirects=allow_redirects,
         )
 
     def options[
         A: Auth = NoAuth, //
-    ](self, var url: String, var headers: Headers = Headers(), auth: Optional[A] = None,) raises -> Response:
+    ](
+        mut self,
+        var url: String,
+        var headers: Headers = Headers(),
+        auth: Optional[A] = None,
+        allow_redirects: Optional[Bool] = None,
+    ) raises -> Response:
         """Sends an OPTIONS request to the specified URL.
 
         Parameters:
@@ -908,6 +1061,7 @@ struct Session(Movable):
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
             auth: An optional authentication scheme to apply to the request.
+            allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
             The received response.
@@ -929,4 +1083,5 @@ struct Session(Movable):
             headers=headers,
             data=RequestData(List[Byte]()),
             auth=auth,
+            allow_redirects=allow_redirects,
         )
