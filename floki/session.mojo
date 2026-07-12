@@ -116,6 +116,16 @@ struct Session(Movable):
             The Session instance by value.
         """
         return self^
+    
+    def close(deinit self):
+        """Cleans up the resources associated with the Session.
+
+        This method is automatically called when exiting a `with` statement
+        context. It ensures that the underlying libcurl easy handle is properly
+        cleaned up to prevent resource leaks.
+        """
+        self.easy.cleanup()
+        self.easy^.close()
 
     def raise_if_error(self, code: Result, message: StringSlice) raises Error:
         """Raises an error if the libcurl result code indicates failure.

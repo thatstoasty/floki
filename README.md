@@ -298,10 +298,22 @@ def main() raises -> None:
 
 ## TODO
 
-- Add an option for streaming responses instead of loading it all into memory.
+### TODO: Features
+
+- Streaming responses — the whole body is buffered into a List[Byte]; large downloads and SSE need incremental access.
+- `multipart/form-data` file uploads (files=): today only `x-www-form-urlencoded` is supported, so real file uploads aren't possible.
+- Response encoding awareness: `as_text()` assumes UTF-8 and raises otherwise; it ignores the charset in Content-Type. At minimum, expose a lossy decode fallback.
+- `Accept-Encoding` / transparent decompression: ability to set it so gzip/deflate responses come back decoded (libcurl does this if you enable it).
+- Multi-value response headers: Headers wraps `Dict[String, String]`, so repeated headers collapse (`Set-Cookie` is handled separately by the jar, but others are lost).
+- Add support for passing Dict data to session methods. Just passing a dict literal is a little limiting. I've tried, but it gets very hairy trying to convert it to an emberjson Value object.
+
+### TODO: Optimizations
+
 - Cleanup cookie parsing code, it seems pretty slow.
+- I should update `mojo-curl` bindings to indicate which Easy handle methods mutate the handle. It's deceptive that they're all marked as borrowing self immutably, because it can update the Easy handle's internal state via FFI.
+
+### TODO: Bugs
+
 - Sus out the myriad of bugs and edge cases that may arise as libcurl and requests can do A LOT of things, that I've never used before. Please open issues and open PRs to help address these gaps where possible.
-- Add methods to free Session explicitly, same with Easy handles.
-- Add support for passing Dict data to session methods. Just passing a dict literal is a little limiting. I've tried, but it gets very hairy trying to convert it to an emberjson JSON object.
 
 Reminder, this is a hobby project! You're free to fork it and make changes as you see fit.
