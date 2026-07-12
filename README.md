@@ -186,6 +186,53 @@ def main() raises -> None:
 `raise_for_status()` treats any 2xx as success, so `201 Created` and `204 No Content`
 do not raise.
 
+### Handling request errors
+
+When a request fails *before* a usable response comes back — a DNS failure, a refused
+connection, a timeout, a TLS problem — floki raises a `RequestError`. (This is distinct
+from `HTTPError`, which `raise_for_status()` raises when a response *was* received but
+carried a non-2xx status.)
+
+A `RequestError` wraps one of several concrete error types:
+
+| Concrete type | Raised when |
+| --- | --- |
+| `TimeoutError` | The request exceeded its configured timeout. |
+| `ConnectionError` | The server couldn't be reached (DNS failure, refused/dropped connection). |
+| `TLSError` | A TLS/SSL handshake or certificate-verification failure. |
+| `TooManyRedirectsError` | The request followed more redirects than allowed. |
+| `TransportError` | Any other transport-level failure. |
+
+Use `error.isa[T]()` to test which type it holds and `error[T]` to pull the concrete
+value out:
+
+```mojo
+import floki
+from floki import ConnectionError, TimeoutError, TLSError
+
+def main() raises -> None:
+    try:
+        var r = floki.get("https://example.com")
+        print(r.status.code)
+    except e:  # `e` is a `RequestError`
+        if e.isa[TimeoutError]():
+            print("Timed out:", e[TimeoutError])
+        elif e.isa[ConnectionError]():
+            print("Could not connect:", e[ConnectionError])
+        elif e.isa[TLSError]():
+            print("TLS failure:", e[TLSError])
+        else:
+            print("Request failed:", e)
+```
+
+- `error.isa[T]()` returns `True` when the `RequestError` currently holds a value of
+  type `T`.
+- `error[T]` (the `__getitem_param__` subscript) returns the underlying value of type
+  `T`. Only call it after `isa[T]()` has confirmed the type.
+
+If you don't need to branch on the category, a `RequestError` is `Writable`, so you can
+print or format it directly for a human-readable message.
+
 ### Authentication
 
 Basic and Bearer helpers are built in, and any type implementing the `Auth` trait
@@ -302,7 +349,7 @@ def main() raises -> None:
 
 - Streaming responses — the whole body is buffered into a List[Byte]; large downloads and SSE need incremental access.
 - `multipart/form-data` file uploads (files=): today only `x-www-form-urlencoded` is supported, so real file uploads aren't possible.
-- Response encoding awareness: `as_text()` assumes UTF-8 and raises otherwise; it ignores the charset in Content-Type. At minimum, expose a lossy decode fallback.
+- Response encoding awareness: `as_text()` assumes UTF-8 and raises otherwise; it ignores the charset in `Content-Type`. At minimum, expose a lossy decode fallback.
 - `Accept-Encoding` / transparent decompression: ability to set it so gzip/deflate responses come back decoded (libcurl does this if you enable it).
 - Multi-value response headers: Headers wraps `Dict[String, String]`, so repeated headers collapse (`Set-Cookie` is handled separately by the jar, but others are lost).
 - Add support for passing Dict data to session methods. Just passing a dict literal is a little limiting. I've tried, but it gets very hairy trying to convert it to an emberjson Value object.

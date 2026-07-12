@@ -3,107 +3,6 @@ from std.utils import Variant
 from mojo_curl.easy import Result
 
 
-@fieldwise_init
-struct FFIError(Movable, Writable):
-    """Represents a low-level error returned by the underlying libcurl FFI."""
-
-    var message: String
-    """A human-readable description of the error."""
-
-    def __init__[*Ts: Writable](out self, *text: *Ts):
-        """Constructs an `FFIError` with a formatted message.
-
-        Args:
-            text: A variadic list of values to format into the error message.
-        """
-        self.message = String()
-        comptime for i in range(text.__len__()):
-            self.message.write(text[i])
-            if i != len(text) - 1:
-                self.message.write(" ")
-
-
-@fieldwise_init
-struct ErrorKind(Equatable, ImplicitlyCopyable, Writable):
-    """Classifies why an HTTP request failed before a response was received."""
-
-    var value: UInt8
-    """Internal enum value."""
-
-    comptime CONNECTION = Self(0)
-    """The server could not be reached: DNS resolution failed, the connection was refused, or it was dropped mid-transfer."""
-    comptime TIMEOUT = Self(1)
-    """The request exceeded its configured timeout."""
-    comptime TLS = Self(2)
-    """A TLS/SSL failure occurred, such as a handshake error or a certificate verification failure."""
-    comptime TOO_MANY_REDIRECTS = Self(3)
-    """The request followed more redirects than libcurl permits."""
-    comptime TRANSPORT = Self(4)
-    """A transport-level failure not covered by a more specific kind."""
-
-    @staticmethod
-    def from_result(code: Result) -> Self:
-        """Classifies a libcurl result code into an `ErrorKind`.
-
-        Args:
-            code: The libcurl result code from a failed transfer.
-
-        Returns:
-            The `ErrorKind` that best describes the failure, defaulting to `TRANSPORT`
-            for codes without a more specific classification.
-        """
-        if code == Result.OPERATION_TIMEDOUT:
-            return Self.TIMEOUT
-        elif (
-            code == Result.COULDNT_CONNECT
-            or code == Result.COULDNT_RESOLVE_HOST
-            or code == Result.COULDNT_RESOLVE_PROXY
-            or code == Result.GOT_NOTHING
-            or code == Result.SEND_ERROR
-            or code == Result.RECV_ERROR
-        ):
-            return Self.CONNECTION
-        elif (
-            code == Result.SSL_CONNECT_ERROR
-            or code == Result.PEER_FAILED_VERIFICATION
-            or code == Result.SSL_CERT_PROBLEM
-            or code == Result.SSL_CACERT_BAD_FILE
-        ):
-            return Self.TLS
-        elif code == Result.TOO_MANY_REDIRECTS:
-            return Self.TOO_MANY_REDIRECTS
-        else:
-            return Self.TRANSPORT
-
-    def __eq__(self, other: Self) -> Bool:
-        """Compares two `ErrorKind` values for equality.
-
-        Args:
-            other: The `ErrorKind` to compare with.
-
-        Returns:
-            True if both represent the same kind of failure.
-        """
-        return self.value == other.value
-
-    def write_to(self, mut writer: Some[Writer]):
-        """Writes the kind's name to a writer.
-
-        Args:
-            writer: The writer to which the kind name will be written.
-        """
-        if self == Self.CONNECTION:
-            writer.write("Connection")
-        elif self == Self.TIMEOUT:
-            writer.write("Timeout")
-        elif self == Self.TLS:
-            writer.write("TLS")
-        elif self == Self.TOO_MANY_REDIRECTS:
-            writer.write("TooManyRedirects")
-        else:
-            writer.write("Transport")
-
-
 trait FlokiError(Movable, Writable):
     """A trait for errors raised by floki when an HTTP request fails before a usable response is received."""
     ...
@@ -226,15 +125,6 @@ struct RequestError(FlokiError):
     var value: Self._type
     """The underlying error value, which may be one of several specific error types."""
 
-    # var kind: ErrorKind
-    # """The category of the failure."""
-    # var url: String
-    # """The URL that was being requested when the failure occurred."""
-    # var message: String
-    # """A human-readable description of the failure, as reported by libcurl."""
-    # var code: Int
-    # """The underlying libcurl result code."""
-
     def __init__(out self, code: Result):
         """Constructs a `RequestError` from a libcurl result code.
 
@@ -312,9 +202,9 @@ struct RequestError(FlokiError):
     def __getitem_param__[T: FlokiError](ref self) -> ref[self.value] T:
         """Returns a reference to the underlying error value of the specified type.
 
-        Params:
+        Parameters:
             T: The specific error type to retrieve.
-        
+
         Returns:
             A reference to the underlying error value of type `T`.
         """
@@ -323,9 +213,9 @@ struct RequestError(FlokiError):
     def isa[T: FlokiError](self) -> Bool:
         """Checks if the underlying error value is of the specified type.
 
-        Params:
+        Parameters:
             T: The specific error type to check against.
-        
+
         Returns:
             True if the underlying error value is of type `T`, False otherwise.
         """

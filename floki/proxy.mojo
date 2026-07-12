@@ -38,6 +38,9 @@ struct Proxy(Boolable, Movable):
             username: The username to authenticate with the proxy, or `None`.
             password: The password to authenticate with the proxy, or `None`.
             no_proxy: A list of hosts that should bypass the proxy.
+
+        Raises:
+            Error: If the proxy URL is empty.
         """
         if url.byte_length() <= 0:
             raise Error("Proxy URL cannot be empty")
