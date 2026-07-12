@@ -11,12 +11,6 @@ import floki
 # --- Proxy unit tests (no network) ---
 
 
-def test_proxy_default_is_empty() raises -> None:
-    var p = Proxy()
-    assert_false(Bool(p))
-    assert_equal(p.url, "")
-
-
 def test_proxy_implicit_from_string() raises -> None:
     var p: Proxy = "http://proxy.example:8080"
     assert_true(Bool(p))
@@ -29,11 +23,11 @@ def test_proxy_with_credentials_and_bypass() raises -> None:
         "http://proxy.example:8080",
         username="user",
         password="secret",
-        no_proxy="localhost,127.0.0.1",
+        no_proxy=["localhost", "127.0.0.1"],
     )
     assert_equal(p.username.value(), "user")
     assert_equal(p.password.value(), "secret")
-    assert_equal(p.no_proxy.value(), "localhost,127.0.0.1")
+    assert_equal(p.no_proxy, ["localhost", "127.0.0.1"])
 
 
 # --- TLS unit tests (no network) ---
@@ -74,7 +68,7 @@ def test_tls_verification_disabled_succeeds() raises -> None:
 
 def test_proxy_is_bypassed_for_no_proxy_host() raises -> None:
     # The bogus proxy is never contacted because the target host is in no_proxy.
-    var session = Session(proxy=Proxy("http://127.0.0.1:9", no_proxy="httpbingo.org"))
+    var session = Session(proxy=Proxy("http://127.0.0.1:9", no_proxy=["httpbingo.org"]))
     var response = session.get("https://httpbingo.org/get")
     assert_equal(response.status, Status.OK)
 

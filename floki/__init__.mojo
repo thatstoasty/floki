@@ -1,5 +1,6 @@
 """Floki: An HTTP client library for Mojo!"""
 from floki.auth import Auth, BasicAuth, BearerAuth, NoAuth
+from floki.errors import ErrorKind, RequestError
 from floki.forms import FormData
 from floki.functions import delete, get, head, options, patch, post, put
 from floki.headers import Headers

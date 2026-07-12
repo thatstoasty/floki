@@ -20,11 +20,11 @@ def get[
     var headers: Headers = Headers(),
     query_parameters: Dict[String, String] = {},
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     auth: Optional[A] = None,
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a GET request to the specified URL.
 
     Parameters:
@@ -44,7 +44,7 @@ def get[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the request fails.
+        RequestError: If the request fails.
 
     #### Examples:
     ```mojo
@@ -72,12 +72,12 @@ def post[
     var headers: Headers = Headers(),
     var data: emberjson.Object = {},
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a POST request to the specified URL.
 
     Parameters:
@@ -98,7 +98,7 @@ def post[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be serialized to JSON or if the request fails.
+        RequestError: If the data cannot be serialized to JSON or if the request fails.
 
     #### Examples:
     ```mojo
@@ -126,12 +126,12 @@ def post[
     data: FormData,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a POST request with `application/x-www-form-urlencoded` data to the specified URL.
 
     Parameters:
@@ -152,7 +152,7 @@ def post[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the request fails.
+        RequestError: If the request fails.
 
     #### Examples:
     ```mojo
@@ -183,11 +183,11 @@ def post[
     data: T,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a POST request to the specified URL.
 
     Args:
@@ -204,7 +204,7 @@ def post[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be serialized to JSON or if the request fails.
+        RequestError: If the data cannot be serialized to JSON or if the request fails.
 
     #### Examples:
     ```mojo
@@ -237,11 +237,11 @@ def post[
     data: Span[Byte, origin],
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a POST request to the specified URL.
 
     Parameters:
@@ -261,7 +261,7 @@ def post[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be sent as bytes.
+        RequestError: If the data cannot be sent as bytes.
 
     #### Examples:
     ```mojo
@@ -285,11 +285,11 @@ def post(
     data: FileHandle,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a POST request to the specified URL.
 
     Args:
@@ -306,7 +306,7 @@ def post(
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be sent from the file handle.
+        RequestError: If the data cannot be sent from the file handle.
 
     #### Examples:
     ```mojo
@@ -333,12 +333,12 @@ def put[
     var headers: Headers = Headers(),
     var data: emberjson.Object = {},
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a PUT request to the specified URL.
 
     Parameters:
@@ -359,7 +359,7 @@ def put[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be serialized to JSON or if the request fails.
+        RequestError: If the data cannot be serialized to JSON or if the request fails.
 
     #### Examples:
     ```mojo
@@ -387,11 +387,11 @@ def put[
     data: T,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a PUT request to the specified URL.
 
     Args:
@@ -408,7 +408,7 @@ def put[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be serialized to JSON or if the request fails.
+        RequestError: If the data cannot be serialized to JSON or if the request fails.
 
     #### Examples:
     ```mojo
@@ -441,11 +441,11 @@ def put[
     data: Span[Byte, origin],
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a PUT request to the specified URL.
 
     Parameters:
@@ -465,7 +465,7 @@ def put[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be sent as bytes.
+        RequestError: If the data cannot be sent as bytes.
 
     #### Examples:
     ```mojo
@@ -489,11 +489,11 @@ def put(
     data: FileHandle,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a PUT request to the specified URL.
 
     Args:
@@ -510,7 +510,7 @@ def put(
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be sent from the file handle.
+        RequestError: If the data cannot be sent from the file handle.
 
     #### Examples:
     ```mojo
@@ -536,12 +536,12 @@ def delete[
     var url: String,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a DELETE request to the specified URL.
 
     Parameters:
@@ -561,7 +561,7 @@ def delete[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the request fails.
+        RequestError: If the request fails.
 
     #### Examples:
     ```mojo
@@ -588,12 +588,12 @@ def patch[
     var headers: Headers = Headers(),
     var data: emberjson.Object = {},
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a PATCH request to the specified URL.
 
     Parameters:
@@ -614,7 +614,7 @@ def patch[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be serialized to JSON or if the request fails.
+        RequestError: If the data cannot be serialized to JSON or if the request fails.
 
     #### Examples:
     ```mojo
@@ -642,11 +642,11 @@ def patch[
     data: T,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a GET request to the specified URL.
 
     Args:
@@ -663,7 +663,7 @@ def patch[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be serialized to JSON or if the request fails.
+        RequestError: If the data cannot be serialized to JSON or if the request fails.
 
     #### Examples:
     ```mojo
@@ -696,11 +696,11 @@ def patch[
     data: Span[Byte, origin],
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a GET request to the specified URL.
 
     Parameters:
@@ -720,7 +720,7 @@ def patch[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be sent as bytes.
+        RequestError: If the data cannot be sent as bytes.
 
     #### Examples:
     ```mojo
@@ -744,11 +744,11 @@ def patch(
     data: FileHandle,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     query_parameters: Dict[String, String] = {},
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a GET request to the specified URL.
 
     Args:
@@ -765,7 +765,7 @@ def patch(
         The received response as an `Response` object.
 
     Raises:
-        Error: If the data cannot be sent from the file handle.
+        RequestError: If the data cannot be sent from the file handle.
 
     #### Examples:
     ```mojo
@@ -791,11 +791,11 @@ def head[
     var url: String,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     auth: Optional[A] = None,
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends a HEAD request to the specified URL.
 
     Parameters:
@@ -814,7 +814,7 @@ def head[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the request fails.
+        RequestError: If the request fails.
 
     #### Examples:
     ```mojo
@@ -839,11 +839,11 @@ def options[
     var url: String,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
-    var retry: Retry = Retry(),
-    var proxy: Proxy = Proxy(),
+    var retry: Optional[Retry] = None,
+    var proxy: Optional[Proxy] = None,
     var tls: TLS = TLS(),
     auth: Optional[A] = None,
-) raises -> Response:
+) raises RequestError -> Response:
     """Sends an OPTIONS request to the specified URL.
 
     Parameters:
@@ -862,7 +862,7 @@ def options[
         The received response as an `Response` object.
 
     Raises:
-        Error: If the request fails.
+        RequestError: If the request fails.
 
     #### Examples:
     ```mojo

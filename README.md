@@ -267,7 +267,7 @@ def main() raises -> None:
             "http://proxy.example:8080",
             username="user",
             password="secret",
-            no_proxy="localhost,127.0.0.1",
+            no_proxy=["localhost", "127.0.0.1"],
         )
     )
     var r = session.get("https://example.com")
