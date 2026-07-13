@@ -40,7 +40,8 @@ struct Todo(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
 
 
 def test_get() raises -> None:
-    var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
+    var session = Session()
+    var response = session.get("https://jsonplaceholder.typicode.com/todos/1")
     assert_equal(response.status, Status.OK)
 
     var todo = response.body.as[Todo]()
@@ -89,7 +90,8 @@ struct ServerPostResponse(Defaultable, Equatable, ImplicitlyDestructible, Movabl
 
 
 def test_post() raises -> None:
-    var response = Session().post(
+    var session = Session()
+    var response = session.post(
         "https://httpbingo.org/post",
         headers={
             "Content-Type": "application/json",
@@ -128,7 +130,8 @@ struct FileContent(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writ
 
 def test_post_file() raises -> None:
     with open("test/data/file.json", "r") as f:
-        var response = Session().post(
+        var session = Session()
+        var response = session.post(
             "https://jsonplaceholder.typicode.com/todos",
             headers={
                 "Content-Type": "application/json",
@@ -155,7 +158,8 @@ struct PutResponse(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writ
 
 
 def test_put() raises -> None:
-    var response = Session().put(
+    var session = Session()
+    var response = session.put(
         "https://jsonplaceholder.typicode.com/posts/1",
         {
             "Content-Type": "application/json",
@@ -182,7 +186,8 @@ struct PutFileResponse(Defaultable, Equatable, ImplicitlyDestructible, Movable, 
 
 def test_put_file() raises -> None:
     with open("test/data/update.json", "r") as f:
-        var response = Session().put(
+        var session = Session()
+        var response = session.put(
             "https://jsonplaceholder.typicode.com/posts/1",
             headers={
                 "Content-Type": "application/json",
@@ -214,7 +219,8 @@ struct PatchedTodo(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writ
 
 
 def test_patch() raises -> None:
-    var response = Session().patch(
+    var session = Session()
+    var response = session.patch(
         "https://jsonplaceholder.typicode.com/posts/1",
         {
             "Content-Type": "application/json",
@@ -240,7 +246,8 @@ def test_patch() raises -> None:
 
 def test_patch_file() raises -> None:
     with open("test/data/update.json", "r") as f:
-        var response = Session().patch(
+        var session = Session()
+        var response = session.patch(
             "https://jsonplaceholder.typicode.com/posts/1",
             headers={
                 "Content-Type": "application/json",
@@ -265,23 +272,27 @@ def test_patch_file() raises -> None:
 
 
 def test_delete() raises -> None:
-    var response = Session().delete("https://jsonplaceholder.typicode.com/posts/1")
+    var session = Session()
+    var response = session.delete("https://jsonplaceholder.typicode.com/posts/1")
     assert_equal(response.status, Status.OK)
 
 
 def test_head() raises -> None:
-    var response = Session().head("https://httpbingo.org/head")
+    var session = Session()
+    var response = session.head("https://httpbingo.org/head")
     assert_equal(response.status, Status.OK)
 
 
 def test_options() raises -> None:
-    var response = Session().options("https://jsonplaceholder.typicode.com/posts")
+    var session = Session()
+    var response = session.options("https://jsonplaceholder.typicode.com/posts")
     assert_equal(response.status, Status.NO_CONTENT)
     assert_equal(response.headers["access-control-allow-methods"], "GET,HEAD,PUT,PATCH,POST,DELETE")
 
 
 def test_cookie_parsing() raises -> None:
-    var response = Session().get(
+    var session = Session()
+    var response = session.get(
         "https://httpbin.org/cookies/set",
         query_parameters={"freeform": "my_val"},
     )
@@ -312,7 +323,8 @@ struct ServerGetResponse(Defaultable, ImplicitlyDestructible, Movable):
 
 
 def test_session_level_headers() raises -> None:
-    var response = Session(headers={"X-Floki-Test": "session-headers"}).get(
+    var session = Session(headers={"X-Floki-Test": "session-headers"})
+    var response = session.get(
         "https://httpbin.org/get",
     )
     assert_equal(response.status, Status.OK)
@@ -323,27 +335,32 @@ def test_session_level_headers() raises -> None:
 
 
 def test_session_no_redirects() raises -> None:
-    var response = Session(allow_redirects=False).get("https://httpbin.org/redirect/1")
+    var session = Session(allow_redirects=False)
+    var response = session.get("https://httpbin.org/redirect/1")
     assert_true(response.is_redirect())
 
 
 def test_response_is_ok() raises -> None:
-    var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
+    var session = Session()
+    var response = session.get("https://jsonplaceholder.typicode.com/todos/1")
     assert_true(response.is_ok())
 
 
 def test_response_body_as_bytes() raises -> None:
-    var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
+    var session = Session()
+    var response = session.get("https://jsonplaceholder.typicode.com/todos/1")
     assert_true(len(response.body.as_bytes()) > 0)
 
 
 def test_response_protocol_is_https() raises -> None:
-    var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
+    var session = Session()
+    var response = session.get("https://jsonplaceholder.typicode.com/todos/1")
     assert_true(response.protocol == Protocol.HTTPS)
 
 
 def test_response_raise_for_status_passes_on_200() raises -> None:
-    var response = Session().get("https://jsonplaceholder.typicode.com/todos/1")
+    var session = Session()
+    var response = session.get("https://jsonplaceholder.typicode.com/todos/1")
     try:
         response.raise_for_status()  # must not raise
     except e:
@@ -352,7 +369,8 @@ def test_response_raise_for_status_passes_on_200() raises -> None:
 
 def test_response_raise_for_status_raises_on_4xx() raises -> None:
     var raised = False
-    var response = Session().get("https://httpbingo.org/status/404")
+    var session = Session()
+    var response = session.get("https://httpbingo.org/status/404")
     try:
         response.raise_for_status()
     except:
@@ -361,7 +379,8 @@ def test_response_raise_for_status_raises_on_4xx() raises -> None:
 
 
 def test_post_struct() raises -> None:
-    var response = Session().post(
+    var session = Session()
+    var response = session.post(
         "https://httpbingo.org/post",
         data=Record(userId=1, body="bar", title="booggg", active=True),
         headers={
@@ -388,7 +407,8 @@ struct PutStructData(Defaultable, Equatable, ImplicitlyDestructible, Movable, Wr
 
 
 def test_put_struct() raises -> None:
-    var response = Session().put(
+    var session = Session()
+    var response = session.put(
         "https://jsonplaceholder.typicode.com/posts/1",
         data=PutStructData(key1="updated_value1", key2="updated_value2"),
         headers={
@@ -412,7 +432,8 @@ struct PatchStructData(Defaultable, Equatable, ImplicitlyDestructible, Movable, 
 
 
 def test_patch_struct() raises -> None:
-    var response = Session().patch(
+    var session = Session()
+    var response = session.patch(
         "https://jsonplaceholder.typicode.com/posts/1",
         data=PatchStructData(key1="patched_value"),
         headers={

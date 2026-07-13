@@ -1,8 +1,7 @@
 """The `Retry` type used to configure retry behavior for requests made by a `Session`."""
 
 
-@fieldwise_init
-struct Retry(Copyable, Movable):
+struct Retry(Copyable):
     """A retry policy with exponential backoff for failed requests.
 
     A request is retried when the underlying transfer fails (e.g. a connection
@@ -20,11 +19,25 @@ struct Retry(Copyable, Movable):
     var status_forcelist: List[Int]
     """Response status codes that should trigger a retry."""
 
-    def __init__(out self):
-        """Constructs a `Retry` policy that performs no retries."""
-        self.max_retries = 0
-        self.backoff_factor = 0.0
-        self.status_forcelist = [408, 429, 500, 502, 503, 504]
+    def __init__(
+        out self,
+        max_retries: Int = 0,
+        backoff_factor: Float64 = 0.0,
+        status_forcelist: List[Int] = [408, 429, 500, 502, 503, 504],
+    ):
+        """Constructs a `Retry` policy.
+
+        A default-constructed `Retry()` performs no retries, since `max_retries`
+        defaults to `0`. The `status_forcelist` is inert until `max_retries > 0`.
+
+        Args:
+            max_retries: Maximum number of retries after the initial request. `0` disables retries.
+            backoff_factor: Base delay (seconds) used to compute the exponential backoff between retries.
+            status_forcelist: Response status codes that should trigger a retry.
+        """
+        self.max_retries = max_retries
+        self.backoff_factor = backoff_factor
+        self.status_forcelist = status_forcelist.copy()
 
     def backoff_time(self, attempt: Int) -> Float64:
         """Computes the backoff delay before a given retry attempt.

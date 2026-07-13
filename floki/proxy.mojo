@@ -1,7 +1,7 @@
 """The `Proxy` type used to configure proxying for requests made by a `Session`."""
 
 
-struct Proxy(Boolable, Copyable, Movable):
+struct Proxy(Boolable, Movable):
     """Proxy configuration for requests made by a `Session`.
 
     The proxy `url` may include a scheme and port, e.g. `http://proxy.example:8080`
@@ -19,15 +19,8 @@ struct Proxy(Boolable, Copyable, Movable):
     """The username to authenticate with the proxy, or `None`."""
     var password: Optional[String]
     """The password to authenticate with the proxy, or `None`."""
-    var no_proxy: Optional[String]
-    """A comma-separated list of hosts that should bypass the proxy, or `None`."""
-
-    def __init__(out self):
-        """Constructs an empty `Proxy` representing no proxy."""
-        self.url = ""
-        self.username = None
-        self.password = None
-        self.no_proxy = None
+    var no_proxy: List[String]
+    """A list of hosts that should bypass the proxy, or `None`."""
 
     @implicit
     def __init__(
@@ -36,20 +29,26 @@ struct Proxy(Boolable, Copyable, Movable):
         *,
         username: Optional[String] = None,
         password: Optional[String] = None,
-        no_proxy: Optional[String] = None,
-    ):
+        var no_proxy: List[String] = [],
+    ) raises:
         """Constructs a `Proxy` from a URL and optional settings.
 
         Args:
             url: The proxy URL, including optional scheme and port.
             username: The username to authenticate with the proxy, or `None`.
             password: The password to authenticate with the proxy, or `None`.
-            no_proxy: A comma-separated list of hosts that should bypass the proxy, or `None`.
+            no_proxy: A list of hosts that should bypass the proxy.
+
+        Raises:
+            Error: If the proxy URL is empty.
         """
+        if url.byte_length() <= 0:
+            raise Error("Proxy URL cannot be empty")
+
         self.url = url^
         self.username = username
         self.password = password
-        self.no_proxy = no_proxy
+        self.no_proxy = no_proxy^
 
     def __bool__(self) -> Bool:
         """Reports whether a proxy is configured.

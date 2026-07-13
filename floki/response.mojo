@@ -18,6 +18,30 @@ struct HTTPError(Movable, Writable):
 
     var status: Status
     """The HTTP status code that caused the error."""
+    var url: String
+    """The URL of the request that produced the error."""
+    var body: String
+    """A snippet of the response body, for debugging."""
+
+    def write_to(self, mut writer: Some[Writer]) raises:
+        """Writes a human-readable description of the error to a writer.
+
+        Args:
+            writer: The writer to which the error description will be written.
+
+        Raises:
+            Error: If writing to the writer fails.
+        """
+        writer.write(
+            "HTTPError: ",
+            self.status.code,
+            WHITESPACE,
+            self.status.message,
+            " for ",
+            self.url,
+            CRLF,
+            self.body,
+        )
 
 
 @fieldwise_init
@@ -34,6 +58,8 @@ struct Response(Boolable, Movable, Writable):
     """The HTTP status code of the response."""
     var protocol: Protocol
     """The HTTP protocol used in the response."""
+    var url: String
+    """The final URL of the request, after any redirects."""
 
     def __init__(
         out self,
@@ -42,6 +68,7 @@ struct Response(Boolable, Movable, Writable):
         status: Status,
         protocol: Protocol,
         var headers: Headers = Headers(),
+        var url: String = String(""),
     ) raises:
         """Constructs an Response from its component parts.
 
@@ -51,6 +78,7 @@ struct Response(Boolable, Movable, Writable):
             status: The HTTP status code of the response.
             protocol: The HTTP protocol used in the response.
             headers: The HTTP headers included in the response.
+            url: The final URL of the request, after any redirects.
 
         Raises:
             Error: If there is a failure in constructing the Body from the provided bytes.
@@ -60,6 +88,7 @@ struct Response(Boolable, Movable, Writable):
         self.status = status
         self.protocol = protocol
         self.body = Body(body^)
+        self.url = url^
 
     def write_to(self, mut writer: Some[Writer]) raises:
         """Writes the HTTP response to a writer in a standard HTTP format.
@@ -152,7 +181,15 @@ struct Response(Boolable, Movable, Writable):
             HTTPError: If the response status code is not in the 2xx range.
         """
         if not self.is_success():
-            raise HTTPError(self.status)
+            var snippet: String
+            try:
+                snippet = String(self.body.as_text())
+            except:
+                snippet = String("")  # body not valid UTF-8; leave empty
+            # cap the snippet length to keep errors readable
+            if snippet.byte_length() > 512:
+                snippet = String(snippet[byte=0:512])
+            raise HTTPError(status=self.status, url=self.url, body=snippet^)
 
     def content_length(self) -> Int:
         """Returns the length of the response body in bytes.
