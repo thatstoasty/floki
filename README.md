@@ -297,7 +297,7 @@ def main() raises -> None:
     var r = session.get("https://example.com")
 ```
 
-The delay before retry _n_ is `backoff_factor * 2 ** (n - 1)` seconds.
+The delay before retry *n* is `backoff_factor * 2 ** (n - 1)` seconds.
 
 ### Proxies
 
@@ -347,7 +347,7 @@ def main() raises -> None:
 
 ### TODO: Features
 
-- Streaming responses — the whole body is buffered into a List[Byte]; large downloads and SSE need incremental access.
+- Streaming responses — the whole body is buffered into a `List[Byte]`; large downloads and SSE need incremental access.
 - `multipart/form-data` file uploads (files=): today only `x-www-form-urlencoded` is supported, so real file uploads aren't possible.
 - Response encoding awareness: `as_text()` assumes UTF-8 and raises otherwise; it ignores the charset in `Content-Type`. At minimum, expose a lossy decode fallback.
 - `Accept-Encoding` / transparent decompression: ability to set it so gzip/deflate responses come back decoded (libcurl does this if you enable it).
