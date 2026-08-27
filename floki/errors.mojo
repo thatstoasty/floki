@@ -1,10 +1,11 @@
 """Typed errors raised by floki when an HTTP request fails at the transport level."""
-from std.utils import Variant
 from mojo_curl.easy import Result
+from std.utils import Variant
 
 
 trait FlokiError(Movable, Writable):
     """A trait for errors raised by floki when an HTTP request fails before a usable response is received."""
+
     ...
 
 
@@ -162,7 +163,7 @@ struct RequestError(FlokiError):
             e: The underlying `ConnectionError`.
         """
         self.value = e^
-    
+
     @implicit
     def __init__(out self, var e: TimeoutError):
         """Constructs a `RequestError` from a low-level `TimeoutError`.
@@ -171,7 +172,7 @@ struct RequestError(FlokiError):
             e: The underlying `TimeoutError`.
         """
         self.value = e^
-    
+
     @implicit
     def __init__(out self, var e: TLSError):
         """Constructs a `RequestError` from a low-level `TLSError`.
@@ -180,7 +181,7 @@ struct RequestError(FlokiError):
             e: The underlying `TLSError`.
         """
         self.value = e^
-    
+
     @implicit
     def __init__(out self, var e: TooManyRedirectsError):
         """Constructs a `RequestError` from a low-level `TooManyRedirectsError`.
@@ -209,7 +210,7 @@ struct RequestError(FlokiError):
             A reference to the underlying error value of type `T`.
         """
         return self.value[T]
-    
+
     def isa[T: FlokiError](self) -> Bool:
         """Checks if the underlying error value is of the specified type.
 
@@ -235,7 +236,7 @@ struct RequestError(FlokiError):
                     return
 
         writer.write("RequestError: An unknown error occurred.")
-    
+
     def to_error(deinit self) -> Error:
         """Converts the `RequestError` into a low-level `Error`.
 
@@ -247,5 +248,5 @@ struct RequestError(FlokiError):
         """
         if self.value.isa[Error]():
             return self.value^.unwrap[Error]()
-        
+
         return Error(self.value)

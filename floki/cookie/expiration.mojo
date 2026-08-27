@@ -8,7 +8,7 @@ comptime HTTP_DATE_FORMAT = "ddd, DD MMM YYYY HH:mm:ss ZZZ"
 
 
 @fieldwise_init
-struct Expiration(Copyable, Defaultable, Writable, Equatable):
+struct Expiration(Copyable, Defaultable, Equatable, Writable):
     """Represents the expiration setting for a cookie, which can be either session-scoped (no explicit expiry) or a specific datetime.
     Provides methods for constructing, comparing, and formatting expiration values.
     """

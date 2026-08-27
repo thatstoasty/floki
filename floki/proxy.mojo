@@ -1,7 +1,7 @@
 """The `Proxy` type used to configure proxying for requests made by a `Session`."""
 
 
-struct Proxy(Boolable, Movable, Equatable, Writable):
+struct Proxy(Boolable, Equatable, Movable, Writable):
     """Proxy configuration for requests made by a `Session`.
 
     The proxy `url` may include a scheme and port, e.g. `http://proxy.example:8080`
@@ -9,8 +9,9 @@ struct Proxy(Boolable, Movable, Equatable, Writable):
     can be supplied as well.
 
     A bare URL string can be passed wherever a `Proxy` is expected
-    (e.g. `proxy="http://proxy.example:8080"`). A default-constructed `Proxy()`
-    means "no proxy".
+    (e.g. `proxy="http://proxy.example:8080"`). There is no default constructor:
+    the URL is required and must be non-empty. To make a request without a proxy,
+    leave the `proxy` argument unset (`None`).
     """
 
     var url: String

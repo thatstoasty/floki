@@ -146,11 +146,6 @@ def test_cookie_parsing_domain_and_path() raises -> None:
     assert_equal(cookie.path.value(), "/api/v1")
 
 
-def test_cookie_str_method() raises -> None:
-    var cookie = Cookie("session_id", "abc123")
-    assert_equal(String(cookie), "Name: session_id Value: abc123")
-
-
 def test_cookie_write_to_method() raises -> None:
     var cookie = Cookie("session_id", "abc123")
     assert_equal(String(cookie), "Cookie(name=session_id, value=abc123)")

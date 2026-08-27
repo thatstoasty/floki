@@ -7,7 +7,7 @@ from floki.cookie.cookie import Cookie
 
 
 @fieldwise_init
-struct CookieKey(Copyable, Writable, KeyElement):
+struct CookieKey(Copyable, KeyElement, Writable):
     """A key for identifying cookies in the CookieJar, based on name, domain, and path."""
 
     var name: String
@@ -48,7 +48,7 @@ struct CookieKey(Copyable, Writable, KeyElement):
 
 
 @fieldwise_init
-struct CookieJar(Copyable, Defaultable, Sized, Writable):
+struct CookieJar(Boolable, Copyable, Defaultable, Sized, Writable):
     """A collection of cookies, indexed by CookieKey (name, domain, path)."""
 
     var _inner: Dict[CookieKey, Cookie]
@@ -73,7 +73,6 @@ struct CookieJar(Copyable, Defaultable, Sized, Writable):
             self.set_cookie(elt^)
 
         cookies^.consume_elements(_move_elements)
-            
 
     def __init__(out self, var raw_cookies: CurlList) raises:
         """Constructs a CookieJar by parsing cookies from a libcurl cookie list.
@@ -102,9 +101,9 @@ struct CookieJar(Copyable, Defaultable, Sized, Writable):
         self._inner[key^] = value^
 
     @always_inline
-    def __getitem__(ref self, ref key: CookieKey) raises -> ref[
-        origin_of(self._inner)._get_owned_interior["value"]
-    ] Cookie:
+    def __getitem__(
+        ref self, ref key: CookieKey
+    ) raises -> ref[origin_of(self._inner)._get_owned_interior["value"]] Cookie:
         """Retrieves a cookie from the jar by key.
 
         Args:
@@ -164,12 +163,12 @@ struct CookieJar(Copyable, Defaultable, Sized, Writable):
 
     @always_inline
     def __bool__(self) -> Bool:
-        """Returns True if the cookie jar is empty.
+        """Reports whether the jar contains any cookies.
 
         Returns:
-            True if the jar contains no cookies.
+            True if at least one cookie is present, False otherwise.
         """
-        return len(self) == 0
+        return len(self) > 0
 
     @always_inline
     def set_cookie(mut self, var cookie: Cookie):

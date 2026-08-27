@@ -2,6 +2,7 @@
 import emberjson
 from floki.auth import Auth, NoAuth
 from floki.body import Body
+from floki.errors import RequestError
 from floki.forms import FormData
 from floki.headers import Headers
 from floki.http import RequestMethod
@@ -11,7 +12,6 @@ from floki.retry import Retry
 from floki.session import RequestData, Session
 from floki.timeout import Timeout
 from floki.tls import TLS
-from floki.errors import RequestError
 
 
 def get[
@@ -23,7 +23,7 @@ def get[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends a GET request to the specified URL.
@@ -38,7 +38,7 @@ def get[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -74,7 +74,7 @@ def post[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises RequestError -> Response:
@@ -90,7 +90,7 @@ def post[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
@@ -127,7 +127,7 @@ def post[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises RequestError -> Response:
@@ -143,7 +143,7 @@ def post[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
@@ -173,7 +173,7 @@ def post[
 
 
 def post[
-    T: Deinitable, //
+    T: Deinitable, A: Auth = NoAuth, //
 ](
     var url: String,
     data: T,
@@ -181,10 +181,15 @@ def post[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
+    auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends a POST request to the specified URL.
+
+    Parameters:
+        T: The type of the data to serialize into the request body.
+        A: The concrete `Auth` scheme type, inferred from `auth`.
 
     Args:
         url: The URL to which the request is sent.
@@ -193,8 +198,9 @@ def post[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
+        auth: An optional authentication scheme to apply to the request.
 
     Returns:
         The received response as an `Response` object.
@@ -222,11 +228,12 @@ def post[
         headers=headers^,
         query_parameters=query_parameters,
         data=data,
+        auth=auth,
     )
 
 
 def post[
-    origin: ImmOrigin, //
+    origin: ImmOrigin, A: Auth = NoAuth, //
 ](
     var url: String,
     data: Span[Byte, origin],
@@ -234,13 +241,15 @@ def post[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
+    auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends a POST request to the specified URL.
 
     Parameters:
         origin: The origin of the data span.
+        A: The concrete `Auth` scheme type, inferred from `auth`.
 
     Args:
         url: The URL to which the request is sent.
@@ -249,8 +258,9 @@ def post[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
+        auth: An optional authentication scheme to apply to the request.
 
     Returns:
         The received response as an `Response` object.
@@ -272,20 +282,27 @@ def post[
         headers=headers^,
         query_parameters=query_parameters,
         data=data,
+        auth=auth,
     )
 
 
-def post(
+def post[
+    A: Auth = NoAuth, //
+](
     var url: String,
     data: FileHandle,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
+    auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends a POST request to the specified URL.
+
+    Parameters:
+        A: The concrete `Auth` scheme type, inferred from `auth`.
 
     Args:
         url: The URL to which the request is sent.
@@ -294,8 +311,9 @@ def post(
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
+        auth: An optional authentication scheme to apply to the request.
 
     Returns:
         The received response as an `Response` object.
@@ -318,6 +336,7 @@ def post(
         headers=headers^,
         query_parameters=query_parameters,
         data=data,
+        auth=auth,
     )
 
 
@@ -330,7 +349,7 @@ def put[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises RequestError -> Response:
@@ -346,7 +365,7 @@ def put[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
@@ -375,7 +394,7 @@ def put[
 
 
 def put[
-    T: Deinitable, //
+    T: Deinitable, A: Auth = NoAuth, //
 ](
     var url: String,
     data: T,
@@ -383,10 +402,15 @@ def put[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
+    auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends a PUT request to the specified URL.
+
+    Parameters:
+        T: The type of the data to serialize into the request body.
+        A: The concrete `Auth` scheme type, inferred from `auth`.
 
     Args:
         url: The URL to which the request is sent.
@@ -395,8 +419,9 @@ def put[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
+        auth: An optional authentication scheme to apply to the request.
 
     Returns:
         The received response as an `Response` object.
@@ -424,11 +449,12 @@ def put[
         headers=headers^,
         query_parameters=query_parameters,
         data=data,
+        auth=auth,
     )
 
 
 def put[
-    origin: ImmOrigin, //
+    origin: ImmOrigin, A: Auth = NoAuth, //
 ](
     var url: String,
     data: Span[Byte, origin],
@@ -436,13 +462,15 @@ def put[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
+    auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends a PUT request to the specified URL.
 
     Parameters:
         origin: The origin of the data span.
+        A: The concrete `Auth` scheme type, inferred from `auth`.
 
     Args:
         url: The URL to which the request is sent.
@@ -451,8 +479,9 @@ def put[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
+        auth: An optional authentication scheme to apply to the request.
 
     Returns:
         The received response as an `Response` object.
@@ -474,20 +503,27 @@ def put[
         headers=headers^,
         query_parameters=query_parameters,
         data=data,
+        auth=auth,
     )
 
 
-def put(
+def put[
+    A: Auth = NoAuth, //
+](
     var url: String,
     data: FileHandle,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
+    auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends a PUT request to the specified URL.
+
+    Parameters:
+        A: The concrete `Auth` scheme type, inferred from `auth`.
 
     Args:
         url: The URL to which the request is sent.
@@ -496,8 +532,9 @@ def put(
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
+        auth: An optional authentication scheme to apply to the request.
 
     Returns:
         The received response as an `Response` object.
@@ -520,6 +557,7 @@ def put(
         headers=headers^,
         query_parameters=query_parameters,
         data=data,
+        auth=auth,
     )
 
 
@@ -531,7 +569,7 @@ def delete[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises RequestError -> Response:
@@ -546,7 +584,7 @@ def delete[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
@@ -582,7 +620,7 @@ def patch[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises RequestError -> Response:
@@ -598,7 +636,7 @@ def patch[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
@@ -627,7 +665,7 @@ def patch[
 
 
 def patch[
-    T: Deinitable, //
+    T: Deinitable, A: Auth = NoAuth, //
 ](
     var url: String,
     data: T,
@@ -635,8 +673,9 @@ def patch[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
+    auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends a GET request to the specified URL.
 
@@ -647,8 +686,9 @@ def patch[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
+        auth: An optional authentication scheme to apply to the request.
 
     Returns:
         The received response as an `Response` object.
@@ -676,11 +716,12 @@ def patch[
         headers=headers^,
         query_parameters=query_parameters,
         data=data,
+        auth=auth,
     )
 
 
 def patch[
-    origin: ImmOrigin, //
+    origin: ImmOrigin, A: Auth = NoAuth, //
 ](
     var url: String,
     data: Span[Byte, origin],
@@ -688,13 +729,15 @@ def patch[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
+    auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends a GET request to the specified URL.
 
     Parameters:
         origin: The origin of the data span.
+        A: The concrete `Auth` scheme type, inferred from `auth`.
 
     Args:
         url: The URL to which the request is sent.
@@ -703,8 +746,9 @@ def patch[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
+        auth: An optional authentication scheme to apply to the request.
 
     Returns:
         The received response as an `Response` object.
@@ -726,18 +770,22 @@ def patch[
         headers=headers^,
         query_parameters=query_parameters,
         data=data,
+        auth=auth,
     )
 
 
-def patch(
+def patch[
+    A: Auth = NoAuth, //
+](
     var url: String,
     data: FileHandle,
     var headers: Headers = Headers(),
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
     query_parameters: Dict[String, String] = {},
+    auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends a GET request to the specified URL.
 
@@ -748,8 +796,9 @@ def patch(
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
         query_parameters: Query parameters to include in the request URL.
+        auth: An optional authentication scheme to apply to the request.
 
     Returns:
         The received response as an `Response` object.
@@ -772,6 +821,7 @@ def patch(
         headers=headers^,
         query_parameters=query_parameters,
         data=data,
+        auth=auth,
     )
 
 
@@ -783,7 +833,8 @@ def head[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
+    query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends a HEAD request to the specified URL.
@@ -797,7 +848,8 @@ def head[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
+        query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -818,6 +870,7 @@ def head[
     return session.head(
         url=url,
         headers=headers^,
+        query_parameters=query_parameters,
         auth=auth,
     )
 
@@ -830,7 +883,8 @@ def options[
     var timeout: Timeout = Timeout(),
     var retry: Optional[Retry] = None,
     var proxy: Optional[Proxy] = None,
-    var tls: TLS = TLS(),
+    var tls: Optional[TLS] = None,
+    query_parameters: Dict[String, String] = {},
     auth: Optional[A] = None,
 ) raises RequestError -> Response:
     """Sends an OPTIONS request to the specified URL.
@@ -844,7 +898,8 @@ def options[
         timeout: An optional timeout in seconds for the request.
         retry: An optional retry policy for the request.
         proxy: An optional proxy configuration for the request.
-        tls: An optional TLS configuration for the request.
+        tls: TLS verification settings for the request, or `None` for the defaults.
+        query_parameters: Query parameters to include in the request URL.
         auth: An optional authentication scheme to apply to the request.
 
     Returns:
@@ -865,5 +920,6 @@ def options[
     return session.options(
         url=url,
         headers=headers^,
+        query_parameters=query_parameters,
         auth=auth,
     )

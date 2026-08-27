@@ -149,7 +149,7 @@ def test_patch_raw_bytes() raises -> None:
 
 
 @fieldwise_init
-struct PostPayload(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct PostPayload(Defaultable, Deinitable, Equatable, Movable, Writable):
     var title: String
     var body: String
     var userId: Int
@@ -170,7 +170,7 @@ def test_post_struct() raises -> None:
 
 
 @fieldwise_init
-struct UpdatePayload(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct UpdatePayload(Defaultable, Deinitable, Equatable, Movable, Writable):
     var key1: String
     var key2: String
 
@@ -189,7 +189,7 @@ def test_put_struct() raises -> None:
 
 
 @fieldwise_init
-struct PatchPayload(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct PatchPayload(Defaultable, Deinitable, Equatable, Movable, Writable):
     var key1: String
 
     def __init__(out self):

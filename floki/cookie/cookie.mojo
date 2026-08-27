@@ -7,7 +7,7 @@ from mojo_datetime import DateTime
 
 
 @fieldwise_init
-struct Cookie(Copyable, Writable, Equatable):
+struct Cookie(Copyable, Equatable, Writable):
     """Represents an HTTP cookie with its attributes and provides methods for constructing, manipulating, and serializing cookies.
     """
 

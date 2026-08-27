@@ -29,8 +29,9 @@ struct Headers(Boolable, Copyable, Defaultable, Sized, Writable):
             headers: Header names and values. Keys are normalized to lowercase.
         """
         self._inner = Dict[String, String]()
-        for entry in headers.items():
-            self._inner[Self._normalize(entry.key)] = entry.value
+        for var entry in headers.take_items():
+            var norm_key = Self._normalize(entry.key)
+            self._inner[norm_key^] = entry^.reap_value()
 
     def __init__(out self, var keys: List[String], var values: List[String], __dict_literal__: NoneType):
         """Constructs a `Headers` collection from a dictionary literal, normalizing its keys.
@@ -59,9 +60,9 @@ struct Headers(Boolable, Copyable, Defaultable, Sized, Writable):
         """
         return key.lower()
 
-    def __getitem__(ref self, key: ImmStringSpan) raises -> ref[
-        origin_of(self._inner)._get_owned_interior["value"]
-    ] String:
+    def __getitem__(
+        ref self, key: ImmStringSpan
+    ) raises -> ref[origin_of(self._inner)._get_owned_interior["value"]] String:
         """Looks up a header value by name, case-insensitively.
 
         Args:

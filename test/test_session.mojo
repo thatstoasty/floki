@@ -26,7 +26,7 @@ def assert_variant_equal2(expected: Variant[Int, String], actual: emberjson.Valu
 
 
 @fieldwise_init
-struct Todo(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct Todo(Defaultable, Deinitable, Equatable, Movable, Writable):
     var userId: Int
     var id: Int
     var title: String
@@ -52,7 +52,7 @@ def test_get() raises -> None:
 
 
 @fieldwise_init
-struct Record(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct Record(Defaultable, Deinitable, Equatable, Movable, Writable):
     var userId: Int
     var body: String
     var title: String
@@ -66,7 +66,7 @@ struct Record(Defaultable, Equatable, Deinitable, Movable, Writable):
 
 
 @fieldwise_init
-struct ServerPostResponse(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct ServerPostResponse(Defaultable, Deinitable, Equatable, Movable, Writable):
     var args: Dict[String, String]
     var headers: Dict[String, emberjson.Value]
     var method: String
@@ -110,14 +110,14 @@ def test_post() raises -> None:
     assert_equal(post_response.json.active, True)
 
 
-struct Content(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct Content(Defaultable, Deinitable, Equatable, Movable, Writable):
     var recently_edited: List[String]
 
     def __init__(out self):
         self.recently_edited = List[String]()
 
 
-struct FileContent(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct FileContent(Defaultable, Deinitable, Equatable, Movable, Writable):
     var id: Int
     var name: String
     var content: Content
@@ -146,7 +146,7 @@ def test_post_file() raises -> None:
         assert_equal(file_content.content.recently_edited, ["floki/session.mojo"])
 
 
-struct PutResponse(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct PutResponse(Defaultable, Deinitable, Equatable, Movable, Writable):
     var id: Int
     var key1: String
     var key2: String
@@ -175,7 +175,7 @@ def test_put() raises -> None:
     assert_equal(put_response.key2, "updated_value2")
 
 
-struct PutFileResponse(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct PutFileResponse(Defaultable, Deinitable, Equatable, Movable, Writable):
     var id: Int
     var key1: String
 
@@ -203,7 +203,7 @@ def test_put_file() raises -> None:
 
 
 @fieldwise_init
-struct PatchedTodo(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct PatchedTodo(Defaultable, Deinitable, Equatable, Movable, Writable):
     var userId: Int
     var id: Int
     var title: String
@@ -397,7 +397,7 @@ def test_post_struct() raises -> None:
 
 
 @fieldwise_init
-struct PutStructData(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct PutStructData(Defaultable, Deinitable, Equatable, Movable, Writable):
     var key1: String
     var key2: String
 
@@ -424,7 +424,7 @@ def test_put_struct() raises -> None:
 
 
 @fieldwise_init
-struct PatchStructData(Defaultable, Equatable, Deinitable, Movable, Writable):
+struct PatchStructData(Defaultable, Deinitable, Equatable, Movable, Writable):
     var key1: String
 
     def __init__(out self):

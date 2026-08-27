@@ -1,8 +1,8 @@
 """Libcurl read/write callbacks used to stream request and response bodies."""
+from mojo_curl.c.types import CURL_READFUNC_ABORT, ImmExternalPointer, MutExternalPointer
 from std.ffi import c_char, c_size_t, get_errno
 from std.memory import unsafe_memcpy
 from std.sys import stderr
-from mojo_curl.c.types import CURL_READFUNC_ABORT, ImmExternalPointer, MutExternalPointer
 
 
 # To read HTTP response data into a list of bytes.

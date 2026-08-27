@@ -1,10 +1,5 @@
 """HTTP Client."""
-from std.pathlib import Path
-from std.time import sleep
-from std.utils import Variant
 import emberjson
-from mojo_curl.easy import Easy, Result
-from mojo_curl.list import CurlList
 from floki.auth import Auth, NoAuth
 from floki.body import Body
 from floki.callbacks import read_callback, write_callback
@@ -14,12 +9,17 @@ from floki.errors import RequestError
 from floki.forms import FormData
 from floki.handlers import _handle_delete, _handle_head, _handle_options, _handle_patch, _handle_post, _handle_put
 from floki.headers import Headers
-from floki.http import RequestMethod, Protocol, Status
+from floki.http import Protocol, RequestMethod, Status
 from floki.proxy import Proxy
 from floki.response import Response
 from floki.retry import Retry
 from floki.timeout import Timeout
 from floki.tls import TLS
+from mojo_curl.easy import Easy, Result
+from mojo_curl.list import CurlList
+from std.pathlib import Path
+from std.time import sleep
+from std.utils import Variant
 
 
 def _build_url_with_query(url: String, query_parameters: Dict[String, String], easy: Easy) raises -> String:
@@ -36,7 +36,10 @@ def _build_url_with_query(url: String, query_parameters: Dict[String, String], e
     Raises:
         Error: If there is a failure in URL encoding or setting the URL.
     """
-    var full_url = String(t"{url}?")
+    # Preserve any query string already present on the URL: the first appended
+    # parameter needs `&` rather than `?` in that case.
+    var separator = "&" if "?" in url else "?"
+    var full_url = String(t"{url}{separator}")
     for i, pair in enumerate(query_parameters.items()):
         full_url.write(t"{easy.escape(pair.key)}={easy.escape(pair.value)}")
         if i != len(query_parameters) - 1:
@@ -66,7 +69,7 @@ struct Session(Movable):
     """TLS/SSL verification settings applied to every request made with this session."""
 
     comptime DEFAULT_HEADERS = {
-        "User-Agent": "floki/0.3.4",
+        "User-Agent": "floki/0.4.0",
     }
     """Default headers that are included in every request made with this session, unless overridden by request-specific headers."""
 
@@ -109,22 +112,22 @@ struct Session(Movable):
     def __enter__(var self) -> Self:
         """Context manager entry point.
 
-        Returns the Session by value for use in a `with` statement. The Session's
-        resources are automatically cleaned up when exiting the context block.
+        Returns the Session by value for use in a `with` statement. The underlying
+        libcurl easy handle is released when the Session is destroyed at the end of
+        the block; call `close()` to release it sooner.
 
         Returns:
             The Session instance by value.
         """
         return self^
-    
+
     def close(deinit self):
         """Cleans up the resources associated with the Session.
 
-        This method is automatically called when exiting a `with` statement
-        context. It ensures that the underlying libcurl easy handle is properly
-        cleaned up to prevent resource leaks.
+        Calling this is optional: the underlying libcurl easy handle is also
+        cleaned up when the `Session` is destroyed. Call it to release the
+        handle deterministically rather than at end of scope.
         """
-        self.easy.cleanup()
         self.easy^.close()
 
     def raise_if_error(self, code: Result, message: StringSpan) raises Error:
@@ -144,8 +147,8 @@ struct Session(Movable):
         origin: ImmOrigin, //, method: RequestMethod, A: Auth = NoAuth
     ](
         mut self,
-        mut url: String,
-        mut headers: Headers,
+        url: String,
+        var headers: Headers,
         data: RequestData[origin],
         query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
@@ -263,7 +266,7 @@ struct Session(Movable):
                     )
                     self.raise_if_error(
                         self.easy.ssl_verify_host(verify=False), "Failed to disable TLS host verification:"
-                )
+                    )
                 if tls.ca_bundle:
                     self.raise_if_error(self.easy.cainfo(tls.ca_bundle.value()), "Failed to set TLS CA bundle:")
                 if tls.ca_path:
@@ -304,7 +307,7 @@ struct Session(Movable):
                             attempt += 1
                             sleep(retry.backoff_time(attempt))
                             continue
-                    
+
                     # Retries (if any) are exhausted. A failed transfer is surfaced as a
                     # classified `RequestError` so callers can tell a timeout from a
                     # connection failure from a TLS problem.
@@ -367,7 +370,7 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.GET](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=RequestData(List[Byte]()),
             query_parameters=query_parameters,
             auth=auth,
@@ -413,10 +416,12 @@ struct Session(Movable):
             var r = session.post("https://httpbin.org/post", data={"key": "value"})
         ```
         """
+        if "Content-Type" not in headers:
+            headers["Content-Type"] = "application/json"
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.POST](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=RequestData(json_data),
             query_parameters=query_parameters,
             auth=auth,
@@ -468,7 +473,7 @@ struct Session(Movable):
         var encoded = data.encode()
         return self.send[RequestMethod.POST](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=RequestData(encoded.as_bytes()),
             query_parameters=query_parameters,
             auth=auth,
@@ -476,22 +481,28 @@ struct Session(Movable):
         )
 
     def post[
-        T: Deinitable, //
+        T: Deinitable, A: Auth = NoAuth, //
     ](
         mut self,
         var url: String,
         data: T,
         var headers: Headers = Headers(),
         query_parameters: Dict[String, String] = {},
+        auth: Optional[A] = None,
         allow_redirects: Optional[Bool] = None,
     ) raises RequestError -> Response:
         """Sends a POST request to the specified URL.
+
+        Parameters:
+            T: The type of the data to serialize into the request body.
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the POST request.
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request URL.
+            auth: An optional authentication scheme to apply to the request.
             allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
@@ -514,36 +525,42 @@ struct Session(Movable):
             var r = session.post("https://httpbin.org/post", data=Point(0, 1))
         ```
         """
+        if "Content-Type" not in headers:
+            headers["Content-Type"] = "application/json"
         var json_data = emberjson.serialize(data)
         var json_bytes = json_data.as_bytes()
         return self.send[RequestMethod.POST](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=RequestData(json_bytes),
             query_parameters=query_parameters,
+            auth=auth,
             allow_redirects=allow_redirects,
         )
 
     def post[
-        origin: ImmOrigin, //
+        origin: ImmOrigin, A: Auth = NoAuth, //
     ](
         mut self,
         var url: String,
         data: Span[Byte, origin],
         var headers: Headers = Headers(),
         query_parameters: Dict[String, String] = {},
+        auth: Optional[A] = None,
         allow_redirects: Optional[Bool] = None,
     ) raises RequestError -> Response:
         """Sends a POST request to the specified URL.
 
         Parameters:
             origin: The origin of the data span.
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the POST request.
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request URL.
+            auth: An optional authentication scheme to apply to the request.
             allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
@@ -563,27 +580,35 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.POST](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=RequestData(data),
             query_parameters=query_parameters,
+            auth=auth,
             allow_redirects=allow_redirects,
         )
 
-    def post(
+    def post[
+        A: Auth = NoAuth, //
+    ](
         mut self,
         var url: String,
         data: FileHandle,
         var headers: Headers = Headers(),
         query_parameters: Dict[String, String] = {},
+        auth: Optional[A] = None,
         allow_redirects: Optional[Bool] = None,
     ) raises RequestError -> Response:
         """Sends a POST request to the specified URL.
+
+        Parameters:
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the POST request.
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request URL.
+            auth: An optional authentication scheme to apply to the request.
             allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
@@ -604,9 +629,10 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.POST](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=RequestData(Pointer(to=data)),
             query_parameters=query_parameters,
+            auth=auth,
             allow_redirects=allow_redirects,
         )
 
@@ -649,10 +675,12 @@ struct Session(Movable):
             var r = session.put("https://httpbin.org/put", data={"key": "value"})
         ```
         """
+        if "Content-Type" not in headers:
+            headers["Content-Type"] = "application/json"
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.PUT](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=json_data,
             query_parameters=query_parameters,
             auth=auth,
@@ -660,22 +688,28 @@ struct Session(Movable):
         )
 
     def put[
-        T: Deinitable, //
+        T: Deinitable, A: Auth = NoAuth, //
     ](
         mut self,
         var url: String,
         data: T,
         var headers: Headers = Headers(),
         query_parameters: Dict[String, String] = {},
+        auth: Optional[A] = None,
         allow_redirects: Optional[Bool] = None,
     ) raises RequestError -> Response:
         """Sends a PUT request to the specified URL.
+
+        Parameters:
+            T: The type of the data to serialize into the request body.
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the PUT request.
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request URL.
+            auth: An optional authentication scheme to apply to the request.
             allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
@@ -698,36 +732,42 @@ struct Session(Movable):
             var r = session.put("https://httpbin.org/put", data=Point(0, 1))
         ```
         """
+        if "Content-Type" not in headers:
+            headers["Content-Type"] = "application/json"
         var json_data = emberjson.serialize(data)
         var json_bytes = json_data.as_bytes()
         return self.send[RequestMethod.PUT](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=RequestData(json_bytes),
             query_parameters=query_parameters,
+            auth=auth,
             allow_redirects=allow_redirects,
         )
 
     def put[
-        origin: ImmOrigin, //
+        origin: ImmOrigin, A: Auth = NoAuth, //
     ](
         mut self,
         var url: String,
         data: Span[Byte, origin],
         var headers: Headers = Headers(),
         query_parameters: Dict[String, String] = {},
+        auth: Optional[A] = None,
         allow_redirects: Optional[Bool] = None,
     ) raises RequestError -> Response:
         """Sends a PUT request to the specified URL.
 
         Parameters:
             origin: The origin of the data span.
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the PUT request.
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request URL.
+            auth: An optional authentication scheme to apply to the request.
             allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
@@ -747,27 +787,35 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.PUT](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=data,
             query_parameters=query_parameters,
+            auth=auth,
             allow_redirects=allow_redirects,
         )
 
-    def put(
+    def put[
+        A: Auth = NoAuth, //
+    ](
         mut self,
         var url: String,
         data: FileHandle,
         var headers: Headers = Headers(),
         query_parameters: Dict[String, String] = {},
+        auth: Optional[A] = None,
         allow_redirects: Optional[Bool] = None,
     ) raises RequestError -> Response:
         """Sends a PUT request to the specified URL.
+
+        Parameters:
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the PUT request.
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request URL.
+            auth: An optional authentication scheme to apply to the request.
             allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
@@ -788,9 +836,10 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.PUT](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=Pointer(to=data),
             query_parameters=query_parameters,
+            auth=auth,
             allow_redirects=allow_redirects,
         )
 
@@ -833,7 +882,7 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.DELETE](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=RequestData(List[Byte]()),
             query_parameters=query_parameters,
             auth=auth,
@@ -879,10 +928,12 @@ struct Session(Movable):
             var r = session.patch("https://httpbin.org/patch", data={"key": "value"})
         ```
         """
+        if "Content-Type" not in headers:
+            headers["Content-Type"] = "application/json"
         var json_data = emberjson.to_string(data^).as_bytes()
         return self.send[RequestMethod.PATCH](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=json_data,
             query_parameters=query_parameters,
             auth=auth,
@@ -890,22 +941,28 @@ struct Session(Movable):
         )
 
     def patch[
-        T: Deinitable, //
+        T: Deinitable, A: Auth = NoAuth, //
     ](
         mut self,
         var url: String,
         data: T,
         var headers: Headers = Headers(),
         query_parameters: Dict[String, String] = {},
+        auth: Optional[A] = None,
         allow_redirects: Optional[Bool] = None,
     ) raises RequestError -> Response:
         """Sends a PATCH request to the specified URL.
+
+        Parameters:
+            T: The type of the data to serialize into the request body.
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the PATCH request.
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request URL.
+            auth: An optional authentication scheme to apply to the request.
             allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
@@ -928,36 +985,42 @@ struct Session(Movable):
             var r = session.patch("https://httpbin.org/patch", data=Point(0, 1))
         ```
         """
+        if "Content-Type" not in headers:
+            headers["Content-Type"] = "application/json"
         var json_data = emberjson.serialize(data)
         var json_bytes = json_data.as_bytes()
         return self.send[RequestMethod.PATCH](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=RequestData(json_bytes),
             query_parameters=query_parameters,
+            auth=auth,
             allow_redirects=allow_redirects,
         )
 
     def patch[
-        origin: ImmOrigin, //
+        origin: ImmOrigin, A: Auth = NoAuth, //
     ](
         mut self,
         var url: String,
         data: Span[Byte, origin],
         var headers: Headers = Headers(),
         query_parameters: Dict[String, String] = {},
+        auth: Optional[A] = None,
         allow_redirects: Optional[Bool] = None,
     ) raises RequestError -> Response:
         """Sends a PATCH request to the specified URL.
 
         Parameters:
             origin: The origin of the data span.
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the PATCH request.
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request URL.
+            auth: An optional authentication scheme to apply to the request.
             allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
@@ -977,27 +1040,35 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.PATCH](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=data,
             query_parameters=query_parameters,
+            auth=auth,
             allow_redirects=allow_redirects,
         )
 
-    def patch(
+    def patch[
+        A: Auth = NoAuth, //
+    ](
         mut self,
         var url: String,
         data: FileHandle,
         var headers: Headers = Headers(),
         query_parameters: Dict[String, String] = {},
+        auth: Optional[A] = None,
         allow_redirects: Optional[Bool] = None,
     ) raises RequestError -> Response:
         """Sends a PATCH request to the specified URL.
+
+        Parameters:
+            A: The concrete `Auth` scheme type, inferred from `auth`.
 
         Args:
             url: The URL to which the request is sent.
             data: The data to include in the body of the PATCH request.
             headers: HTTP headers to include in the request.
             query_parameters: Query parameters to include in the request URL.
+            auth: An optional authentication scheme to apply to the request.
             allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
         Returns:
@@ -1018,9 +1089,10 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.PATCH](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=Pointer(to=data),
             query_parameters=query_parameters,
+            auth=auth,
             allow_redirects=allow_redirects,
         )
 
@@ -1030,6 +1102,7 @@ struct Session(Movable):
         mut self,
         var url: String,
         var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
         allow_redirects: Optional[Bool] = None,
     ) raises RequestError -> Response:
@@ -1041,6 +1114,7 @@ struct Session(Movable):
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
             auth: An optional authentication scheme to apply to the request.
             allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
@@ -1061,8 +1135,9 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.HEAD](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=RequestData(List[Byte]()),
+            query_parameters=query_parameters,
             auth=auth,
             allow_redirects=allow_redirects,
         )
@@ -1073,6 +1148,7 @@ struct Session(Movable):
         mut self,
         var url: String,
         var headers: Headers = Headers(),
+        query_parameters: Dict[String, String] = {},
         auth: Optional[A] = None,
         allow_redirects: Optional[Bool] = None,
     ) raises RequestError -> Response:
@@ -1084,6 +1160,7 @@ struct Session(Movable):
         Args:
             url: The URL to which the request is sent.
             headers: HTTP headers to include in the request.
+            query_parameters: Query parameters to include in the request URL.
             auth: An optional authentication scheme to apply to the request.
             allow_redirects: Per-request override for following redirects; falls back to the session default when None.
 
@@ -1104,8 +1181,9 @@ struct Session(Movable):
         """
         return self.send[RequestMethod.OPTIONS](
             url=url,
-            headers=headers,
+            headers=headers^,
             data=RequestData(List[Byte]()),
+            query_parameters=query_parameters,
             auth=auth,
             allow_redirects=allow_redirects,
         )
