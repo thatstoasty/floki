@@ -1,7 +1,7 @@
 """The `Retry` type used to configure retry behavior for requests made by a `Session`."""
 
 
-struct Retry(Copyable):
+struct Retry(Copyable, Equatable, Writable):
     """A retry policy with exponential backoff for failed requests.
 
     A request is retried when the underlying transfer fails (e.g. a connection

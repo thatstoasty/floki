@@ -3,7 +3,7 @@
 comptime _HEX: StaticString = "0123456789ABCDEF"
 
 
-def _percent_encode(s: StringSlice) -> String:
+def _percent_encode(s: StringSpan) -> String:
     """Percent-encodes a string for use in `application/x-www-form-urlencoded` data.
 
     Unreserved characters (letters, digits, `-`, `_`, `.`, `~`) are left as-is, spaces

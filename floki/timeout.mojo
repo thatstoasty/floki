@@ -1,7 +1,7 @@
 """The `Timeout` type used to configure timeouts for requests made by a `Session`."""
 
 
-struct Timeout(Copyable, Movable):
+struct Timeout(Copyable, Equatable, Writable):
     """Granular timeout configuration for a request, expressed in seconds.
 
     Each field limits a different phase of the request lifecycle. A field set to

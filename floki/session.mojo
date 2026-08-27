@@ -1,25 +1,25 @@
 """HTTP Client."""
+from std.pathlib import Path
+from std.time import sleep
+from std.utils import Variant
 import emberjson
+from mojo_curl.easy import Easy, Result
+from mojo_curl.list import CurlList
 from floki.auth import Auth, NoAuth
 from floki.body import Body
 from floki.callbacks import read_callback, write_callback
 from floki.cookie.cookie_jar import CookieJar
 from floki.data import RequestData
-from floki.errors import ErrorKind, RequestError, FFIError
+from floki.errors import RequestError
 from floki.forms import FormData
 from floki.handlers import _handle_delete, _handle_head, _handle_options, _handle_patch, _handle_post, _handle_put
 from floki.headers import Headers
-from floki.http import RequestMethod
+from floki.http import RequestMethod, Protocol, Status
 from floki.proxy import Proxy
 from floki.response import Response
 from floki.retry import Retry
 from floki.timeout import Timeout
 from floki.tls import TLS
-from mojo_curl.easy import Easy, Result
-from mojo_curl.list import CurlList
-from std.pathlib import Path
-from std.time import sleep
-from std.utils import Variant
 
 
 def _build_url_with_query(url: String, query_parameters: Dict[String, String], easy: Easy) raises -> String:
@@ -127,7 +127,7 @@ struct Session(Movable):
         self.easy.cleanup()
         self.easy^.close()
 
-    def raise_if_error(self, code: Result, message: StringSlice) raises Error:
+    def raise_if_error(self, code: Result, message: StringSpan) raises Error:
         """Raises an error if the libcurl result code indicates failure.
 
         Args:
@@ -141,7 +141,7 @@ struct Session(Movable):
             raise Error(message, " ", self.easy.describe_error(code))
 
     def send[
-        origin: ImmutOrigin, //, method: RequestMethod, A: Auth = NoAuth
+        origin: ImmOrigin, //, method: RequestMethod, A: Auth = NoAuth
     ](
         mut self,
         mut url: String,
@@ -186,7 +186,7 @@ struct Session(Movable):
             # Set the buffer to load the response into
             var response_body = List[Byte](capacity=8192)
             self.raise_if_error(
-                self.easy.write_data(UnsafePointer(to=response_body).bitcast[NoneType]()),
+                self.easy.write_data(Pointer(to=response_body).unsafe_bitcast[NoneType]()),
                 "Failed to set write data:",
             )
 
@@ -476,7 +476,7 @@ struct Session(Movable):
         )
 
     def post[
-        T: AnyType & ImplicitlyDestructible, //
+        T: Deinitable, //
     ](
         mut self,
         var url: String,
@@ -505,7 +505,7 @@ struct Session(Movable):
         from floki.session import Session
 
         @fieldwise_init
-        struct Point(ImplicitlyDestructible):
+        struct Point(Deinitable):
             var x: Int
             var y: Int
 
@@ -515,16 +515,17 @@ struct Session(Movable):
         ```
         """
         var json_data = emberjson.serialize(data)
+        var json_bytes = json_data.as_bytes()
         return self.send[RequestMethod.POST](
             url=url,
             headers=headers,
-            data=json_data.as_bytes(),
+            data=RequestData(json_bytes),
             query_parameters=query_parameters,
             allow_redirects=allow_redirects,
         )
 
     def post[
-        origin: ImmutOrigin, //
+        origin: ImmOrigin, //
     ](
         mut self,
         var url: String,
@@ -659,7 +660,7 @@ struct Session(Movable):
         )
 
     def put[
-        T: AnyType & ImplicitlyDestructible, //
+        T: Deinitable, //
     ](
         mut self,
         var url: String,
@@ -698,16 +699,17 @@ struct Session(Movable):
         ```
         """
         var json_data = emberjson.serialize(data)
+        var json_bytes = json_data.as_bytes()
         return self.send[RequestMethod.PUT](
             url=url,
             headers=headers,
-            data=json_data.as_bytes(),
+            data=RequestData(json_bytes),
             query_parameters=query_parameters,
             allow_redirects=allow_redirects,
         )
 
     def put[
-        origin: ImmutOrigin, //
+        origin: ImmOrigin, //
     ](
         mut self,
         var url: String,
@@ -888,7 +890,7 @@ struct Session(Movable):
         )
 
     def patch[
-        T: AnyType & ImplicitlyDestructible, //
+        T: Deinitable, //
     ](
         mut self,
         var url: String,
@@ -927,16 +929,17 @@ struct Session(Movable):
         ```
         """
         var json_data = emberjson.serialize(data)
+        var json_bytes = json_data.as_bytes()
         return self.send[RequestMethod.PATCH](
             url=url,
             headers=headers,
-            data=json_data.as_bytes(),
+            data=RequestData(json_bytes),
             query_parameters=query_parameters,
             allow_redirects=allow_redirects,
         )
 
     def patch[
-        origin: ImmutOrigin, //
+        origin: ImmOrigin, //
     ](
         mut self,
         var url: String,

@@ -1,7 +1,7 @@
 """The `Headers` type: a case-insensitive collection of HTTP headers."""
 
 
-struct Headers(Boolable, Copyable, Defaultable, Movable, Sized, Writable):
+struct Headers(Boolable, Copyable, Defaultable, Sized, Writable):
     """A case-insensitive collection of HTTP headers.
 
     HTTP header names are case-insensitive, so `Headers` normalizes every key to
@@ -48,7 +48,7 @@ struct Headers(Boolable, Copyable, Defaultable, Movable, Sized, Writable):
             self._inner[Self._normalize(pair[0])] = pair[1]
 
     @staticmethod
-    def _normalize(key: StringSlice) -> String:
+    def _normalize(key: ImmStringSpan) -> String:
         """Normalizes a header name to its canonical (lowercased) form.
 
         Args:
@@ -59,7 +59,9 @@ struct Headers(Boolable, Copyable, Defaultable, Movable, Sized, Writable):
         """
         return key.lower()
 
-    def __getitem__(ref self, key: StringSlice) raises -> ref[self._inner] String:
+    def __getitem__(ref self, key: ImmStringSpan) raises -> ref[
+        origin_of(self._inner)._get_owned_interior["value"]
+    ] String:
         """Looks up a header value by name, case-insensitively.
 
         Args:
@@ -73,7 +75,7 @@ struct Headers(Boolable, Copyable, Defaultable, Movable, Sized, Writable):
         """
         return self._inner[Self._normalize(key)]
 
-    def __setitem__(mut self, key: StringSlice, var value: String):
+    def __setitem__(mut self, key: ImmStringSpan, var value: String):
         """Sets a header value by name, normalizing the name first.
 
         Args:
@@ -82,7 +84,7 @@ struct Headers(Boolable, Copyable, Defaultable, Movable, Sized, Writable):
         """
         self._inner[Self._normalize(key)] = value^
 
-    def __contains__(self, key: StringSlice) -> Bool:
+    def __contains__(self, key: ImmStringSpan) -> Bool:
         """Reports whether a header with the given name is present, case-insensitively.
 
         Args:
@@ -93,7 +95,7 @@ struct Headers(Boolable, Copyable, Defaultable, Movable, Sized, Writable):
         """
         return Self._normalize(key) in self._inner
 
-    def get(self, key: StringSlice, var default: String = "") -> String:
+    def get(self, key: ImmStringSpan, var default: String = "") -> String:
         """Looks up a header value by name, returning `default` if it is absent.
 
         Args:

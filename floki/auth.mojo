@@ -3,7 +3,7 @@ from floki.headers import Headers
 from std import base64
 
 
-trait Auth(Copyable, Movable):
+trait Auth(Copyable):
     """A strategy for authenticating an HTTP request.
 
     Implement this trait to define a custom authentication scheme. The `apply`

@@ -11,6 +11,7 @@ from floki.retry import Retry
 from floki.session import RequestData, Session
 from floki.timeout import Timeout
 from floki.tls import TLS
+from floki.errors import RequestError
 
 
 def get[
@@ -56,11 +57,10 @@ def get[
     ```
     """
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.GET](
+    return session.get(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=RequestData(List[Byte]()),
         auth=auth,
     )
 
@@ -108,13 +108,12 @@ def post[
         var r = floki.post("https://httpbin.org/post", data={"key": "value"})
     ```
     """
-    var json_data = emberjson.to_string(data^).as_bytes()
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.POST](
+    return session.post(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=json_data,
+        data=data^,
         auth=auth,
     )
 
@@ -163,21 +162,18 @@ def post[
         var r = floki.post("https://httpbin.org/post", data=FormData({"key": "value"}))
     ```
     """
-    if "Content-Type" not in headers:
-        headers["Content-Type"] = "application/x-www-form-urlencoded"
-    var encoded = data.encode()
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.POST](
+    return session.post(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=RequestData(encoded.as_bytes()),
+        data=data,
         auth=auth,
     )
 
 
 def post[
-    T: AnyType & ImplicitlyDestructible & Defaultable, //
+    T: Deinitable, //
 ](
     var url: String,
     data: T,
@@ -211,7 +207,7 @@ def post[
     from floki.session import Session
 
     @fieldwise_init
-    struct Point(ImplicitlyDestructible):
+    struct Point(Deinitable):
         var x: Int
         var y: Int
 
@@ -220,18 +216,17 @@ def post[
         var r = session.post("https://httpbin.org/post", data=Point(0, 1))
     ```
     """
-    var json_data = emberjson.serialize(data)
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.POST](
+    return session.post(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=json_data.as_bytes(),
+        data=data,
     )
 
 
 def post[
-    origin: ImmutOrigin, //
+    origin: ImmOrigin, //
 ](
     var url: String,
     data: Span[Byte, origin],
@@ -272,9 +267,9 @@ def post[
     ```
     """
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.POST](
+    return session.post(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
         data=data,
     )
@@ -318,11 +313,11 @@ def post(
     ```
     """
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.POST](
+    return session.post(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=Pointer(to=data),
+        data=data,
     )
 
 
@@ -369,19 +364,18 @@ def put[
         var r = floki.put("https://httpbin.org/put", data={"key": "value"})
     ```
     """
-    var json_data = emberjson.to_string(data^).as_bytes()
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.PUT](
+    return session.put(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=json_data,
+        data=data^,
         auth=auth,
     )
 
 
 def put[
-    T: AnyType & ImplicitlyDestructible, //
+    T: Deinitable, //
 ](
     var url: String,
     data: T,
@@ -424,18 +418,17 @@ def put[
         var r = session.put("https://httpbin.org/put", data=Point(0, 1))
     ```
     """
-    var json_data = emberjson.serialize(data)
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.PUT](
+    return session.put(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=json_data.as_bytes(),
+        data=data,
     )
 
 
 def put[
-    origin: ImmutOrigin, //
+    origin: ImmOrigin, //
 ](
     var url: String,
     data: Span[Byte, origin],
@@ -476,9 +469,9 @@ def put[
     ```
     """
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.PUT](
+    return session.put(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
         data=data,
     )
@@ -522,11 +515,11 @@ def put(
     ```
     """
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.PUT](
+    return session.put(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=Pointer(to=data),
+        data=data,
     )
 
 
@@ -572,11 +565,10 @@ def delete[
     ```
     """
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.DELETE](
+    return session.delete(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=RequestData(List[Byte]()),
         auth=auth,
     )
 
@@ -624,19 +616,18 @@ def patch[
         var r = floki.patch("https://httpbin.org/patch", data={"key": "value"})
     ```
     """
-    var json_data = emberjson.to_string(data^).as_bytes()
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.PATCH](
+    return session.patch(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=json_data,
+        data=data^,
         auth=auth,
     )
 
 
 def patch[
-    T: AnyType & ImplicitlyDestructible, //
+    T: Deinitable, //
 ](
     var url: String,
     data: T,
@@ -679,18 +670,17 @@ def patch[
         var r = session.patch("https://httpbin.org/patch", data=Point(0, 1))
     ```
     """
-    var json_data = emberjson.serialize(data)
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.PATCH](
+    return session.patch(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=json_data.as_bytes(),
+        data=data,
     )
 
 
 def patch[
-    origin: ImmutOrigin, //
+    origin: ImmOrigin, //
 ](
     var url: String,
     data: Span[Byte, origin],
@@ -731,9 +721,9 @@ def patch[
     ```
     """
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.PATCH](
+    return session.patch(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
         data=data,
     )
@@ -777,11 +767,11 @@ def patch(
     ```
     """
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.PATCH](
+    return session.patch(
         url=url,
-        headers=headers,
+        headers=headers^,
         query_parameters=query_parameters,
-        data=Pointer(to=data),
+        data=data,
     )
 
 
@@ -825,10 +815,9 @@ def head[
     ```
     """
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.HEAD](
+    return session.head(
         url=url,
-        headers=headers,
-        data=RequestData(List[Byte]()),
+        headers=headers^,
         auth=auth,
     )
 
@@ -873,9 +862,8 @@ def options[
     ```
     """
     var session = Session(timeout=timeout^, retry=retry^, proxy=proxy^, tls=tls^)
-    return session.send[RequestMethod.OPTIONS](
+    return session.options(
         url=url,
-        headers=headers,
-        data=RequestData(List[Byte]()),
+        headers=headers^,
         auth=auth,
     )

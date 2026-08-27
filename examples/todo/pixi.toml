@@ -10,7 +10,7 @@ preview = ["pixi-build"]
 example = "bash -c 'mojo server.mojo & pid=$! && sleep 3 && mojo client.mojo && kill $pid'"
 
 [dependencies]
-mojo = "==1.0.0b2"
-flare = { git = "https://github.com/ehsanmok/flare.git", tag = "v0.8.1" }
+mojo = "==1.0.0"
+flare = { git = "https://github.com/ehsanmok/flare.git", tag = "v0.10.0" }
 floki = { path = "../.." }
-slight = { git = "https://github.com/thatstoasty/slight.git", tag = "v0.2.1" }
+slight = { git = "https://github.com/thatstoasty/slight.git", tag = "v0.3.0" }

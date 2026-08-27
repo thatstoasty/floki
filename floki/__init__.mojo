@@ -2,7 +2,6 @@
 from floki.auth import Auth, BasicAuth, BearerAuth, NoAuth
 from floki.errors import (
     ConnectionError,
-    ErrorKind,
     FlokiError,
     RequestError,
     TimeoutError,

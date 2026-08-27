@@ -185,10 +185,11 @@ struct Response(Boolable, Movable, Writable):
             try:
                 snippet = String(self.body.as_text())
             except:
-                snippet = String("")  # body not valid UTF-8; leave empty
+                snippet = ""  # body not valid UTF-8; leave empty
             # cap the snippet length to keep errors readable
             if snippet.byte_length() > 512:
-                snippet = String(snippet[byte=0:512])
+                var new_snippet = String(snippet[byte=0:512])
+                snippet = new_snippet^
             raise HTTPError(status=self.status, url=self.url, body=snippet^)
 
     def content_length(self) -> Int:
@@ -218,7 +219,7 @@ struct Response(Boolable, Movable, Writable):
         """
         return self.status.message
 
-    def as_text(self) raises -> StringSlice[origin_of(self.body.body)]:
+    def as_text(self) raises -> StringSpan[origin_of(self.body.body)]:
         """Returns the response body decoded as text.
 
         Convenience for `response.body.as_text()`.
@@ -255,7 +256,7 @@ struct Response(Boolable, Movable, Writable):
         """
         return self.body.as_json()
 
-    def as[T: Movable & ImplicitlyDestructible & Defaultable](self, out result: T) raises:
+    def as[T: Movable & Deinitable & Defaultable](self, out result: T) raises:
         """Deserializes the response body into a value of the given type.
 
         Convenience for `response.body.as[T]()`.
@@ -271,7 +272,7 @@ struct Response(Boolable, Movable, Writable):
         """
         return self.body.as[T]()
 
-    def header(self, name: StringSlice, default: String = "") -> String:
+    def header(self, name: StringSpan, default: String = "") -> String:
         """Looks up a response header by name, case-insensitively.
 
         HTTP header names are case-insensitive, so this matches regardless of the

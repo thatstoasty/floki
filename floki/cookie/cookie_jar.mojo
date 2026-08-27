@@ -7,7 +7,7 @@ from floki.cookie.cookie import Cookie
 
 
 @fieldwise_init
-struct CookieKey(Copyable, KeyElement):
+struct CookieKey(Copyable, Writable, KeyElement):
     """A key for identifying cookies in the CookieJar, based on name, domain, and path."""
 
     var name: String
@@ -35,17 +35,6 @@ struct CookieKey(Copyable, KeyElement):
         self.domain = domain.or_else("")
         self.path = path.or_else("/")
 
-    def __eq__(self: Self, other: Self) -> Bool:
-        """Compares two CookieKey instances for equality.
-
-        Args:
-            other: The CookieKey to compare with.
-
-        Returns:
-            True if name, domain, and path all match.
-        """
-        return self.name == other.name and self.domain == other.domain and self.path == other.path
-
     def __hash__[H: Hasher](self, mut hasher: H):
         """Updates hasher with the underlying bytes.
 
@@ -69,7 +58,7 @@ struct CookieJar(Copyable, Defaultable, Sized, Writable):
         """Constructs an empty CookieJar."""
         self._inner = Dict[CookieKey, Cookie]()
 
-    def __init__(out self, *cookies: Cookie) raises:
+    def __init__(out self, var *cookies: Cookie) raises:
         """Constructs a CookieJar pre-populated with the given cookies.
 
         Args:
@@ -78,9 +67,13 @@ struct CookieJar(Copyable, Defaultable, Sized, Writable):
         Raises:
             Error: If any of the provided cookies are invalid.
         """
-        self._inner = Dict[CookieKey, Cookie]()
-        for cookie in cookies:
-            self.set_cookie(cookie.copy())
+        self._inner = Dict[CookieKey, Cookie](capacity=len(cookies))
+
+        def _move_elements(idx: Int, var elt: Cookie) {mut self}:
+            self.set_cookie(elt^)
+
+        cookies^.consume_elements(_move_elements)
+            
 
     def __init__(out self, var raw_cookies: CurlList) raises:
         """Constructs a CookieJar by parsing cookies from a libcurl cookie list.
@@ -94,7 +87,7 @@ struct CookieJar(Copyable, Defaultable, Sized, Writable):
         self._inner = Dict[CookieKey, Cookie]()
         try:
             for cookie in raw_cookies:
-                self.set_cookie(Cookie(StringSlice(unsafe_from_utf8=cookie)))
+                self.set_cookie(Cookie(StringSpan(unsafe_from_utf8=cookie)))
         finally:
             raw_cookies^.free()
 
@@ -108,7 +101,10 @@ struct CookieJar(Copyable, Defaultable, Sized, Writable):
         """
         self._inner[key^] = value^
 
-    def __getitem__(ref self, var key: CookieKey) raises -> ref[self._inner] Cookie:
+    @always_inline
+    def __getitem__(ref self, ref key: CookieKey) raises -> ref[
+        origin_of(self._inner)._get_owned_interior["value"]
+    ] Cookie:
         """Retrieves a cookie from the jar by key.
 
         Args:
@@ -120,7 +116,7 @@ struct CookieJar(Copyable, Defaultable, Sized, Writable):
         Raises:
             KeyError: If the key is not found.
         """
-        return self._inner[key^]
+        return self._inner[key]
 
     def get(self, key: CookieKey) -> Optional[Cookie]:
         """Retrieves a cookie from the jar by key, returning None if not found.

@@ -138,7 +138,7 @@ def test_cookie_jar_replace_existing_cookie() raises -> None:
 def test_cookie_jar_write_to_contains_header() raises -> None:
     var jar = CookieJar()
     jar.set_cookie(Cookie("session_id", "abc123"))
-    var output = String.write(jar)
+    var output = String(jar)
     assert_true("set-cookie" in output)
     assert_true("session_id=abc123" in output)
 

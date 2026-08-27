@@ -1,7 +1,7 @@
 """The `Proxy` type used to configure proxying for requests made by a `Session`."""
 
 
-struct Proxy(Boolable, Movable):
+struct Proxy(Boolable, Movable, Equatable, Writable):
     """Proxy configuration for requests made by a `Session`.
 
     The proxy `url` may include a scheme and port, e.g. `http://proxy.example:8080`

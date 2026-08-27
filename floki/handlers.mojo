@@ -7,7 +7,7 @@ comptime SIZE_LIMIT = 2_147_483_648
 """Size limit (2GB) for using the standard post field size option in libcurl. Requests with body sizes above this threshold will use the large post field size option."""
 
 
-def _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
+def _handle_post[origin: ImmOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
     """Configures the libcurl easy handle for a POST request with byte data.
 
     Parameters:
@@ -28,7 +28,7 @@ def _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) 
             if result != Result.OK:
                 raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
 
-        result = easy.post_fields(data)
+        var result = easy.post_fields(data)
         if result != Result.OK:
             raise Error("_handle_post: Failed to set post fields: ", easy.describe_error(result))
     else:
@@ -38,7 +38,7 @@ def _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) 
             raise Error("_handle_post: Failed to set POST method: ", easy.describe_error(result))
 
 
-def _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
+def _handle_post[origin: ImmOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
     """Configures the libcurl easy handle for a POST request with file data.
 
     Args:
@@ -53,12 +53,12 @@ def _handle_post[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, 
     if result != Result.OK:
         raise Error("_handle_post: Failed to set read function: ", easy.describe_error(result))
 
-    result = easy.read_data(UnsafePointer(to=data[]).bitcast[NoneType]())
+    result = easy.read_data(Pointer(to=data[]).unsafe_bitcast[NoneType]())
     if result != Result.OK:
         raise Error("_handle_post: Failed to set read data: ", easy.describe_error(result))
 
 
-def _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
+def _handle_put[origin: ImmOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
     """Configures the libcurl easy handle for a PUT request with byte data.
 
     Parameters:
@@ -92,7 +92,7 @@ def _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) r
         raise Error("_handle_put: Failed to set PUT request post fields: ", easy.describe_error(result))
 
 
-def _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
+def _handle_put[origin: ImmOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
     """Configures the libcurl easy handle for a PUT request with file data.
 
     Args:
@@ -112,7 +112,7 @@ def _handle_put[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, o
     if result != Result.OK:
         raise Error("_handle_put: Failed to set read function: ", easy.describe_error(result))
 
-    result = easy.read_data(UnsafePointer(to=data[]).bitcast[NoneType]())
+    result = easy.read_data(Pointer(to=data[]).unsafe_bitcast[NoneType]())
     if result != Result.OK:
         raise Error("_handle_put: Failed to set read data: ", easy.describe_error(result))
 
@@ -134,7 +134,7 @@ def _handle_delete(easy: Easy) raises:
         raise Error("_handle_delete: Failed to set DELETE method: ", easy.describe_error(result))
 
 
-def _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
+def _handle_patch[origin: ImmOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
     """Configures the libcurl easy handle for a PATCH request with byte data.
 
     Parameters:
@@ -170,7 +170,7 @@ def _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Span[Byte, origin])
             raise Error("_handle_patch: Failed to set zero-length PATCH body: ", easy.describe_error(result))
 
 
-def _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
+def _handle_patch[origin: ImmOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
     """Configures the libcurl easy handle for a PATCH request with file data.
 
     Args:
@@ -190,7 +190,7 @@ def _handle_patch[origin: ImmutOrigin, //](easy: Easy, data: Pointer[FileHandle,
     if result != Result.OK:
         raise Error("_handle_patch: Failed to set read function: ", easy.describe_error(result))
 
-    result = easy.read_data(UnsafePointer(to=data[]).bitcast[NoneType]())
+    result = easy.read_data(Pointer(to=data[]).unsafe_bitcast[NoneType]())
     if result != Result.OK:
         raise Error("_handle_patch: Failed to set read data: ", easy.describe_error(result))
 

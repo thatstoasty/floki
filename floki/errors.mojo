@@ -199,7 +199,7 @@ struct RequestError(FlokiError):
         """
         self.value = e^
 
-    def __getitem_param__[T: FlokiError](ref self) -> ref[self.value] T:
+    def __getitem_param__[T: FlokiError](ref self) -> ref[origin_of(self.value)._get_owned_interior["value"]] T:
         """Returns a reference to the underlying error value of the specified type.
 
         Parameters:
@@ -246,6 +246,6 @@ struct RequestError(FlokiError):
             An `Error` representing the underlying failure.
         """
         if self.value.isa[Error]():
-            return self.value^.take[Error]()
+            return self.value^.unwrap[Error]()
         
         return Error(self.value)

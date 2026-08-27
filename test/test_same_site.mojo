@@ -51,15 +51,15 @@ def test_same_site_inequality() raises -> None:
 
 
 def test_same_site_write_to_none() raises -> None:
-    assert_equal(String.write(SameSite.NONE), "none")
+    assert_equal(String(SameSite.NONE), "none")
 
 
 def test_same_site_write_to_lax() raises -> None:
-    assert_equal(String.write(SameSite.LAX), "lax")
+    assert_equal(String(SameSite.LAX), "lax")
 
 
 def test_same_site_write_to_strict() raises -> None:
-    assert_equal(String.write(SameSite.STRICT), "strict")
+    assert_equal(String(SameSite.STRICT), "strict")
 
 
 def main() raises -> None:
