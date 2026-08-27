@@ -16,7 +16,7 @@ struct SameSite(Copyable, Equatable, TrivialRegisterPassable, Writable):
     comptime STRICT = Self(2)
     """The cookie is only sent in a first-party context and not with requests initiated by third party websites."""
 
-    def __init__(out self, text: StringSlice) raises:
+    def __init__(out self, text: StringSpan) raises:
         """Constructs a SameSite from its string representation.
 
         Args:
@@ -32,17 +32,6 @@ struct SameSite(Copyable, Equatable, TrivialRegisterPassable, Writable):
         elif text == "strict":
             return SameSite.STRICT
         raise Error("Invalid SameSite value: ", text)
-
-    def __eq__(self, other: Self) -> Bool:
-        """Compares two SameSite instances for equality.
-
-        Args:
-            other: The SameSite instance to compare with.
-
-        Returns:
-            True if both instances represent the same SameSite policy.
-        """
-        return self.value == other.value
 
     def write_to(self, mut writer: Some[Writer]):
         """Writes the SameSite policy name to a writer.

@@ -2,7 +2,7 @@
 
 A `requests` like HTTP client for Mojo, leveraging `libcurl` under the hood.
 
-![Mojo Version](https://img.shields.io/badge/Mojo%F0%9F%94%A5-1.0.0b2-orange)
+![Mojo Version](https://img.shields.io/badge/Mojo%F0%9F%94%A5-1.0.0-orange)
 ![Build Status](https://github.com/thatstoasty/floki/actions/workflows/build.yml/badge.svg)
 ![Test Status](https://github.com/thatstoasty/floki/actions/workflows/test.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -36,7 +36,7 @@ There's two ways to build `floki` from source: directly from the Git repository 
 Run the following commands in your terminal:
 
 ```bash
-pixi add floki --git "https://github.com/thatstoasty/floki.git" --tag v0.3.4 && pixi install
+pixi add floki --git "https://github.com/thatstoasty/floki.git" --tag "v0.4.0" && pixi install
 ```
 
 #### Building from source: Local
@@ -155,7 +155,7 @@ def main() raises -> None:
         r.raise_for_status()  # raises HTTPError on a non-2xx response
 
     # Body as text, raw bytes, or JSON.
-    print(r.as_text())                    # StringSlice over the body
+    print(r.as_text())                    # StringSpan over the body
     var data = r.as_json()                # dynamic JSON, e.g. data["url"]
 
     # Headers are looked up case-insensitively.
@@ -169,7 +169,7 @@ For typed JSON, deserialize straight into a struct with `r.as[T]()`:
 import floki
 
 @fieldwise_init
-struct Todo(Defaultable, ImplicitlyDestructible, Movable):
+struct Todo(Defaultable, Deinitable, Movable):
     var id: Int
     var title: String
 

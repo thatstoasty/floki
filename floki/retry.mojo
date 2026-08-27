@@ -1,7 +1,7 @@
 """The `Retry` type used to configure retry behavior for requests made by a `Session`."""
 
 
-struct Retry(Copyable):
+struct Retry(Copyable, Equatable, Writable):
     """A retry policy with exponential backoff for failed requests.
 
     A request is retried when the underlying transfer fails (e.g. a connection
@@ -23,7 +23,7 @@ struct Retry(Copyable):
         out self,
         max_retries: Int = 0,
         backoff_factor: Float64 = 0.0,
-        status_forcelist: List[Int] = [408, 429, 500, 502, 503, 504],
+        var status_forcelist: List[Int] = [408, 429, 500, 502, 503, 504],
     ):
         """Constructs a `Retry` policy.
 
@@ -37,7 +37,7 @@ struct Retry(Copyable):
         """
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor
-        self.status_forcelist = status_forcelist.copy()
+        self.status_forcelist = status_forcelist^
 
     def backoff_time(self, attempt: Int) -> Float64:
         """Computes the backoff delay before a given retry attempt.

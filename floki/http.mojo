@@ -12,7 +12,7 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
     comptime HTTPS = Self(1)
     """Represents the HTTPS protocol, which is the secure version of HTTP. It uses encryption to protect data transmitted between the client and server."""
 
-    def __init__(out self, s: StringSlice) raises:
+    def __init__(out self, s: ImmStringSpan) raises:
         """Constructs a Protocol from its string representation.
 
         Args:
@@ -28,17 +28,6 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
         else:
             raise Error(t"Invalid protocol: {s}")
 
-    def __eq__(self, other: Self) -> Bool:
-        """Compares two Protocol instances for equality.
-
-        Args:
-            other: The Protocol instance to compare with.
-
-        Returns:
-            True if both instances represent the same protocol.
-        """
-        return self.value == other.value
-
     def write_to(self, mut writer: Some[Writer]):
         """Writes the protocol name to a writer.
 
@@ -52,7 +41,7 @@ struct Protocol(Equatable, ImplicitlyCopyable, Writable):
 
 
 @fieldwise_init
-struct Status(Copyable, Equatable, TrivialRegisterPassable, Writable):
+struct Status(Equatable, TrivialRegisterPassable, Writable):
     """Represents the status of an HTTP response, including the status code and a corresponding message."""
 
     var code: UInt16
@@ -213,10 +202,10 @@ struct Status(Copyable, Equatable, TrivialRegisterPassable, Writable):
         Returns:
             The reason phrase for a known code, otherwise "Unknown".
         """
-        if code == 100:
-            return "Continue"
-        elif code == 101:
-            return "Switching Protocols"
+        if code == Self.CONTINUE.code:
+            return Self.CONTINUE.message
+        elif code == Self.SWITCHING_PROTOCOLS.code:
+            return Self.SWITCHING_PROTOCOLS.message
         elif code == 102:
             return "Processing"
         elif code == 103:
@@ -384,7 +373,7 @@ struct RequestMethod(Equatable, ImplicitlyCopyable, Writable):
     comptime OPTIONS = Self(6)
     """The OPTIONS method is used to describe the communication options for the target resource. It allows clients to discover which HTTP methods are supported by the server for a specific resource."""
 
-    def __init__(out self, s: StringSlice) raises:
+    def __init__(out self, s: ImmStringSpan) raises:
         """Constructs a RequestMethod from its string representation.
 
         Args:

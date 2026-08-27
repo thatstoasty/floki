@@ -3,7 +3,7 @@ from std.utils import Variant
 
 
 @fieldwise_init
-struct RequestData[origin: ImmutOrigin]:
+struct RequestData[origin: ImmOrigin]:
     """Data variant to represent either a FileHandle or a Span of bytes for request bodies.
 
     Parameters:
@@ -48,7 +48,7 @@ struct RequestData[origin: ImmutOrigin]:
         """
         return self.data.isa[T]()
 
-    def __getitem_param__[T: AnyType](ref self) -> ref[self.data] T:
+    def __getitem_param__[T: AnyType](ref self) -> ref[origin_of(self.data)._get_owned_interior["value"]] T:
         """Retrieves the contained data as the specified type.
 
         Parameters:

@@ -1,14 +1,8 @@
-import floki
-from floki import (
-    ConnectionError,
-    RequestError,
-    TimeoutError,
-    TLSError,
-    TooManyRedirectsError,
-    TransportError,
-)
 from floki.session import Session
 from floki.timeout import Timeout
+
+import floki
+from floki import ConnectionError, RequestError, TimeoutError, TLSError, TooManyRedirectsError, TransportError
 
 
 def main() raises -> None:

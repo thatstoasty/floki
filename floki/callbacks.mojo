@@ -1,7 +1,7 @@
 """Libcurl read/write callbacks used to stream request and response bodies."""
-from mojo_curl.c.types import CURL_READFUNC_ABORT, ImmutExternalPointer, MutExternalPointer
+from mojo_curl.c.types import CURL_READFUNC_ABORT, ImmExternalPointer, MutExternalPointer
 from std.ffi import c_char, c_size_t, get_errno
-from std.memory import memcpy
+from std.memory import unsafe_memcpy
 from std.sys import stderr
 
 
@@ -20,8 +20,8 @@ def write_callback(
     Returns:
         The number of bytes handled, which must equal `size * nmemb` to indicate success.
     """
-    var body = userdata.bitcast[List[UInt8]]()
-    var s = Span(ptr=ptr.bitcast[UInt8](), length=Int(size * nmemb))
+    var body = userdata.unsafe_bitcast[List[UInt8]]()
+    var s = Span(unsafe_ptr=ptr.unsafe_bitcast[UInt8](), length=Int(size * nmemb))
     body[].extend(s)
     return size * nmemb
 
@@ -30,7 +30,7 @@ def write_callback(
 struct DataToRead:
     """Struct to hold data that will be read by the `read_callback` function for libcurl."""
 
-    var data: ImmutExternalPointer[Byte]
+    var data: ImmExternalPointer[Byte]
     """The pointer to the data that will be read by the `read_callback` function for libcurl."""
     var bytes_remaining: UInt
     """The total number of bytes remaining to be read from the data pointer."""
@@ -50,7 +50,7 @@ def read_callback(
     Returns:
         The number of bytes copied into the buffer, or 0 when no data remains.
     """
-    var data = userdata.bitcast[DataToRead]()
+    var data = userdata.unsafe_bitcast[DataToRead]()
     var buffer_size = size * nmemb  # Max bytes we can write to ptr
 
     # Nothing to write
@@ -62,14 +62,14 @@ def read_callback(
     var bytes_to_read = min(data[].bytes_remaining, buffer_size)
     if bytes_to_read > 0:
         # Copy the data into the buffer
-        memcpy(
+        unsafe_memcpy(
             dest=ptr,
-            src=data[].data.bitcast[Int8](),
+            src=data[].data.unsafe_bitcast[Int8](),
             count=Int(bytes_to_read),
         )
 
         # Update the userdata to reflect the consumed data
-        data[].data += bytes_to_read
+        data[].data = data[].data.unsafe_offset(bytes_to_read)
         data[].bytes_remaining -= UInt(bytes_to_read)
 
         return bytes_to_read
@@ -91,7 +91,7 @@ def fd_read_callback(
     Returns:
         The number of bytes read into the buffer, or an abort code on error.
     """
-    var file = userdata.bitcast[FileHandle]()
+    var file = userdata.unsafe_bitcast[FileHandle]()
     var buffer_size = size * nmemb  # Max bytes we can write to ptr
 
     # Nothing to write
@@ -101,7 +101,7 @@ def fd_read_callback(
     # Copy the data into the buffer
     try:
         var fd = FileDescriptor(file[]._get_raw_fd())
-        return fd.read_bytes(Span(ptr=ptr.bitcast[UInt8](), length=Int(buffer_size)))
+        return c_size_t(fd.read_bytes(Span(unsafe_ptr=ptr.unsafe_bitcast[UInt8](), length=Int(buffer_size))))
     except e:
         print(t"fd_read_callback: Error reading from file descriptor: {e}. Errno: {get_errno()}", file=stderr)
         return CURL_READFUNC_ABORT

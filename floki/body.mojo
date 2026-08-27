@@ -20,7 +20,7 @@ struct Body(Copyable, Equatable, Sized, Writable):
         """
         self.body = body^
 
-    def __init__[origin: ImmutOrigin, //](out self, body: Span[Byte, origin]):
+    def __init__[origin: ImmOrigin, //](out self, body: Span[Byte, origin]):
         """Alternate constructor that accepts a Span[Byte] for the body content.
 
         Parameters:
@@ -47,8 +47,8 @@ struct Body(Copyable, Equatable, Sized, Writable):
         """
         return Span(self.body)
 
-    def as_text(self) raises -> StringSlice[origin_of(self.body)]:
-        """Creates and returns a `StringSlice` view of the body content.
+    def as_text(self) raises -> StringSpan[origin_of(self.body)]:
+        """Creates and returns a `StringSpan` view of the body content.
 
         Returns:
             The body content as a string slice.
@@ -56,9 +56,9 @@ struct Body(Copyable, Equatable, Sized, Writable):
         Raises:
             Error: If the body content is not valid UTF-8.
         """
-        return StringSlice(from_utf8=Span(self.body))
+        return StringSpan(from_utf8=Span(self.body))
 
-    def as[T: Movable & ImplicitlyDestructible & Defaultable](self, out result: T) raises:
+    def as[T: Movable & Deinitable & Defaultable](self, out result: T) raises:
         """Deserializes the body into a value of the given type.
 
         Use this when you have a struct (or other deserializable type) to parse

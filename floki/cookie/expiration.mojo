@@ -8,8 +8,9 @@ comptime HTTP_DATE_FORMAT = "ddd, DD MMM YYYY HH:mm:ss ZZZ"
 
 
 @fieldwise_init
-struct Expiration(Copyable, Defaultable, Equatable):
-    """Represents the expiration setting for a cookie, which can be either session-scoped (no explicit expiry) or a specific datetime. Provides methods for constructing, comparing, and formatting expiration values.
+struct Expiration(Copyable, Defaultable, Equatable, Writable):
+    """Represents the expiration setting for a cookie, which can be either session-scoped (no explicit expiry) or a specific datetime.
+    Provides methods for constructing, comparing, and formatting expiration values.
     """
 
     var variant: UInt8
@@ -31,7 +32,7 @@ struct Expiration(Copyable, Defaultable, Equatable):
         self.variant = 1
         self.datetime = time
 
-    def __init__(out self, text: StringSlice) raises:
+    def __init__(out self, text: StringSpan) raises:
         """Constructs an Expiration by parsing an HTTP date string.
 
         Args:
@@ -47,7 +48,7 @@ struct Expiration(Copyable, Defaultable, Equatable):
             self = Self(time=DateTime[TZ_UTC, UTCFastCal].parse[fmt_str=HTTP_DATE_FORMAT](text))
 
     @staticmethod
-    def from_libcurl_expires(text: StringSlice) raises -> Self:
+    def from_libcurl_expires(text: StringSpan) raises -> Self:
         """Constructs an Expiration from libcurl's cookie-list expires field.
 
         Args:

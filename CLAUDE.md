@@ -83,13 +83,6 @@ floki/
 - Follow value semantics and ownership conventions
 - Use `Reference` types with explicit lifetimes in APIs
 
-### MAX Kernel Development
-
-- Fine-grained control over memory layout and parallelism
-- Hardware-specific optimizations (tensor cores, SIMD)
-- Vendor library integration when beneficial
-- Performance improvements must include benchmarks
-
 ## LLM-friendly Documentation
 
 - Docs index: <https://docs.modular.com/llms.txt>
@@ -104,18 +97,3 @@ history and revert changes if needed.
 - **Descriptive Commit Messages:** Write clear, concise, and informative commit
 messages. Explain the *why* behind the change, not just *what* was changed. Use
 a consistent format (e.g., imperative mood: "Fix bug", "Add feature").
-- **Commit titles:** git commit titles should have the `[Stdlib]` or `[Kernel]`
-depending on whether the kernel is modified and if they are modifying GPU
-functions then they should use `[GPU]` tag as well.
-- The commit messages should be surrounded by BEGIN_PUBLIC and END_PUBLIC
-- Here is an example template a git commit
-
-```git
-[Kernels] Some new feature
-
-BEGIN_PUBLIC
-[Kernels] Some new feature
-
-This add a new feature for [xyz] to enable [abc]
-END_PUBLIC
-```

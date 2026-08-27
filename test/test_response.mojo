@@ -47,11 +47,11 @@ def test_status_eq_int() raises -> None:
 
 
 def test_status_write_to_ok() raises -> None:
-    assert_equal(String.write(Status.OK), "200 OK")
+    assert_equal(String(Status.OK), "200 OK")
 
 
 def test_status_write_to_not_found() raises -> None:
-    assert_equal(String.write(Status.NOT_FOUND), "404 Not Found")
+    assert_equal(String(Status.NOT_FOUND), "404 Not Found")
 
 
 # === Protocol ===
@@ -77,11 +77,11 @@ def test_protocol_invalid_raises() raises -> None:
 
 
 def test_protocol_write_to_http() raises -> None:
-    assert_equal(String.write(Protocol.HTTP), "http")
+    assert_equal(String(Protocol.HTTP), "http")
 
 
 def test_protocol_write_to_https() raises -> None:
-    assert_equal(String.write(Protocol.HTTPS), "https")
+    assert_equal(String(Protocol.HTTPS), "https")
 
 
 # === Body ===
@@ -112,7 +112,7 @@ def test_body_len() raises -> None:
     assert_equal(len(body), 5)
 
 
-struct TestJSON(Defaultable, ImplicitlyDestructible, Movable):
+struct TestJSON(Defaultable, Deinitable, Movable):
     var name: String
 
     def __init__(out self):

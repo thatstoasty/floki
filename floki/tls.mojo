@@ -3,7 +3,7 @@
 from std.pathlib import Path
 
 
-struct TLS(Copyable, Movable):
+struct TLS(Copyable, Equatable, Writable):
     """TLS/SSL verification settings for requests made by a `Session`.
 
     By default, floki verifies the server's certificate chain and that the

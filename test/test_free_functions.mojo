@@ -62,7 +62,7 @@ def test_options() raises -> None:
 
 
 @fieldwise_init
-struct QueryParameters(Defaultable, ImplicitlyDestructible, Movable):
+struct QueryParameters(Defaultable, Deinitable, Movable):
     var foo: String
 
     def __init__(out self):
@@ -70,7 +70,7 @@ struct QueryParameters(Defaultable, ImplicitlyDestructible, Movable):
 
 
 @fieldwise_init
-struct ArgResponse(Defaultable, ImplicitlyDestructible, Movable):
+struct ArgResponse(Defaultable, Deinitable, Movable):
     var args: QueryParameters
     var headers: Dict[String, String]
     var origin: String
@@ -93,7 +93,7 @@ def test_get_with_query_parameters() raises -> None:
 
 
 @fieldwise_init
-struct CustomHeaderResponse(Defaultable, ImplicitlyDestructible, Movable):
+struct CustomHeaderResponse(Defaultable, Deinitable, Movable):
     var args: Dict[String, String]
     var headers: Dict[String, String]
     var origin: String
@@ -149,7 +149,7 @@ def test_patch_raw_bytes() raises -> None:
 
 
 @fieldwise_init
-struct PostPayload(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
+struct PostPayload(Defaultable, Deinitable, Equatable, Movable, Writable):
     var title: String
     var body: String
     var userId: Int
@@ -170,7 +170,7 @@ def test_post_struct() raises -> None:
 
 
 @fieldwise_init
-struct UpdatePayload(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
+struct UpdatePayload(Defaultable, Deinitable, Equatable, Movable, Writable):
     var key1: String
     var key2: String
 
@@ -189,7 +189,7 @@ def test_put_struct() raises -> None:
 
 
 @fieldwise_init
-struct PatchPayload(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
+struct PatchPayload(Defaultable, Deinitable, Equatable, Movable, Writable):
     var key1: String
 
     def __init__(out self):

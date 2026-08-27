@@ -7,7 +7,7 @@ from mojo_datetime import DateTime
 
 
 @fieldwise_init
-struct Cookie(Copyable, Writable):
+struct Cookie(Copyable, Equatable, Writable):
     """Represents an HTTP cookie with its attributes and provides methods for constructing, manipulating, and serializing cookies.
     """
 
@@ -88,11 +88,11 @@ struct Cookie(Copyable, Writable):
         self.secure = secure
         self.partitioned = partitioned
 
-    def __init__[origin: Origin, //](out self, header: StringSlice[origin]) raises:
+    def __init__[origin: Origin, //](out self, header: StringSpan[origin]) raises:
         """Constructs a Cookie by parsing a tab-separated libcurl cookie-list string.
 
         Parameters:
-            origin: The origin of the StringSlice.
+            origin: The origin of the StringSpan.
 
         Args:
             header: A tab-separated libcurl cookie-list string containing cookie fields
@@ -102,7 +102,7 @@ struct Cookie(Copyable, Writable):
             Error: If the cookie-list string cannot be parsed.
         """
         var raw_parts = header.split("\t")
-        var parts: List[StringSlice[origin].Immutable] = [part for part in raw_parts]
+        var parts: List[StringSpan[origin].Immutable] = [part for part in raw_parts]
         self.domain = String(parts[0])
         self.partitioned = parts[1] == "TRUE"
         self.path = String(parts[2])
@@ -120,14 +120,6 @@ struct Cookie(Copyable, Writable):
         """
         writer.write("Cookie(", "name=", self.name, ", value=", self.value, ")")
 
-    def __str__(self) -> String:
-        """Returns a string representation of the cookie.
-
-        Returns:
-            A string containing the cookie's name and value.
-        """
-        return String.write("Name: ", self.name, " Value: ", self.value)
-
     def clear_cookie(mut self):
         """Invalidates the cookie by clearing its expiration."""
         # self.max_age = None
@@ -142,10 +134,10 @@ struct Cookie(Copyable, Writable):
         Returns:
             The complete header value string including all cookie attributes.
         """
-        var header_value = String.write(self.name, Self.EQUAL, self.value)
+        var header_value = String(self.name, Self.EQUAL, self.value)
         if self.expires.is_datetime():
             try:
-                if v := self.expires.http_date_timestamp():
+                if var v := self.expires.http_date_timestamp():
                     header_value.write(Self.SEPERATOR, Self.EXPIRES, Self.EQUAL, v.value())
             except:
                 # TODO: This should be a hardfail however Writeable trait write_to method does not raise

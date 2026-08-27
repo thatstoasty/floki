@@ -1,15 +1,12 @@
-from flare.prelude import *  # Request, Response, Router, HttpServer, ok, ok_json, SocketAddr, ...
-from flare.http import (
-    Router, ok, Request, Response, HttpServer,
-    Extracted, PathInt, Handler,
-)
-from slight import Connection
 from emberjson import serialize
+from flare.http import Extracted, Handler, HttpServer, PathInt, Request, Response, Router, ok
+from flare.prelude import *  # Request, Response, Router, HttpServer, ok, ok_json, SocketAddr, ...
+from slight import Connection
 from std.pathlib import Path
 
 
 @fieldwise_init
-struct User(Movable, Writable, Defaultable):
+struct User(Defaultable, Movable, Writable):
     var id: Int
     var name: String
     var email: String
@@ -36,10 +33,12 @@ struct GetUserHandler(Copyable, Handler, Movable):
         except:
             return Response(status=404, body=List("User not found".as_bytes()))
 
+
 def main() raises:
     var path = Path("todo.db")
     var db = Connection.open(path)
-    db.execute_batch("""
+    db.execute_batch(
+        """
     CREATE TABLE users (
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
@@ -47,7 +46,8 @@ def main() raises:
     );
     INSERT INTO users (name, email) VALUES ('Alice', 'alice@example.com');
     INSERT INTO users (name, email) VALUES ('Bob', 'bob@example.com');
-    """)
+    """
+    )
 
     var r = Router()
     r.get("/users/:id", GetUserHandler(path))

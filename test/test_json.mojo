@@ -5,7 +5,7 @@ from std.utils import Variant
 
 
 @fieldwise_init
-struct Todo(Defaultable, Equatable, ImplicitlyDestructible, Movable, Writable):
+struct Todo(Defaultable, Deinitable, Equatable, Movable, Writable):
     var userId: Int
     var id: Int
     var title: String

@@ -1,7 +1,7 @@
 from floki.cookie.cookie_jar import CookieJar, CookieKey
 from floki.cookie.expiration import Expiration
 from mojo_datetime import DateTime
-from std.testing import TestSuite, assert_equal, assert_true
+from std.testing import TestSuite, assert_equal, assert_false, assert_true
 
 from floki.cookie.cookie import Cookie
 
@@ -61,9 +61,9 @@ def test_cookie_jar_empty_construction() raises -> None:
     assert_equal(len(jar), 0)
 
 
-def test_cookie_jar_bool_true_when_empty() raises -> None:
+def test_cookie_jar_bool_false_when_empty() raises -> None:
     var jar = CookieJar()
-    assert_true(jar.__bool__())
+    assert_false(Bool(jar))
 
 
 def test_cookie_jar_from_cookies() raises -> None:
@@ -121,10 +121,10 @@ def test_cookie_jar_len_after_adding() raises -> None:
     assert_equal(len(jar), 3)
 
 
-def test_cookie_jar_bool_false_when_nonempty() raises -> None:
+def test_cookie_jar_bool_true_when_nonempty() raises -> None:
     var jar = CookieJar()
     jar.set_cookie(Cookie("session_id", "abc123"))
-    assert_true(not jar.__bool__())
+    assert_true(Bool(jar))
 
 
 def test_cookie_jar_replace_existing_cookie() raises -> None:
@@ -138,7 +138,7 @@ def test_cookie_jar_replace_existing_cookie() raises -> None:
 def test_cookie_jar_write_to_contains_header() raises -> None:
     var jar = CookieJar()
     jar.set_cookie(Cookie("session_id", "abc123"))
-    var output = String.write(jar)
+    var output = String(jar)
     assert_true("set-cookie" in output)
     assert_true("session_id=abc123" in output)
 

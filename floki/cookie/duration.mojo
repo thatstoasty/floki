@@ -2,7 +2,7 @@
 
 
 @fieldwise_init
-struct Duration(ImplicitlyCopyable, TrivialRegisterPassable):
+struct Duration(Equatable, TrivialRegisterPassable, Writable):
     """Represents a duration of time, stored internally as total seconds."""
 
     var total_seconds: Int
@@ -22,7 +22,7 @@ struct Duration(ImplicitlyCopyable, TrivialRegisterPassable):
         self.total_seconds += hours * 60 * 60
         self.total_seconds += days * 24 * 60 * 60
 
-    def __init__(out self, text: StringSlice) raises:
+    def __init__(out self, text: StringSpan) raises:
         """Constructs a Duration by parsing a string as a number of seconds.
 
         Args:
