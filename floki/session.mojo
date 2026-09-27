@@ -177,6 +177,11 @@ struct Session(Movable):
         Raises:
             RequestError: If there is a failure in sending or receiving the message.
         """
+        # The transfer's result is raised as a classified `RequestError` only after leaving the
+        # `try` blocks below. Raising it inside them would unify it with the plain `Error`s raised
+        # by the setup calls, flattening it to an `Error` and losing its kind (timeout, TLS, etc.).
+        var perform_result: Result
+        var response: Optional[Response] = None
         try:
             # Set the url
             if query_parameters:
@@ -297,7 +302,7 @@ struct Session(Movable):
                 var attempt = 0
                 while True:
                     response_body.clear()  # Discard any partial body from a previous attempt.
-                    var perform_result = self.easy.perform()
+                    perform_result = self.easy.perform()
                     var status_code = Int(self.easy.response_code()) if perform_result == Result.OK else 0
 
                     if self.retry:
@@ -308,27 +313,30 @@ struct Session(Movable):
                             sleep(retry.backoff_time(attempt))
                             continue
 
-                    # Retries (if any) are exhausted. A failed transfer is surfaced as a
-                    # classified `RequestError` so callers can tell a timeout from a
-                    # connection failure from a TLS problem.
-                    if perform_result != Result.OK:
-                        raise RequestError(perform_result)
+                    # Retries (if any) are exhausted.
                     break
             finally:
                 header_list^.free()  # Free headers after performing the request.
 
-            return Response(
-                body=response_body^,
-                headers=self.easy.headers(),
-                protocol=Protocol(self.easy.get_scheme()),
-                status=Status(Int(self.easy.response_code())),
-                cookies=CookieJar(self.easy.cookies()),
-                url=self.easy.effective_url(),
-            )
+            if perform_result == Result.OK:
+                response = Response(
+                    body=response_body^,
+                    headers=self.easy.headers(),
+                    protocol=Protocol(self.easy.get_scheme()),
+                    status=Status(Int(self.easy.response_code())),
+                    cookies=CookieJar(self.easy.cookies()),
+                    url=self.easy.effective_url(),
+                )
         finally:
             self.easy.reset()  # Reset the easy handle to clear any state for the next request.
             if self.verbose:
                 _ = self.easy.verbose()
+
+        # A failed transfer is surfaced as a classified `RequestError` so callers can tell a
+        # timeout from a connection failure from a TLS problem.
+        if perform_result != Result.OK:
+            raise RequestError(perform_result)
+        return response.take()
 
     def get[
         A: Auth = NoAuth, //
@@ -418,13 +426,13 @@ struct Session(Movable):
         """
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"
-        
+
         var json: String
         try:
             json = emberjson.to_json(data)
         except e:
             raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
-        
+
         var json_data = json.as_bytes()
         return self.send[RequestMethod.POST](
             url=url,
@@ -539,7 +547,7 @@ struct Session(Movable):
             json = emberjson.to_json(data)
         except e:
             raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
-        
+
         var json_data = json.as_bytes()
         return self.send[RequestMethod.POST](
             url=url,
@@ -694,7 +702,7 @@ struct Session(Movable):
             json = emberjson.to_json(data)
         except e:
             raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
-        
+
         var json_data = json.as_bytes()
         return self.send[RequestMethod.PUT](
             url=url,
@@ -752,13 +760,13 @@ struct Session(Movable):
         """
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"
-        
+
         var json_data: String
         try:
             json_data = emberjson.to_json(data)
         except e:
             raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
-        
+
         var json_bytes = json_data.as_bytes()
         return self.send[RequestMethod.PUT](
             url=url,
@@ -959,7 +967,7 @@ struct Session(Movable):
             json = emberjson.to_json(data)
         except e:
             raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
-        
+
         var json_data = json.as_bytes()
         return self.send[RequestMethod.PATCH](
             url=url,
@@ -1022,7 +1030,7 @@ struct Session(Movable):
             json = emberjson.to_json(data)
         except e:
             raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
-        
+
         var json_data = json.as_bytes()
         return self.send[RequestMethod.PATCH](
             url=url,
