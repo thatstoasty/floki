@@ -156,6 +156,15 @@ struct RequestError(FlokiError):
         self.value = e^
 
     @implicit
+    def __init__(out self, var message: String):
+        """Constructs a `RequestError` wrapping an `Error` with the given message.
+
+        Args:
+            message: The error message.
+        """
+        self.value = Error(message^)
+
+    @implicit
     def __init__(out self, var e: ConnectionError):
         """Constructs a `RequestError` from a low-level `ConnectionError`.
 
