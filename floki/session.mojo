@@ -418,7 +418,14 @@ struct Session(Movable):
         """
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"
-        var json_data = emberjson.to_string(data^).as_bytes()
+        
+        var json: String
+        try:
+            json = emberjson.to_json(data)
+        except e:
+            raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
+        
+        var json_data = json.as_bytes()
         return self.send[RequestMethod.POST](
             url=url,
             headers=headers^,
@@ -527,12 +534,17 @@ struct Session(Movable):
         """
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"
-        var json_data = emberjson.serialize(data)
-        var json_bytes = json_data.as_bytes()
+        var json: String
+        try:
+            json = emberjson.to_json(data)
+        except e:
+            raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
+        
+        var json_data = json.as_bytes()
         return self.send[RequestMethod.POST](
             url=url,
             headers=headers^,
-            data=RequestData(json_bytes),
+            data=RequestData(json_data),
             query_parameters=query_parameters,
             auth=auth,
             allow_redirects=allow_redirects,
@@ -677,11 +689,17 @@ struct Session(Movable):
         """
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"
-        var json_data = emberjson.to_string(data^).as_bytes()
+        var json: String
+        try:
+            json = emberjson.to_json(data)
+        except e:
+            raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
+        
+        var json_data = json.as_bytes()
         return self.send[RequestMethod.PUT](
             url=url,
             headers=headers^,
-            data=json_data,
+            data=RequestData(json_data),
             query_parameters=query_parameters,
             auth=auth,
             allow_redirects=allow_redirects,
@@ -734,7 +752,13 @@ struct Session(Movable):
         """
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"
-        var json_data = emberjson.serialize(data)
+        
+        var json_data: String
+        try:
+            json_data = emberjson.to_json(data)
+        except e:
+            raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
+        
         var json_bytes = json_data.as_bytes()
         return self.send[RequestMethod.PUT](
             url=url,
@@ -930,11 +954,17 @@ struct Session(Movable):
         """
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"
-        var json_data = emberjson.to_string(data^).as_bytes()
+        var json: String
+        try:
+            json = emberjson.to_json(data)
+        except e:
+            raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
+        
+        var json_data = json.as_bytes()
         return self.send[RequestMethod.PATCH](
             url=url,
             headers=headers^,
-            data=json_data,
+            data=RequestData(json_data),
             query_parameters=query_parameters,
             auth=auth,
             allow_redirects=allow_redirects,
@@ -987,12 +1017,17 @@ struct Session(Movable):
         """
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"
-        var json_data = emberjson.serialize(data)
-        var json_bytes = json_data.as_bytes()
+        var json: String
+        try:
+            json = emberjson.to_json(data)
+        except e:
+            raise RequestError(String(t"Failed to serialize data to JSON: {e}"))
+        
+        var json_data = json.as_bytes()
         return self.send[RequestMethod.PATCH](
             url=url,
             headers=headers^,
-            data=RequestData(json_bytes),
+            data=RequestData(json_data),
             query_parameters=query_parameters,
             auth=auth,
             allow_redirects=allow_redirects,
