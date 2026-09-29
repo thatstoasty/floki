@@ -25,35 +25,38 @@ api_server = "fastapi run utils/test_server.py"
 
 [package]
 name = "floki"
-version = "0.4.0"
+version = "0.4.1"
 publish = true
 
 [package.build]
 backend = { name = "pixi-build-mojo", version = "0.*" }
 
 [dependencies]
-mojo = ">=1.0.0,<1.1.0"
-emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.4" }
-mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.4.4" }
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.4.4"  }
-mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "1.0.0" }
+mojo = ">=1.1.0,<1.2.0"
+emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.4.0" }
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.4.6" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.4.6"  }
+# mojo_datetime = { git = "https://github.com/martinvuyk/mojo_datetime.git", rev = "1.1.0" }
+mojo_datetime = { git = "https://github.com/thatstoasty/mojo_datetime.git", rev = "1.1.0" }
 
 [package.build-dependencies]
-mojo-compiler = ">=1.0.0,<1.1.0"
-emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.4" }
-mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.4.4" }
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.4.4" }
-mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "1.0.0" }
+mojo-compiler = ">=1.1.0,<1.2.0"
+emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.4.0" }
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.4.6" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.4.6" }
+# mojo_datetime = { git = "https://github.com/martinvuyk/mojo_datetime.git", rev = "1.1.0" }
+mojo_datetime = { git = "https://github.com/thatstoasty/mojo_datetime.git", rev = "1.1.0" }
 
 [package.host-dependencies]
-mojo-compiler = ">=1.0.0,<1.1.0"
+mojo-compiler = ">=1.1.0,<1.2.0"
 
 [package.run-dependencies]
-mojo-compiler = ">=1.0.0,<1.1.0"
-emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.3.4" }
-mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.4.4" }
-curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.4.4"  }
-mojo_datetime = { git = "https://github.com/martinvuyk/mojo-datetime.git", rev = "1.0.0" }
+mojo-compiler = ">=1.1.0,<1.2.0"
+emberjson = { git = "https://github.com/bgreni/EmberJson.git", tag = "0.4.0" }
+mojo-curl = { git = "https://github.com/thatstoasty/mojo-curl.git", tag = "v0.4.6" }
+curl_wrapper = { git = "https://github.com/thatstoasty/mojo-curl.git", subdirectory = "shim", tag = "v0.4.6"  }
+# mojo_datetime = { git = "https://github.com/martinvuyk/mojo_datetime.git", rev = "1.1.0" }
+mojo_datetime = { git = "https://github.com/thatstoasty/mojo_datetime.git", rev = "1.1.0" }
 
 [feature.util.dependencies]
 isort = ">=8.0.1,<9"
