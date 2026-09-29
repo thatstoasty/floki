@@ -74,7 +74,7 @@ struct Body(Copyable, Equatable, Sized, Writable):
         Raises:
             Error: if the body is empty or cannot be parsed as JSON.
         """
-        return emberjson.from_json[T](String(self.as_text()))
+        return emberjson.from_json[T](self.as_text())
 
     def as_json(self) raises -> emberjson.Value:
         """Parses the body as a dynamic JSON document for ad-hoc access.
@@ -88,7 +88,7 @@ struct Body(Copyable, Equatable, Sized, Writable):
         Raises:
             Error: if the body is empty or cannot be parsed as JSON.
         """
-        return emberjson.from_json[emberjson.Value](String(self.as_text()))
+        return emberjson.from_json[emberjson.Value](self.as_text())
 
     def write_to(self, mut writer: Some[Writer]) raises:
         """Writes the body to a writer.
