@@ -6,6 +6,35 @@ from mojo_curl.easy import Easy, Result
 comptime SIZE_LIMIT = 2_147_483_648
 """Size limit (2GB) for using the standard post field size option in libcurl. Requests with body sizes above this threshold will use the large post field size option."""
 
+comptime _EMPTY_BODY: StaticString = ""
+"""Static storage for zero-length bodies: libcurl keeps the post fields pointer until the transfer ends, so it must outlive the request."""
+
+
+def _set_post_fields[origin: ImmOrigin, //](easy: Easy, data: Span[Byte, origin], caller: StaticString) raises:
+    """Sets `data` as the request body, with an explicit size.
+
+    The size is always set, including for an empty body: without it libcurl
+    falls back to `strlen` on the pointer, or to a chunked upload with
+    `Expect: 100-continue` when no post fields are set at all.
+
+    Parameters:
+        origin: The origin of the data span.
+
+    Args:
+        easy: The libcurl easy handle to configure.
+        data: The request body as a span of bytes.
+        caller: The name of the calling handler, used in error messages.
+    """
+    var data_size = len(data)
+    # libcurl dictates the usage of the large post field size option over 2GB.
+    var result = easy.post_field_size_large(data_size) if data_size > SIZE_LIMIT else easy.post_field_size(data_size)
+    if result != Result.OK:
+        raise Error(caller, ": Failed to set post fields size: ", easy.describe_error(result))
+
+    result = easy.post_fields(data) if data_size > 0 else easy.post_fields(_EMPTY_BODY.as_bytes())
+    if result != Result.OK:
+        raise Error(caller, ": Failed to set post fields: ", easy.describe_error(result))
+
 
 def _handle_post[origin: ImmOrigin, //](easy: Easy, data: Span[Byte, origin]) raises:
     """Configures the libcurl easy handle for a POST request with byte data.
@@ -17,25 +46,10 @@ def _handle_post[origin: ImmOrigin, //](easy: Easy, data: Span[Byte, origin]) ra
         easy: The libcurl easy handle to configure.
         data: The request body as a span of bytes.
     """
-    if data:
-        var data_size = len(data)
-        if data_size > SIZE_LIMIT:
-            var result = easy.post_field_size_large(data_size)
-            if result != Result.OK:
-                raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
-        else:
-            var result = easy.post_field_size(data_size)
-            if result != Result.OK:
-                raise Error("_handle_post: Failed to set post fields size: ", easy.describe_error(result))
-
-        var result = easy.post_fields(data)
-        if result != Result.OK:
-            raise Error("_handle_post: Failed to set post fields: ", easy.describe_error(result))
-    else:
-        # Set POST with zero-length body
-        var result = easy.post()
-        if result != Result.OK:
-            raise Error("_handle_post: Failed to set POST method: ", easy.describe_error(result))
+    var result = easy.post()
+    if result != Result.OK:
+        raise Error("_handle_post: Failed to set POST method: ", easy.describe_error(result))
+    _set_post_fields(easy, data, "_handle_post")
 
 
 def _handle_post[origin: ImmOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
@@ -73,23 +87,7 @@ def _handle_put[origin: ImmOrigin, //](easy: Easy, data: Span[Byte, origin]) rai
     if result != Result.OK:
         raise Error("_handle_put: Failed to set PUT method: ", easy.describe_error(result))
 
-    if data:
-        var data_size = len(data)
-        # libcurl dictates the usage of the large post field size option over 2GB.
-        if data_size > SIZE_LIMIT:
-            var result = easy.post_field_size_large(data_size)
-            if result != Result.OK:
-                raise Error("_handle_put: Failed to set post fields size: ", easy.describe_error(result))
-        else:
-            var result = easy.post_field_size(data_size)
-            if result != Result.OK:
-                raise Error("_handle_put: Failed to set post fields size: ", easy.describe_error(result))
-        result = easy.post_fields(data)
-    else:
-        # Set PUT with zero-length body
-        result = easy.post_fields(List[Byte]())
-    if result != Result.OK:
-        raise Error("_handle_put: Failed to set PUT request post fields: ", easy.describe_error(result))
+    _set_post_fields(easy, data, "_handle_put")
 
 
 def _handle_put[origin: ImmOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
@@ -149,25 +147,7 @@ def _handle_patch[origin: ImmOrigin, //](easy: Easy, data: Span[Byte, origin]) r
     if result != Result.OK:
         raise Error("_handle_patch: Failed to set PATCH method: ", easy.describe_error(result))
 
-    if data:
-        var data_size = len(data)
-        if data_size > SIZE_LIMIT:
-            var result = easy.post_field_size_large(data_size)
-            if result != Result.OK:
-                raise Error("_handle_patch: Failed to set post fields size: ", easy.describe_error(result))
-        else:
-            var result = easy.post_field_size(data_size)
-            if result != Result.OK:
-                raise Error("_handle_patch: Failed to set post fields size: ", easy.describe_error(result))
-
-        result = easy.post_fields(data)
-        if result != Result.OK:
-            raise Error("_handle_patch: Failed to set PATCH request post fields: ", easy.describe_error(result))
-    else:
-        # Set PATCH with zero-length body
-        var result = easy.post()
-        if result != Result.OK:
-            raise Error("_handle_patch: Failed to set zero-length PATCH body: ", easy.describe_error(result))
+    _set_post_fields(easy, data, "_handle_patch")
 
 
 def _handle_patch[origin: ImmOrigin, //](easy: Easy, data: Pointer[FileHandle, origin]) raises:
