@@ -108,13 +108,13 @@ struct Headers(Boolable, Copyable, Defaultable, Sized, Writable):
         """
         return self._inner.get(Self._normalize(key), default)
 
-    def update(mut self, var other: Self):
+    def update(mut self, other: Self):
         """Merges another `Headers` collection into this one, overwriting on conflicts.
 
         Args:
             other: The headers to merge in. Its keys are already normalized.
         """
-        self._inner.update(other._inner^)
+        self._inner.update(other._inner)
 
     def items(ref self) -> type_of(self._inner.items()):
         """Iterates over the header entries as normalized `(key, value)` pairs.

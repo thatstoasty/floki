@@ -1,6 +1,6 @@
 """Libcurl read/write callbacks used to stream request and response bodies."""
 from mojo_curl.c.types import CURL_READFUNC_ABORT, ImmExternalPointer, MutExternalPointer
-from std.ffi import c_char, c_size_t, get_errno
+from std.ffi import c_char, c_size_t, get_errno, c_int
 from std.memory import unsafe_memcpy
 from std.sys import stderr
 
@@ -64,7 +64,7 @@ def read_callback(
         # Copy the data into the buffer
         unsafe_memcpy(
             dest=ptr,
-            src=data[].data.unsafe_bitcast[Int8](),
+            src=data[].data.unsafe_bitcast[c_char](),
             count=Int(bytes_to_read),
         )
 
@@ -100,7 +100,7 @@ def fd_read_callback(
 
     # Copy the data into the buffer
     try:
-        var fd = FileDescriptor(file[]._get_raw_fd())
+        var fd = RawFileDescriptor(c_int(file[]._get_raw_fd()))
         return c_size_t(fd.read_bytes(Span(unsafe_ptr=ptr.unsafe_bitcast[UInt8](), length=Int(buffer_size))))
     except e:
         print(t"fd_read_callback: Error reading from file descriptor: {e}. Errno: {get_errno()}", file=stderr)

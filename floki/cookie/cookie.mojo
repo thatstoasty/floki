@@ -88,11 +88,8 @@ struct Cookie(Copyable, Equatable, Writable):
         self.secure = secure
         self.partitioned = partitioned
 
-    def __init__[origin: Origin, //](out self, header: StringSpan[origin]) raises:
+    def __init__(out self, header: ImmStringSpan) raises:
         """Constructs a Cookie by parsing a tab-separated libcurl cookie-list string.
-
-        Parameters:
-            origin: The origin of the StringSpan.
 
         Args:
             header: A tab-separated libcurl cookie-list string containing cookie fields
@@ -101,8 +98,7 @@ struct Cookie(Copyable, Equatable, Writable):
         Raises:
             Error: If the cookie-list string cannot be parsed.
         """
-        var raw_parts = header.split("\t")
-        var parts: List[StringSpan[origin].Immutable] = [part for part in raw_parts]
+        var parts = header.split("\t")
         self.domain = String(parts[0])
         self.partitioned = parts[1] == "TRUE"
         self.path = String(parts[2])
