@@ -233,7 +233,7 @@ def post[
 
 
 def post[
-    origin: ImmOrigin, A: Auth = NoAuth, //
+    mut: Bool, origin: Origin[mut=mut], A: Auth = NoAuth, //
 ](
     var url: String,
     data: Span[Byte, origin],
@@ -248,6 +248,7 @@ def post[
     """Sends a POST request to the specified URL.
 
     Parameters:
+        mut: Whether the data span is mutable.
         origin: The origin of the data span.
         A: The concrete `Auth` scheme type, inferred from `auth`.
 
@@ -454,7 +455,7 @@ def put[
 
 
 def put[
-    origin: ImmOrigin, A: Auth = NoAuth, //
+    mut: Bool, origin: Origin[mut=mut], A: Auth = NoAuth, //
 ](
     var url: String,
     data: Span[Byte, origin],
@@ -469,6 +470,7 @@ def put[
     """Sends a PUT request to the specified URL.
 
     Parameters:
+        mut: Whether the data span is mutable.
         origin: The origin of the data span.
         A: The concrete `Auth` scheme type, inferred from `auth`.
 
@@ -721,7 +723,7 @@ def patch[
 
 
 def patch[
-    origin: ImmOrigin, A: Auth = NoAuth, //
+    mut: Bool, origin: Origin[mut=mut], A: Auth = NoAuth, //
 ](
     var url: String,
     data: Span[Byte, origin],
@@ -736,6 +738,7 @@ def patch[
     """Sends a GET request to the specified URL.
 
     Parameters:
+        mut: Whether the data span is mutable.
         origin: The origin of the data span.
         A: The concrete `Auth` scheme type, inferred from `auth`.
 

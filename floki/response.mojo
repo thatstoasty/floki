@@ -242,6 +242,17 @@ struct Response(Boolable, Movable, Writable):
         """
         return self.body.as_bytes()
 
+    def take_body(deinit self) -> List[Byte]:
+        """Consumes the response and returns its body bytes without copying them.
+
+        Use this instead of `List[Byte](response.as_bytes())` when the response is no longer
+        needed, for example to hand a large download to another owner. Read any headers first.
+
+        Returns:
+            The raw response body.
+        """
+        return self.body^.take_bytes()
+
     def as_json(self) raises -> emberjson.Value:
         """Parses the response body as a dynamic JSON document for ad-hoc access.
 

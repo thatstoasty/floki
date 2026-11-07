@@ -143,6 +143,17 @@ def test_body_consume() raises -> None:
 # === Response ===
 
 
+def test_http_response_take_body_moves_the_bytes() raises -> None:
+    var body: List[Byte] = [0x00, 0x01, 0xFF]
+    var address = Int(body.unsafe_ptr())
+    var response = Response(body=body^, cookies=CookieJar(), status=Status.OK, protocol=Protocol.HTTPS)
+    var taken = response^.take_body()
+    assert_equal(len(taken), 3)
+    assert_equal(Int(taken[2]), 0xFF)
+    # The same allocation comes back: nothing was copied.
+    assert_equal(Int(taken.unsafe_ptr()), address)
+
+
 def test_http_response_is_ok_true() raises -> None:
     var response = Response(
         body=List[Byte](),

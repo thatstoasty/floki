@@ -67,6 +67,8 @@ struct Session(Movable):
     """Proxy configuration applied to every request made with this session."""
     var tls: Optional[TLS]
     """TLS/SSL verification settings applied to every request made with this session."""
+    var path_as_is: Bool
+    """Indicates whether URL paths are sent exactly as given, without collapsing `.` and `..` segments."""
 
     comptime DEFAULT_HEADERS = {
         "User-Agent": "floki/0.4.0",
@@ -82,6 +84,7 @@ struct Session(Movable):
         var retry: Optional[Retry] = None,
         var proxy: Optional[Proxy] = None,
         var tls: Optional[TLS] = None,
+        path_as_is: Bool = False,
     ) raises:
         """Initialize a new Session.
 
@@ -93,6 +96,8 @@ struct Session(Movable):
             retry: Retry policy applied to every request made with this session.
             proxy: Proxy configuration applied to every request made with this session.
             tls: TLS/SSL verification settings applied to every request made with this session.
+            path_as_is: If True, send URL paths exactly as given. By default libcurl collapses `.` and `..`
+                segments, which breaks protocols that sign the literal path (such as AWS SigV4 for S3).
 
         Raises:
             Error: If there is a failure in initializing the libcurl easy handle or setting options.
@@ -106,6 +111,7 @@ struct Session(Movable):
         self.retry = retry^
         self.proxy = proxy^
         self.tls = tls^
+        self.path_as_is = path_as_is
         if self.verbose:
             self.raise_if_error(self.easy.verbose(), "Failed to set libcurl verbose mode:")
 
@@ -228,6 +234,8 @@ struct Session(Movable):
             # precedence over the session default.
             var follow_redirects = allow_redirects.value() if allow_redirects else self.allow_redirects
             self.raise_if_error(self.easy.follow_location(enable=follow_redirects), "Failed to set follow location:")
+            if self.path_as_is:
+                self.raise_if_error(self.easy.path_as_is(), "Failed to set path as is:")
 
             # Apply the session's timeout configuration. libcurl expects milliseconds.
             if self.timeout.connect:
@@ -559,7 +567,7 @@ struct Session(Movable):
         )
 
     def post[
-        origin: ImmOrigin, A: Auth = NoAuth, //
+        mut: Bool, origin: Origin[mut=mut], A: Auth = NoAuth, //
     ](
         mut self,
         var url: String,
@@ -572,6 +580,7 @@ struct Session(Movable):
         """Sends a POST request to the specified URL.
 
         Parameters:
+            mut: Whether the data span is mutable.
             origin: The origin of the data span.
             A: The concrete `Auth` scheme type, inferred from `auth`.
 
@@ -601,7 +610,7 @@ struct Session(Movable):
         return self.send[RequestMethod.POST](
             url=url,
             headers=headers^,
-            data=RequestData(data),
+            data=RequestData[ImmOrigin(origin)](data),
             query_parameters=query_parameters,
             auth=auth,
             allow_redirects=allow_redirects,
@@ -778,7 +787,7 @@ struct Session(Movable):
         )
 
     def put[
-        origin: ImmOrigin, A: Auth = NoAuth, //
+        mut: Bool, origin: Origin[mut=mut], A: Auth = NoAuth, //
     ](
         mut self,
         var url: String,
@@ -791,6 +800,7 @@ struct Session(Movable):
         """Sends a PUT request to the specified URL.
 
         Parameters:
+            mut: Whether the data span is mutable.
             origin: The origin of the data span.
             A: The concrete `Auth` scheme type, inferred from `auth`.
 
@@ -820,7 +830,7 @@ struct Session(Movable):
         return self.send[RequestMethod.PUT](
             url=url,
             headers=headers^,
-            data=data,
+            data=RequestData[ImmOrigin(origin)](data),
             query_parameters=query_parameters,
             auth=auth,
             allow_redirects=allow_redirects,
@@ -1042,7 +1052,7 @@ struct Session(Movable):
         )
 
     def patch[
-        origin: ImmOrigin, A: Auth = NoAuth, //
+        mut: Bool, origin: Origin[mut=mut], A: Auth = NoAuth, //
     ](
         mut self,
         var url: String,
@@ -1055,6 +1065,7 @@ struct Session(Movable):
         """Sends a PATCH request to the specified URL.
 
         Parameters:
+            mut: Whether the data span is mutable.
             origin: The origin of the data span.
             A: The concrete `Auth` scheme type, inferred from `auth`.
 
@@ -1084,7 +1095,7 @@ struct Session(Movable):
         return self.send[RequestMethod.PATCH](
             url=url,
             headers=headers^,
-            data=data,
+            data=RequestData[ImmOrigin(origin)](data),
             query_parameters=query_parameters,
             auth=auth,
             allow_redirects=allow_redirects,
