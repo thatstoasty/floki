@@ -1,0 +1,16 @@
+[workspace]
+authors = ["Mikhail Tavarez <miktavarez@gmail.com>"]
+channels = ["https://conda.modular.com/max", "conda-forge"]
+name = "sqlite_tui"
+platforms = ["osx-arm64", "linux-64", "linux-aarch64"]
+version = "0.1.0"
+preview = ["pixi-build"]
+
+[tasks]
+example = "bash -c 'mojo server.mojo & pid=$! && sleep 3 && mojo client.mojo && kill $pid'"
+
+[dependencies]
+floki = { path = "../.." }
+flare = { git = "https://github.com/ehsanmok/flare.git", tag = "v0.10.0" }
+slight = { git = "https://github.com/thatstoasty/slight.git", tag = "v0.3.1" }
+banjo = { path = "../../banjo" }
