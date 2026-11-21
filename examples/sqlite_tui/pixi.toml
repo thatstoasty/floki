@@ -11,6 +11,6 @@ example = "bash -c 'mojo server.mojo & pid=$! && sleep 3 && mojo client.mojo && 
 
 [dependencies]
 floki = { path = "../.." }
-flare = { git = "https://github.com/ehsanmok/flare.git", tag = "v0.10.0" }
-slight = { git = "https://github.com/thatstoasty/slight.git", tag = "v0.3.1" }
+flare = { git = "https://github.com/ehsanmok/flare.git", tag = "v0.13.1" }
+slight = { git = "https://github.com/thatstoasty/slight.git", tag = "v0.4.0" }
 banjo = { path = "../../banjo" }

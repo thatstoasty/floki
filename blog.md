@@ -409,14 +409,19 @@ As the author, I know that if an `Easy` handle is opened, it __must__ be explici
 
 ## What's next?
 
-In the short term, I'd like to throw together a cookbook for common recipes and patterns for using Floki. Well written documentation is important, but  The project is open to contributions, and I'd love to hear ideas on how to improve it. Try it out, break it, stress test it, and let me know what gaps you find. It's challenging to account for all of the different use cases, so it helps in strengthening the soundness of Floki.
+In the short term, I'd like to put together a cookbook for common recipes and patterns for using Floki. Well written documentation is important, but practical examples provide a better sense of what using the package looks like and provide starting points for code that can be copied.
+
+I'd love to hear ideas on how to improve Floki. Try it out, break it, stress test it, and let me know what gaps you find. Real-world use cases are the best way to harden the project!
 
 ## Give it a try
+
+You can find the installation instructions in `Adding the floki package to your project` section of the README.
+
+- [Floki: HTTP Client](https://github.com/thatstoasty/floki)
 
 Come join the party! I'm open to contributions on any of these Mojo projects.
 
 - [Mojo-curl: Libcurl bindings](https://github.com/thatstoasty/mojo-curl)
-- [Floki: HTTP Client](https://github.com/thatstoasty/floki)
 - [Prism: CLI builder](https://github.com/thatstoasty/prism)
 - [Mist: Terminal ANSI styling and color](https://github.com/thatstoasty/mist)
 - [Mog: Terminal styling](https://github.com/thatstoasty/mog)
@@ -425,4 +430,9 @@ Come join the party! I'm open to contributions on any of these Mojo projects.
 
 ## About me
 
-My name is Mikhail Tavarez, and I've been part of the Mojo community since 2024. I spend most of my days at work building internal data services and tooling for data engineers. I'm always down to chat about music, games, books, programming, and whatnot, so feel free to reach out! Thanks again to Modular for choosing my project for their grant program; it's been an absolute pleasure to work alongside the team.
+My name is Mikhail Tavarez, and I've been part of the Mojo community since 2024. I spend most of my days at work building internal data services and tooling for data engineers. I'm always available to chat about music, games, books, programming, and whatnot, so feel free to reach out! Thank you to Modular for choosing my project for their grant program; it's been an absolute pleasure to work alongside the team.
+
+My Socials:
+
+- [Github](https://github.com/thatstoasty)
+- [LinkedIn](https://www.linkedin.com/in/mikhail-tavarez-a94750b6/)
