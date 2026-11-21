@@ -3,10 +3,10 @@ Output flurl.gif
 Set Shell "zsh"
 Set FontSize 20
 Set Width 1200
-Set Height 400
+Set Height 800
 Set WindowBar Colorful
 Set Theme "Catppuccin Frappe"
 Set BorderRadius 10
 
-Type "mojo main.mojo -i https://httpbin.org/get" Sleep 500ms  Enter
-Sleep 5s
+Type "pixi run mojo main.mojo -i https://httpbin.org/get" Sleep 500ms  Enter
+Sleep 10s

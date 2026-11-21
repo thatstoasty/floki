@@ -8,5 +8,5 @@ Set WindowBar Colorful
 Set Theme "Catppuccin Frappe"
 Set BorderRadius 10
 
-Type "mojo main.mojo -i https://httpbin.org/get" Sleep 500ms  Enter
-Sleep 5s
+Type "pixi run example" Sleep 500ms  Enter
+Sleep 10s

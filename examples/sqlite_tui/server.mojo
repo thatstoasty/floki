@@ -29,7 +29,8 @@ struct GetUserHandler(Copyable, Handler, Movable):
         var id = Int(req.param("id"))
         print(t"GET /users/{id}")
         var stmt = db.prepare("SELECT id, name, email FROM users WHERE id = ? LIMIT 1;")
-        var row = stmt.query[User]((id,)).nth(0)
+        var rows = stmt.query[User]((id,))
+        var row = rows.next()
         # Checked before `.value()`, which aborts the whole process on an empty
         # `Optional` rather than raising -- no `except` can catch it.
         if not row:

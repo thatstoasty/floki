@@ -22,7 +22,7 @@ from emberjson import Value, from_json
 from floki.timeout import Timeout
 from mog import Profile
 from std.utils.variant import Variant
-from termctl.event.event import Char, Enter, Esc, Event, KeyEvent, KeyModifiers
+from termctl.event.event import Event, KeyCode, KeyEvent, KeyModifiers
 from termctl.multiplex import DefaultSelector
 
 from floki import Session
@@ -33,19 +33,23 @@ comptime RENDER_HZ = 60.0
 comptime SERVER = "localhost:8080"
 """Where `server.mojo` listens."""
 
-comptime TITLE = mog.Style(Profile.ANSI).bold().foreground(mog.Color(5))
+comptime TITLE = mog.Style(Profile.ansi).bold().foreground(mog.Color(5))
 """The heading."""
-comptime LABEL = mog.Style(Profile.ANSI).foreground(mog.Color(8))
+comptime LABEL = mog.Style(Profile.ansi).foreground(mog.Color(8))
 """Field names in the result."""
-comptime CARD = mog.Style(Profile.ANSI, border=mog.ROUNDED_BORDER, padding=mog.Padding(1, 0)).border_foreground(
-    mog.Color(8)
-)
+comptime CARD = mog.Style(
+    Profile.ansi, border=mog.Border.ROUNDED, padding=mog.Padding(1, 0)
+).border_foreground(mog.Color(8))
 """The box a found user is drawn in."""
-comptime PROBLEM = mog.Style(Profile.ANSI, width=74, padding=mog.Padding(2, 0)).foreground(mog.Color(1))
+comptime PROBLEM = mog.Style(
+    Profile.ansi, width=74, padding=mog.Padding(2, 0)
+).foreground(mog.Color(1))
 """Anything that went wrong. Wrapped, since a transport error can be long."""
-comptime HINT = mog.Style(Profile.ANSI).foreground(mog.Color(8))
+comptime HINT = mog.Style(Profile.ansi).foreground(mog.Color(8))
 """Guidance before the first lookup."""
-comptime APP = mog.Style(Profile.ANSI, border=mog.ROUNDED_BORDER, padding=mog.Padding(1))
+comptime APP = mog.Style(
+    Profile.ansi, border=mog.Border.ROUNDED, padding=mog.Padding(1)
+)
 
 
 @fieldwise_init
@@ -57,7 +61,9 @@ struct Msg(ImplicitlyCopyable):
     def isa[T: Copyable](self) -> Bool:
         return self.value.isa[T]()
 
-    def __getitem_param__[T: Copyable](ref self) -> ref[origin_of(self.value)._get_owned_interior["value"]] T:
+    def __getitem_param__[
+        T: Copyable
+    ](ref self) -> ref[origin_of(self.value)._get_owned_interior["value"]] T:
         return self.value[T]
 
 
@@ -79,10 +85,32 @@ def _is_digit(key: KeyEvent) -> Bool:
     Returns:
         True for `0` through `9` with no modifier held.
     """
-    if not key.code.isa[Char]() or key.modifiers != KeyModifiers.NONE:
+    if key.modifiers != KeyModifiers.NONE:
         return False
-    var codepoint = key.code[Char].char.to_u32()
-    return codepoint >= UInt32(ord("0")) and codepoint <= UInt32(ord("9"))
+    match key.code:
+        case .char(char):
+            var codepoint = char.to_u32()
+            return codepoint >= UInt32(ord("0")) and codepoint <= UInt32(
+                ord("9")
+            )
+        case _:
+            return False
+
+
+def _is_char(key: KeyEvent) -> Bool:
+    """Whether a key produces a character, as opposed to an editing key.
+
+    Args:
+        key: The key that was pressed.
+
+    Returns:
+        True for a character key.
+    """
+    match key.code:
+        case .char:
+            return True
+        case _:
+            return False
 
 
 struct Model(Program):
@@ -109,24 +137,30 @@ struct Model(Program):
         self.input = TextInput()
         self.input.prompt = "  user id > "
         self.input.placeholder = "a number, e.g. 1"
-        self.input.styles_prompt = mog.Style(Profile.ANSI).foreground(mog.Color(5))
+        self.input.styles_prompt = mog.Style(Profile.ansi).foreground(
+            mog.Color(5)
+        )
         self.input.styles_placeholder = HINT.copy()
 
         self.user = None
         self.problem = String()
         self.help = HelpView(width=76)
         self.bindings = [
-            Binding(keys=[Enter()], help=Help("enter", "look up")),
+            Binding(
+                keys=[KeyEvent(KeyCode.enter)], help=Help("enter", "look up")
+            ),
             self.input.keymap.backspace.copy(),
-            Binding(keys=[Esc()], help=Help("esc", "quit")),
+            Binding(keys=[KeyEvent(KeyCode.esc)], help=Help("esc", "quit")),
         ]
         self.done = False
 
     @staticmethod
     def on_event(event: Event) raises -> Optional[Msg]:
-        if not event.isa[KeyEvent]():
-            return None
-        return Msg(event[KeyEvent])
+        match event:
+            case .key(key):
+                return Msg(key)
+            case _:
+                return None
 
     def on_tick(mut self, tag: Int) raises -> Optional[Msg]:
         return None
@@ -139,18 +173,22 @@ struct Model(Program):
             return None
 
         var key = msg[KeyEvent]
-        if key.code.isa[Esc]():
+        if key.code == KeyCode.esc:
             self.done = True
             return None
 
-        if key.code.isa[Enter]():
+        if key.code == KeyCode.enter:
             self._look_up()
             return None
 
         # Only digits are typed. Anything else would reach the server as an id
         # it cannot parse, so it is refused here. Editing keys still reach the
         # input, since they are not characters.
-        if key.code.isa[Char]() and not _is_digit(key) and key.modifiers == KeyModifiers.NONE:
+        if (
+            _is_char(key)
+            and not _is_digit(key)
+            and key.modifiers == KeyModifiers.NONE
+        ):
             return None
 
         _ = self.input.update(key)
@@ -167,7 +205,13 @@ struct Model(Program):
         try:
             var response = self.session.get(String(SERVER, "/users/", id))
             if not response:
-                self.problem = String("No user with id ", id, ". The server answered ", response.status.code, ".")
+                self.problem = String(
+                    "No user with id ",
+                    id,
+                    ". The server answered ",
+                    response.status.code,
+                    ".",
+                )
                 return
 
             try:
@@ -179,12 +223,22 @@ struct Model(Program):
                 )
                 self.problem = String()
             except:
-                self.problem = String("The server's reply for id ", id, " was not a user.")
+                self.problem = String(
+                    "The server's reply for id ", id, " was not a user."
+                )
         except e:
-            self.problem = String("Could not reach the server at ", SERVER, ". Is it running? (", e, ")")
+            self.problem = String(
+                "Could not reach the server at ",
+                SERVER,
+                ". Is it running? (",
+                e,
+                ")",
+            )
 
     def view(self) raises -> String:
-        var out = String(TITLE.render("User lookup"), "\n\n", self.input.view(), "\n\n")
+        var out = String(
+            TITLE.render("User lookup"), "\n\n", self.input.view(), "\n\n"
+        )
 
         if self.user:
             ref user = self.user.value()
