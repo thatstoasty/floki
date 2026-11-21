@@ -1,13 +1,16 @@
-import floki
-from floki.forms import FormData
+from std.ffi import external_call, c_int
 
-def main() raises -> None:
-    # # JSON body (Content-Type: application/json)
-    # var r = floki.post("https://httpbin.org/post", data={"key": "value"})
+comptime CURL = MutPointer[NoneType, origin=MutUntrackedOrigin]
+comptime CURLcode = c_int
+comptime CURLoption = c_int
 
-    # # Form-encoded body (Content-Type: application/x-www-form-urlencoded)
-    # var r2 = floki.post("https://httpbin.org/post", data=FormData({"key": "value"}))
+def curl_easy_setopt[T: AnyType, //](curl: CURL, option: CURLoption, parameter: T) -> CURLcode:
+    # CURLcode curl_easy_setopt(CURL *curl, CURLoption option, ...);
+    return external_call["curl_easy_setopt", CURLoption, num_fixed_args=1](
+        curl,
+        option,
+        parameter,
+    )
 
-    # Bytes body (Content-Type: application/octet-stream)
-    var r3 = floki.post("https://httpbin.org/post", data="raw bytes".as_bytes())
-    print(r3.as_text())
+def main() raises:
+    ...
