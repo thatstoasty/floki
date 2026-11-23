@@ -40,8 +40,6 @@ Here are a few examples of Floki in action!
 
 Every HTTP method is available both as a free function and as a `Session` method:
 
-TODO: Include terminal gifs for the examples?
-
 ```mojo
 import floki
 from floki.session import Session
