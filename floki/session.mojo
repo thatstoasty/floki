@@ -71,7 +71,7 @@ struct Session(Movable):
     """Indicates whether URL paths are sent exactly as given, without collapsing `.` and `..` segments."""
 
     comptime DEFAULT_HEADERS = {
-        "User-Agent": "floki/0.4.0",
+        "User-Agent": "floki/0.4.2",
     }
     """Default headers that are included in every request made with this session, unless overridden by request-specific headers."""
 
