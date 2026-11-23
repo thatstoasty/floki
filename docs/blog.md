@@ -118,8 +118,7 @@ def main() raises -> None:
 Small code snippets are great for a quick overview, but what about some practical examples? Check out these demonstrations of Floki being used with other packages from the ecosystem, some of which I've created!
 
 #### Minimal curl dupe
-
-![Flurl GIF](https://github.com/thatstoasty/floki/tree/blog-examples/examples/flurl/flurl.gif)
+![Flurl GIF](https://github.com/thatstoasty/floki/blob/main/examples/flurl/flurl.gif)
 
 - [Link to the project](https://github.com/thatstoasty/floki/tree/blog-examples/examples/flurl).
 
@@ -127,7 +126,7 @@ I used [prism](https://github.com/thatstoasty/prism) to build a CLI that mirrors
 
 #### HTTP server and client
 
-![Server Client GIF](https://github.com/thatstoasty/floki/tree/blog-examples/examples/server_client/server_client.gif)
+![Server Client GIF](https://github.com/thatstoasty/floki/blob/main/examples/server_client/server_client.gif)
 
 - [Link to the project](https://github.com/thatstoasty/floki/tree/blog-examples/examples/server_client).
 
@@ -135,7 +134,7 @@ I used [flare](https://github.com/ehsanmok/flare) to create a small web server s
 
 #### HTTP server and SQLite TUI client
 
-![SQLite TUI GIF](https://github.com/thatstoasty/floki/tree/blog-examples/examples/sqlite_tui/sqlite_tui.gif)
+![SQLite TUI GIF](https://github.com/thatstoasty/floki/blob/main/examples/sqlite_tui/sqlite_tui.gif)
 
 - [Link to the project](https://github.com/thatstoasty/floki/tree/blog-examples/examples/sqlite_tui).
 
